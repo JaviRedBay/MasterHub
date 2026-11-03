@@ -1,0 +1,136 @@
+/* ==========================================================================
+   THEME BASE · Contrato de variables de diseño (design tokens)
+   --------------------------------------------------------------------------
+   Este archivo define QUÉ variables existen y cómo se DERIVAN unas de otras.
+   Los colores base de cada estilo viven en css/themes/<id>.css; aquí solo hay:
+     · valores estructurales por defecto (radios, bordes, tipografía, sombras)
+     · tokens COMPUESTOS (degradados, líneas, brillos) calculados a partir de
+       los colores base con color-mix(), de modo que un tema nuevo solo necesita
+       definir su paleta y obtiene el resto "gratis".
+   Un tema puede sobrescribir cualquier token compuesto si quiere un acabado
+   propio (ver alto-contraste.css o ciberpunk.css).
+
+   IMPORTANTE: los tokens compuestos se declaran en :root y se resuelven sobre
+   <html>, que es el mismo elemento donde se aplica data-theme. Por eso heredan
+   la paleta del tema activo sin repetirse.
+
+   Nombres históricos (se mantienen por compatibilidad con todo el código):
+     --rpg-crimson*  → color PRIMARIO (acciones principales, cabeceras, bordes)
+     --rpg-gold*     → color de ACENTO (títulos, resaltes, iconos, foco)
+   ========================================================================== */
+
+:root {
+  /* ---------- Tipografía ---------- */
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Montserrat', sans-serif;
+  --rpg-title-transform: none;
+  --rpg-title-tracking: 0.5px;
+  --rpg-label-tracking: 0.75px;
+  --touch-target: 44px;
+
+  /* ---------- Forma ---------- */
+  --rpg-radius-sm: 4px;
+  --rpg-radius: 6px;
+  --rpg-radius-lg: 8px;
+  --rpg-radius-pill: 20px;
+  --rpg-border-w: 1px;
+  --rpg-border-w-strong: 2px;
+
+  /* ---------- Intensidad de efectos (0 = sin efecto, 1 = normal) ---------- */
+  --rpg-shadow-rgb: 0 0 0;
+  --rpg-shadow-strength: 1;
+  --rpg-glow-strength: 1;
+
+  /* ---------- Líneas y tintes derivados del acento / primario ---------- */
+  --rpg-line-faint: color-mix(in srgb, var(--rpg-gold) 20%, transparent);
+  --rpg-line: color-mix(in srgb, var(--rpg-gold) 25%, transparent);
+  --rpg-line-mid: color-mix(in srgb, var(--rpg-gold) 35%, transparent);
+  --rpg-line-strong: color-mix(in srgb, var(--rpg-gold) 55%, transparent);
+  --rpg-tint-hover: color-mix(in srgb, var(--rpg-gold) 6%, transparent);
+  --rpg-tint-soft: color-mix(in srgb, var(--rpg-gold) 12%, transparent);
+  --rpg-tint-medium: color-mix(in srgb, var(--rpg-gold) 16%, transparent);
+  --rpg-crimson-tint: color-mix(in srgb, var(--rpg-crimson) 18%, transparent);
+  --rpg-crimson-glow: color-mix(in srgb, var(--rpg-crimson) 50%, transparent);
+  --rpg-gold-glow: color-mix(in srgb, var(--rpg-gold) 40%, transparent);
+  --rpg-row-line: color-mix(in srgb, var(--rpg-text-main) 7%, transparent);
+  --rpg-backdrop: rgb(0 0 0 / 0.8);
+
+  /* ---------- Sombras y resplandores ---------- */
+  --rpg-shadow-sm: 0 2px 8px rgb(var(--rpg-shadow-rgb) / calc(0.35 * var(--rpg-shadow-strength)));
+  --rpg-shadow-md: 0 3px 10px rgb(var(--rpg-shadow-rgb) / calc(0.45 * var(--rpg-shadow-strength)));
+  --rpg-shadow-lg: 0 6px 20px rgb(var(--rpg-shadow-rgb) / calc(0.55 * var(--rpg-shadow-strength)));
+  --rpg-shadow-xl: 0 15px 50px rgb(var(--rpg-shadow-rgb) / calc(0.9 * var(--rpg-shadow-strength)));
+  --rpg-shadow-nav: 0 4px 20px rgb(var(--rpg-shadow-rgb) / calc(0.8 * var(--rpg-shadow-strength)));
+  --rpg-inset-highlight: inset 0 1px 0 rgb(255 255 255 / calc(0.05 * var(--rpg-shadow-strength)));
+  --rpg-glow-soft: 0 0 10px color-mix(in srgb, var(--rpg-gold) min(100%, calc(18% * var(--rpg-glow-strength))), transparent);
+  --rpg-glow: 0 0 12px color-mix(in srgb, var(--rpg-gold) min(100%, calc(30% * var(--rpg-glow-strength))), transparent);
+  --rpg-glow-strong: 0 0 8px color-mix(in srgb, var(--rpg-gold) min(100%, calc(60% * var(--rpg-glow-strength))), transparent);
+  --rpg-glow-primary: 0 0 12px color-mix(in srgb, var(--rpg-crimson) min(100%, calc(50% * var(--rpg-glow-strength))), transparent);
+  --rpg-text-glow: 0 0 8px color-mix(in srgb, var(--rpg-gold) min(100%, calc(40% * var(--rpg-glow-strength))), transparent);
+  --rpg-heading-shadow: 0 2px 6px rgb(var(--rpg-shadow-rgb) / calc(0.8 * var(--rpg-shadow-strength)));
+  --rpg-text-shadow: 0 1px 3px rgb(var(--rpg-shadow-rgb) / calc(0.8 * var(--rpg-shadow-strength)));
+
+  /* ---------- Fondos compuestos ---------- */
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rpg-crimson) 16%, transparent) 0%, transparent 55%),
+    radial-gradient(circle at 85% 25%, color-mix(in srgb, var(--rpg-gold) 5%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 15% 75%, color-mix(in srgb, var(--rpg-crimson) 8%, transparent) 0%, transparent 50%);
+  --rpg-navbar-bg: linear-gradient(180deg,
+    color-mix(in srgb, var(--rpg-crimson-dark) 36%, #000) 0%,
+    color-mix(in srgb, var(--rpg-crimson-dark) 17%, #000) 100%);
+  --rpg-card-bg: linear-gradient(180deg, var(--rpg-dark-card) 0%, var(--rpg-parchment-dark) 100%);
+  --rpg-card-header-bg: linear-gradient(90deg,
+    color-mix(in srgb, var(--rpg-crimson) 50%, transparent) 0%,
+    color-mix(in srgb, var(--rpg-dark-card-hover) 80%, transparent) 100%);
+  --rpg-card-header-strong-bg: linear-gradient(90deg, var(--rpg-crimson-dark) 0%, var(--rpg-crimson) 50%, var(--rpg-crimson-dark) 100%);
+  --rpg-card-header-strong-fg: var(--rpg-text-on-crimson);
+  --rpg-codex-bg: linear-gradient(180deg, var(--rpg-parchment) 0%, var(--rpg-parchment-dark) 100%);
+  --rpg-box-bg: linear-gradient(180deg, var(--rpg-parchment-light) 0%, var(--rpg-parchment) 100%);
+  --rpg-feat-bg: linear-gradient(180deg, var(--rpg-dark-surface) 0%, var(--rpg-parchment-dark) 100%);
+  --rpg-th-bg: linear-gradient(180deg, var(--rpg-dark-card-hover) 0%, var(--rpg-dark-card) 100%);
+  --rpg-tab-active-bg: linear-gradient(180deg, color-mix(in srgb, var(--rpg-crimson-dark) 25%, var(--rpg-dark-card)) 0%, var(--rpg-dark-card) 100%);
+  --rpg-dialog-bg: linear-gradient(180deg, var(--rpg-dark-surface) 0%, var(--rpg-parchment-dark) 100%);
+  --rpg-toast-bg: linear-gradient(180deg, var(--rpg-dark-surface) 0%, var(--rpg-parchment-dark) 100%);
+  --rpg-currency-bg: linear-gradient(90deg, var(--rpg-dark-surface) 0%, var(--rpg-dark-card) 100%);
+  --rpg-pill-active-bg: linear-gradient(180deg, var(--rpg-crimson) 0%, var(--rpg-crimson-dark) 100%);
+  --rpg-fab-bg: linear-gradient(135deg, var(--rpg-crimson) 0%, var(--rpg-crimson-dark) 100%);
+
+  /* ---------- Botones ---------- */
+  --rpg-btn-primary-bg: linear-gradient(180deg, var(--rpg-crimson-light) 0%, var(--rpg-crimson) 100%);
+  --rpg-btn-primary-bg-hover: linear-gradient(180deg, color-mix(in srgb, var(--rpg-crimson-light) 82%, #fff) 0%, var(--rpg-crimson-light) 100%);
+  --rpg-btn-gold-bg: linear-gradient(180deg, var(--rpg-gold) 0%, var(--rpg-gold-dark) 100%);
+  --rpg-btn-gold-bg-hover: linear-gradient(180deg, color-mix(in srgb, var(--rpg-gold) 88%, #fff) 0%, color-mix(in srgb, var(--rpg-gold-dark) 88%, #fff) 100%);
+  --rpg-btn2-bg: color-mix(in srgb, var(--rpg-dark-surface) 92%, var(--rpg-text-main));
+  --rpg-btn2-bg-hover: color-mix(in srgb, var(--rpg-dark-surface) 82%, var(--rpg-text-main));
+  --rpg-btn2-border: color-mix(in srgb, var(--rpg-dark-border) 75%, var(--rpg-text-muted));
+  --rpg-btn2-fg: var(--rpg-text-main);
+
+  /* ---------- Formularios ---------- */
+  --rpg-input-bg: var(--rpg-parchment-dark);
+  --rpg-input-bg-focus: var(--rpg-parchment);
+  --rpg-input-fg: var(--rpg-text-main);
+  --rpg-input-fg-focus: var(--rpg-text-light);
+  --rpg-input-border: var(--rpg-dark-border);
+  --rpg-focus-ring: 0 0 0 0.2rem color-mix(in srgb, var(--rpg-gold) 25%, transparent);
+
+  /* ---------- Barra superior ---------- */
+  --rpg-navbar-hover-fg: var(--rpg-gold-light);
+
+  /* ---------- Scrollbars ---------- */
+  --rpg-scroll-track: color-mix(in srgb, var(--rpg-dark-bg) 50%, transparent);
+  --rpg-scroll-thumb: color-mix(in srgb, var(--rpg-text-muted) 40%, var(--rpg-dark-card));
+
+  /* ---------- Puente hacia Bootstrap 5.3 ----------
+     Bootstrap 5.3 pinta modales, dropdowns, list-groups, etc. con sus propias
+     variables --bs-*; las alineamos con la paleta del tema activo. */
+  --bs-body-bg: var(--rpg-dark-bg);
+  --bs-body-color: var(--rpg-text-main);
+  --bs-emphasis-color: var(--rpg-text-light);
+  --bs-secondary-color: var(--rpg-text-muted);
+  --bs-secondary-bg: var(--rpg-dark-card-hover);
+  --bs-tertiary-bg: var(--rpg-dark-surface);
+  --bs-border-color: var(--rpg-dark-border);
+  --bs-link-color: var(--rpg-link);
+  --bs-link-hover-color: color-mix(in srgb, var(--rpg-link) 75%, var(--rpg-text-light));
+  --bs-warning: var(--rpg-warning);
+}

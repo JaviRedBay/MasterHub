@@ -1,0 +1,140 @@
+/* ==========================================================================
+   TEMA · Alto Contraste  (id: alto-contraste · modo: dark)
+   Negro puro, texto blanco, acentos amarillo y cian, bordes gruesos, sin
+   degradados, sin sombras ni resplandores. Texto algo más grande y foco muy
+   visible. Pensado para baja visión y entornos con mucha luz.
+   Relaciones de contraste: blanco/negro 21:1 · amarillo/negro 19.6:1.
+   ========================================================================== */
+[data-theme="alto-contraste"] {
+  --rpg-crimson: #00e5ff;
+  --rpg-crimson-light: #5cf0ff;
+  --rpg-crimson-dark: #00a9bd;
+  --rpg-crimson-text: #5cf0ff;
+
+  --rpg-gold: #ffff00;
+  --rpg-gold-light: #ffff66;
+  --rpg-gold-dark: #cccc00;
+  --rpg-gold-dim: #e6e600;
+
+  --rpg-dark-bg: #000000;
+  --rpg-dark-card: #000000;
+  --rpg-dark-card-hover: #1a1a1a;
+  --rpg-dark-surface: #0a0a0a;
+  --rpg-dark-border: #ffffff;
+  --rpg-parchment: #000000;
+  --rpg-parchment-light: #000000;
+  --rpg-parchment-dark: #000000;
+
+  --rpg-text-main: #ffffff;
+  --rpg-text-light: #ffffff;
+  --rpg-text-muted: #e0e0e0;
+  --rpg-text-gold: #ffff00;
+  --rpg-text-soft: #ffffff;
+  --rpg-text-on-crimson: #000000;
+  --rpg-text-on-gold: #000000;
+  --rpg-link: #66f0ff;
+
+  --rpg-u-bg-dark: #000000;
+  --rpg-u-bg-black: #000000;
+  --rpg-u-text-light: #ffffff;
+
+  --rpg-secondary: #d0d0d0;
+  --rpg-success: #00ff66;
+  --rpg-danger: #ff6b6b;
+  --rpg-warning: #ffff00;
+  --rpg-info: #66f0ff;
+  --rpg-dot-proficient: #ff5c5c;
+  --rpg-dot-expertise: #ffff00;
+  --rpg-dot-untrained: #bdbdbd;
+  --rpg-hp-healthy: #00c853;
+  --rpg-hp-wounded: #ffd600;
+  --rpg-hp-critical: #ff1744;
+
+  --rpg-navbar-bg: #000000;
+  --rpg-navbar-brand: #ffff00;
+  --rpg-navbar-fg: #ffffff;
+  --rpg-navbar-fg-muted: #e0e0e0;
+  --rpg-navbar-tab-bg: #000000;
+
+  /* Acabado plano: sin degradados ni imágenes de fondo */
+  --rpg-body-bg-image: none;
+  --rpg-card-bg: #000000;
+  --rpg-card-header-bg: #000000;
+  --rpg-card-header-strong-bg: #000000;
+  --rpg-card-header-strong-fg: #ffff00;
+  --rpg-codex-bg: #000000;
+  --rpg-box-bg: #000000;
+  --rpg-feat-bg: #000000;
+  --rpg-th-bg: #000000;
+  --rpg-tab-active-bg: #ffff00;
+  --rpg-dialog-bg: #000000;
+  --rpg-toast-bg: #000000;
+  --rpg-currency-bg: #000000;
+  --rpg-pill-active-bg: #ffff00;
+  --rpg-fab-bg: #000000;
+  --rpg-btn-primary-bg: #00e5ff;
+  --rpg-btn-primary-bg-hover: #ffffff;
+  --rpg-btn-gold-bg: #ffff00;
+  --rpg-btn-gold-bg-hover: #ffffff;
+  --rpg-btn2-bg: #000000;
+  --rpg-btn2-bg-hover: #1f1f1f;
+  --rpg-btn2-border: #ffffff;
+  --rpg-input-bg: #000000;
+  --rpg-input-bg-focus: #000000;
+  --rpg-input-border: #ffffff;
+  --rpg-focus-ring: 0 0 0 3px #ffff00;
+  --rpg-scroll-track: #000000;
+  --rpg-scroll-thumb: #ffffff;
+  --rpg-backdrop: rgb(0 0 0 / 0.92);
+
+  --rpg-line-faint: #ffffff;
+  --rpg-line: #ffffff;
+  --rpg-line-mid: #ffffff;
+  --rpg-line-strong: #ffff00;
+  --rpg-tint-hover: #1f1f1f;
+  --rpg-tint-soft: #1a1a1a;
+  --rpg-tint-medium: #262626;
+  --rpg-crimson-tint: #001f24;
+  --rpg-row-line: #5a5a5a;
+
+  --rpg-border-w: 2px;
+  --rpg-border-w-strong: 3px;
+  --rpg-radius-sm: 2px;
+  --rpg-radius: 3px;
+  --rpg-radius-lg: 4px;
+  --rpg-shadow-strength: 0;
+  --rpg-glow-strength: 0;
+
+  --font-title: Verdana, Tahoma, 'Segoe UI', sans-serif;
+  --font-body: Verdana, Tahoma, 'Segoe UI', sans-serif;
+  --rpg-title-tracking: 0.3px;
+}
+
+/* Texto base algo mayor y enlaces subrayados */
+html[data-theme="alto-contraste"] {
+  font-size: 110%;
+}
+
+[data-theme="alto-contraste"] a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Foco imposible de pasar por alto */
+[data-theme="alto-contraste"] :focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 2px !important;
+}
+
+/* La pestaña/píldora activa se invierte (texto negro sobre amarillo) */
+[data-theme="alto-contraste"] .rpg-nav-tabs .nav-link.active,
+[data-theme="alto-contraste"] .rpg-filter-pill.active {
+  color: #000000 !important;
+  text-shadow: none;
+}
+
+/* Barras de HP sin degradado para distinguir estados sin depender del matiz */
+[data-theme="alto-contraste"] .hp-bar-container {
+  border-width: 2px;
+}
+

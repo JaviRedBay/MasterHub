@@ -1,0 +1,4 @@
+# Herramienta privada para un grupo de juego: no indexar
+User-agent: *
+Disallow: /
+

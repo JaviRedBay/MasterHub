@@ -1,0 +1,97 @@
+/* ==========================================================================
+   PLANTILLA PARA CREAR UN TEMA NUEVO  (este archivo NO se carga en la app)
+   --------------------------------------------------------------------------
+   1. Copia este archivo como css/themes/<mi-tema>.css
+   2. Sustituye "mi-tema" por el id elegido y ajusta los colores.
+   3. Enlázalo en index.html, DESPUÉS de fantasia-oscura.css:
+        <link rel="stylesheet" href="css/themes/mi-tema.css">
+   4. Regístralo en js/constants/themes.js (id, nombre, descripción, modo).
+   Eso es todo: el selector del menú "Estilo" lo mostrará automáticamente.
+
+   Solo son obligatorios los bloques de PALETA; todo lo demás (degradados,
+   líneas, brillos, botones, formularios) se calcula solo a partir de ellos.
+   Añade las secciones "OPCIONALES" únicamente si quieres un acabado propio.
+
+   Guía rápida de roles:
+     --rpg-crimson*   color PRIMARIO  (botón principal, cabeceras, borde activo)
+     --rpg-gold*      color de ACENTO (títulos, etiquetas, iconos, foco)
+                      En temas CLAROS usa tonos oscuros: se emplean como texto.
+     --rpg-dark-*     superficies: fondo, tarjetas, bordes
+     --rpg-parchment* superficies de la hoja de personaje y sus cajas
+   ========================================================================== */
+[data-theme="mi-tema"] {
+  /* ---- PALETA · primario ---- */
+  --rpg-crimson: #8b0000;
+  --rpg-crimson-light: #ab1d29;
+  --rpg-crimson-dark: #4d0000;
+  --rpg-crimson-text: #ff9999;      /* primario legible como texto sobre superficie */
+
+  /* ---- PALETA · acento ---- */
+  --rpg-gold: #d4af37;
+  --rpg-gold-light: #f3e5ab;        /* acento fuerte: títulos de dotes */
+  --rpg-gold-dark: #997814;
+  --rpg-gold-dim: #b8933b;
+
+  /* ---- PALETA · superficies ---- */
+  --rpg-dark-bg: #0c0e14;           /* fondo de la página */
+  --rpg-dark-card: #151922;         /* tarjetas */
+  --rpg-dark-card-hover: #1b212e;
+  --rpg-dark-surface: #181d2a;      /* menús, diálogos, tablas */
+  --rpg-dark-border: #2a3344;
+  --rpg-parchment: #141722;         /* hoja de personaje */
+  --rpg-parchment-light: #191e2b;
+  --rpg-parchment-dark: #0f121a;
+
+  /* ---- PALETA · texto ---- */
+  --rpg-text-main: #f0ede6;
+  --rpg-text-light: #ffffff;        /* énfasis máximo */
+  --rpg-text-muted: #9aa3b2;
+  --rpg-text-gold: #e6c875;
+  --rpg-text-soft: #c9d1dc;
+  --rpg-text-on-crimson: #ffffff;   /* texto sobre botones primarios */
+  --rpg-text-on-gold: #120e03;      /* texto sobre botones de acento */
+  --rpg-link: #6ea8fe;
+
+  /* ---- Clases de Bootstrap que el código usa con color fijo ----
+     .bg-dark / .bg-black / .text-light se redirigen a estos valores.
+     En un tema claro, pon superficies claras y texto oscuro. */
+  --rpg-u-bg-dark: #212529;
+  --rpg-u-bg-black: #000000;
+  --rpg-u-text-light: #f8f9fa;
+
+  /* ---- Estados ---- */
+  --rpg-secondary: #6c757d;         /* .text-secondary / .border-secondary / .bg-secondary */
+  --rpg-success: #198754;
+  --rpg-danger: #dc3545;
+  --rpg-warning: #ffc107;           /* .text-warning */
+  --rpg-info: #0dcaf0;              /* .text-info */
+
+  /* ---- Barra superior ---- */
+  --rpg-navbar-brand: var(--rpg-gold);
+  --rpg-navbar-fg: #b5bcc9;
+  --rpg-navbar-fg-muted: #c9b382;
+
+  /* ---- Tipografía ---- (si usas Google Fonts, indícalo en themes.js) */
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Montserrat', sans-serif;
+
+  /* ==================== OPCIONALES ====================
+     Descomenta lo que quieras afinar.
+
+  --rpg-radius-sm: 4px;  --rpg-radius: 6px;  --rpg-radius-lg: 8px;
+  --rpg-border-w: 1px;   --rpg-border-w-strong: 2px;
+  --rpg-title-transform: none;   --rpg-title-tracking: 0.5px;
+  --rpg-shadow-rgb: 0 0 0;       --rpg-shadow-strength: 1;   (0 = sin sombras)
+  --rpg-glow-strength: 1;                                    (0 = sin resplandor)
+
+  Degradados y fondos compuestos (sobrescribe solo si quieres otro acabado):
+  --rpg-body-bg-image   --rpg-navbar-bg     --rpg-card-bg    --rpg-box-bg
+  --rpg-card-header-bg  --rpg-feat-bg       --rpg-th-bg      --rpg-dialog-bg
+  --rpg-btn-primary-bg  --rpg-btn-gold-bg   --rpg-btn2-bg    --rpg-input-bg
+  (lista completa y fórmulas por defecto en css/themes/theme-base.css)
+  ====================================================== */
+}
+
+/* Reglas extra opcionales: decoración exclusiva de este tema.
+   Prefija siempre con [data-theme="mi-tema"] para no afectar a los demás. */
+

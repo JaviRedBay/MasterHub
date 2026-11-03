@@ -1,0 +1,61 @@
+LICENCIAS DE TERCEROS / THIRD-PARTY LICENSES
+=============================================
+
+Este proyecto incluye o carga las siguientes librerías y recursos de terceros.
+
+------------------------------------------------------------------------------
+pdf-lib (js/vendor/pdf-lib.min.js) — https://github.com/Hopding/pdf-lib
+------------------------------------------------------------------------------
+MIT License
+
+Copyright (c) 2019 Andrew Dillon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+pdf-lib incorpora a su vez componentes con sus propias licencias permisivas:
+  - pako (MIT y zlib License) — https://github.com/nodeca/pako
+  - @pdf-lib/standard-fonts (MIT; métricas AFM de Adobe bajo la licencia de Adobe)
+  - @pdf-lib/upng (MIT)
+
+------------------------------------------------------------------------------
+Recursos cargados por CDN (no redistribuidos en este repositorio)
+------------------------------------------------------------------------------
+  - Bootstrap 5.3.2 — MIT License, Copyright (c) 2011-2023 The Bootstrap Authors
+    https://github.com/twbs/bootstrap/blob/main/LICENSE
+  - Lucide Icons — ISC License, Copyright (c) Lucide Contributors
+    https://github.com/lucide-icons/lucide/blob/main/LICENSE
+  - Google Fonts (Cinzel, Montserrat, Crimson Pro, MedievalSharp, Exo 2,
+    Orbitron, Rajdhani, Share Tech Mono) — SIL Open Font License 1.1
+    https://openfontlicense.org
+
+------------------------------------------------------------------------------
+Contenido de juego
+------------------------------------------------------------------------------
+Este trabajo incluye material del System Reference Document 5.2.1 ("SRD 5.2.1")
+de Wizards of the Coast LLC, disponible en https://www.dndbeyond.com/srd.
+El SRD 5.2.1 está licenciado bajo la Creative Commons Attribution 4.0
+International License, disponible en
+https://creativecommons.org/licenses/by/4.0/legalcode.
+
+Contenido de fans no oficial permitido por la Política de Contenido de Fans
+(https://company.wizards.com/es/legal/fancontentpolicy). No aprobado ni
+respaldado por Wizards. Partes de los materiales utilizados son propiedad de
+Wizards of the Coast. ©Wizards of the Coast LLC. Dungeons & Dragons y D&D son
+marcas registradas de Wizards of the Coast LLC.
+

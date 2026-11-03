@@ -1,0 +1,71 @@
+/* ==========================================================================
+   TEMA · Claro  (id: claro · modo: light)
+   Interfaz limpia sobre blanco/gris suave, acento índigo y primario granate.
+   Nota: en temas claros --rpg-gold / --rpg-gold-light se usan como COLOR DE
+   TEXTO de acento, por eso son tonos oscuros con contraste AA sobre blanco.
+   ========================================================================== */
+[data-theme="claro"] {
+  --rpg-crimson: #b02a37;
+  --rpg-crimson-light: #c9363f;
+  --rpg-crimson-dark: #7f1d27;
+  --rpg-crimson-text: #a61e2d;
+
+  --rpg-gold: #3b5bdb;
+  --rpg-gold-light: #2b44b0;
+  --rpg-gold-dark: #223596;
+  --rpg-gold-dim: #4f6bdc;
+
+  --rpg-dark-bg: #f1f3f8;
+  --rpg-dark-card: #ffffff;
+  --rpg-dark-card-hover: #eef1f8;
+  --rpg-dark-surface: #f6f7fb;
+  --rpg-dark-border: #ccd2e0;
+  --rpg-parchment: #ffffff;
+  --rpg-parchment-light: #fbfbfe;
+  --rpg-parchment-dark: #f3f4f9;
+
+  --rpg-text-main: #1f2430;
+  --rpg-text-light: #0b0e17;
+  --rpg-text-muted: #5b6475;
+  --rpg-text-gold: #2b44b0;
+  --rpg-text-soft: #3a4254;
+  --rpg-text-on-crimson: #ffffff;
+  --rpg-text-on-gold: #ffffff;
+  --rpg-link: #1f4fd1;
+
+  --rpg-u-bg-dark: #e4e8f2;
+  --rpg-u-bg-black: #d6dbe9;
+  --rpg-u-text-light: #1f2430;
+
+  --rpg-secondary: #6b7385;
+  --rpg-success: #1b7a45;
+  --rpg-danger: #b42318;
+  --rpg-warning: #b7791f;
+  --rpg-info: #0b7285;
+  --rpg-dot-proficient: #c92a2a;
+  --rpg-dot-expertise: #b7791f;
+  --rpg-dot-untrained: #aab2c3;
+
+  --rpg-navbar-bg: linear-gradient(180deg, #ffffff 0%, #eef1f8 100%);
+  --rpg-navbar-brand: var(--rpg-gold-light);
+  --rpg-navbar-fg: #4a5266;
+  --rpg-navbar-fg-muted: #6b7488;
+  --rpg-navbar-tab-bg: rgb(31 36 48 / 0.04);
+
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rpg-gold) 9%, transparent) 0%, transparent 55%),
+    radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--rpg-crimson) 4%, transparent) 0%, transparent 45%);
+  --rpg-card-header-bg: linear-gradient(90deg, color-mix(in srgb, var(--rpg-gold) 13%, #fff) 0%, #ffffff 100%);
+  --rpg-card-header-strong-bg: linear-gradient(90deg, var(--rpg-gold-dark) 0%, var(--rpg-gold) 50%, var(--rpg-gold-dark) 100%);
+  --rpg-card-header-strong-fg: #ffffff;
+  --rpg-tab-active-bg: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+  --rpg-backdrop: rgb(15 20 35 / 0.55);
+
+  --rpg-shadow-rgb: 40 52 90;
+  --rpg-shadow-strength: 0.28;
+  --rpg-glow-strength: 0;
+
+  --font-title: 'Montserrat', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
+  --rpg-title-tracking: 0;
+}

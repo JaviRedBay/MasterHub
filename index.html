@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="fantasia-oscura" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <!-- Aplica el último estilo visual usado ANTES de pintar nada (evita el parpadeo del tema por defecto).
+       El valor lo escribe js/utils/themeManager.js con el formato "id|modo". -->
+  <script>
+    (function () {
+      try {
+        var applied = window.localStorage.getItem('rpg-hub-theme-applied');
+        if (!applied) return;
+        var parts = applied.split('|');
+        var root = document.documentElement;
+        if (parts[0]) root.setAttribute('data-theme', parts[0]);
+        root.setAttribute('data-bs-theme', parts[1] === 'light' ? 'light' : 'dark');
+      } catch (e) { /* localStorage no disponible: se usa el tema por defecto */ }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Roleplay Master Utility Hub | BTRS & D&D 5.5</title>
+  <meta name="description" content="Herramienta modular completa de rol para D&D 5.5 (PHB 2024 / Faerûn) y Calculadora de Precios BTRS.">
+  <!-- Uso privado entre amigos: evitar indexación en buscadores -->
+  <meta name="robots" content="noindex, nofollow, noarchive">
+
+  <!-- Google Fonts: Cinzel & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.2 CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- PDF-Lib: Local vendor con fallback a CDN unpkg -->
+  <script src="js/vendor/pdf-lib.min.js"></script>
+  <script>
+    if (typeof PDFLib === 'undefined' && typeof window.PDFLib === 'undefined') {
+      console.warn('[PDFLib] Versión local no encontrada, cargando desde CDN unpkg...');
+      document.write('<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"><\/script>');
+    }
+  </script>
+
+  <!-- Estilos visuales (temas). Orden: contrato de variables → tema por defecto → resto de temas → componentes.
+       Para añadir un tema: css/themes/_plantilla.css + registrarlo en js/constants/themes.js -->
+  <link rel="stylesheet" href="css/themes/theme-base.css">
+  <link rel="stylesheet" href="css/themes/fantasia-oscura.css">
+  <link rel="stylesheet" href="css/themes/oscuro.css">
+  <link rel="stylesheet" href="css/themes/claro.css">
+  <link rel="stylesheet" href="css/themes/alto-contraste.css">
+  <link rel="stylesheet" href="css/themes/medieval.css">
+  <link rel="stylesheet" href="css/themes/futurista.css">
+  <link rel="stylesheet" href="css/themes/ciberpunk.css">
+
+  <!-- RPG Custom CSS (componentes; solo usa variables de los temas) -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Barra de Navegación Principal -->
+  <header class="rpg-navbar sticky-top">
+    <div class="container-fluid px-3 py-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <!-- Marca y Título -->
+      <div class="d-flex align-items-center gap-2">
+        <span class="fs-3 text-warning">⚔️</span>
+        <div>
+          <div class="rpg-brand-title">Roleplay Master Hub</div>
+          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine</div>
+        </div>
+      </div>
+
+      <!-- Botón de Menú Responsivo (visible en tablets y móviles: d-lg-none) -->
+      <button id="btn-responsive-menu-toggle" class="btn btn-sm btn-outline-warning d-lg-none d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#rpg-responsive-menu" aria-expanded="false" aria-controls="rpg-responsive-menu" aria-label="Abrir Menú de Navegación">
+        <i data-lucide="menu"></i>
+        <span class="fw-bold small" id="responsive-active-tab-title">Master Panel</span>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+      </button>
+
+      <!-- Selector de Campaña Rápido y Herramientas Globales (Escritorio) -->
+      <div class="d-none d-lg-flex align-items-center gap-2 flex-wrap">
+        <div class="input-group input-group-sm" style="max-width: 280px;">
+          <span class="input-group-text bg-dark border-secondary text-warning">
+            <i data-lucide="map"></i>
+          </span>
+          <select id="global-campaign-select" class="form-select form-select-sm bg-dark text-light border-secondary" title="Seleccionar Campaña Activa">
+            <!-- Se llena dinámicamente -->
+          </select>
+        </div>
+
+        <button id="btn-quick-dice" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1" title="Tirador de Dados Rápido">
+          <i data-lucide="dices"></i>
+          <span>Tirar Dados</span>
+        </button>
+
+        <!-- Selector de estilo visual (menú generado por js/utils/themeManager.js) -->
+        <div class="dropdown" id="theme-switcher">
+          <button id="theme-toggle" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" title="Cambiar estilo visual">
+            <i data-lucide="palette"></i>
+            <span id="theme-current-name">Estilo</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end rpg-theme-menu" id="theme-menu" aria-labelledby="theme-toggle"></ul>
+        </div>
+
+        <!-- Estado de Repositorio de Ficheros (Disco / Google Drive) -->
+        <button id="btn-repo-status" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Estado del Repositorio de Ficheros (Disco / Google Drive)">
+          <i data-lucide="hard-drive" id="repo-status-icon"></i>
+          <span id="repo-status-label" class="d-none d-xl-inline">Modo Navegador</span>
+        </button>
+
+        <button id="btn-backup-modal" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1" title="Copia de Seguridad y Repositorio de Ficheros">
+          <i data-lucide="database"></i>
+          <span>Datos</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menú Colapsable para Pantallas Pequeñas / Pestañas de Navegación -->
+    <div id="rpg-responsive-menu" class="collapse d-lg-block border-top border-secondary border-opacity-25">
+      <!-- Herramientas globales en modo móvil/tablet -->
+      <div class="d-lg-none px-3 pt-2 pb-2 border-bottom border-secondary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="input-group input-group-sm flex-grow-1" style="min-width: 180px;">
+          <span class="input-group-text bg-dark border-secondary text-warning">
+            <i data-lucide="map"></i>
+          </span>
+          <select id="mobile-campaign-select" class="form-select form-select-sm bg-dark text-light border-secondary" title="Seleccionar Campaña Activa">
+            <!-- Se sincroniza con global-campaign-select -->
+          </select>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+          <button id="btn-mobile-quick-dice" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1" title="Tirar Dados">
+            <i data-lucide="dices"></i> Dados
+          </button>
+          <button id="btn-mobile-repo" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Carpeta / Drive">
+            <i data-lucide="hard-drive"></i>
+          </button>
+          <button id="btn-mobile-backup" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1" title="Datos">
+            <i data-lucide="database"></i> Datos
+          </button>
+        </div>
+      </div>
+
+      <!-- Pestañas de Navegación -->
+      <nav class="container-fluid px-3 pt-1">
+        <ul class="nav rpg-nav-tabs flex-row flex-nowrap overflow-x-auto" id="app-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-master-panel-btn" data-tab="master-panel" type="button" role="tab">
+              <i data-lucide="shield-alert"></i>
+              <span>Master Panel</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-wizard-btn" data-tab="wizard" type="button" role="tab">
+              <i data-lucide="sparkles"></i>
+              <span>Asistente Creación</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-sheet-btn" data-tab="sheet" type="button" role="tab">
+              <i data-lucide="scroll"></i>
+              <span>Hoja Oficial</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btrs-btn" data-tab="btrs" type="button" role="tab">
+              <i data-lucide="coins"></i>
+              <span>Calculadora BTRS</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-campaigns-btn" data-tab="campaigns" type="button" role="tab">
+              <i data-lucide="users"></i>
+              <span>Campañas &amp; Roster</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-names-btn" data-tab="names" type="button" role="tab">
+              <i data-lucide="book-open"></i>
+              <span>Generador de Nombres</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal de Vistas -->
+  <main class="container-fluid px-3 py-3">
+    <!-- 1. Master Panel -->
+    <section id="view-master-panel" class="tab-view active">
+      <div id="master-panel-container">
+        <!-- Renderizado dinámico por js/modules/masterPanel.js -->
+      </div>
+    </section>
+
+    <!-- 2. Asistente de Creación (Wizard 7 Pasos) -->
+    <section id="view-wizard" class="tab-view d-none">
+      <div id="wizard-container">
+        <!-- Renderizado dinámico por js/modules/characterWizard.js -->
+      </div>
+    </section>
+
+    <!-- 3. Hoja de Personaje Oficial & Versión Imprimible -->
+    <section id="view-sheet" class="tab-view d-none">
+      <div id="sheet-container">
+        <!-- Renderizado dinámico por js/modules/characterSheet.js -->
+      </div>
+    </section>
+
+    <!-- 4. Calculadora BTRS y Generador de Tiendas -->
+    <section id="view-btrs" class="tab-view d-none">
+      <div id="btrs-container">
+        <!-- Renderizado dinámico por js/modules/btrsCalculator.js -->
+      </div>
+    </section>
+
+    <!-- 5. Hub de Campañas y Gestión de Personajes -->
+    <section id="view-campaigns" class="tab-view d-none">
+      <div id="campaigns-container">
+        <!-- Renderizado dinámico por js/modules/dnd55Manager.js -->
+      </div>
+    </section>
+
+    <!-- 6. Generador de Nombres por Especie -->
+    <section id="view-names" class="tab-view d-none">
+      <div id="names-container">
+        <!-- Renderizado dinámico por js/modules/nameGenerator.js -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Aviso legal y atribuciones (SRD 5.2.1 CC-BY-4.0, contenido de fans, librerías de terceros) -->
+  <footer class="rpg-legal-footer container-fluid py-3 mt-4 small text-center"
+          style="color: var(--rpg-text-soft); border-top: 1px solid var(--rpg-line);">
+    <p class="mb-1">
+      Este trabajo incluye material del System Reference Document 5.2.1 ("SRD 5.2.1") de Wizards of the Coast LLC,
+      disponible en <a href="https://www.dndbeyond.com/srd" target="_blank" rel="noopener" style="color: var(--rpg-gold);">https://www.dndbeyond.com/srd</a>.
+      El SRD 5.2.1 está licenciado bajo la
+      <a href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank" rel="noopener" style="color: var(--rpg-gold);">Creative Commons Attribution 4.0 International License</a>.
+    </p>
+    <p class="mb-1">
+      Contenido de fans no oficial permitido por la
+      <a href="https://company.wizards.com/es/legal/fancontentpolicy" target="_blank" rel="noopener" style="color: var(--rpg-gold);">Política de Contenido de Fans</a>.
+      No aprobado ni respaldado por Wizards. Partes de los materiales utilizados son propiedad de Wizards of the Coast. ©Wizards of the Coast LLC.
+      Dungeons &amp; Dragons y D&amp;D son marcas registradas de Wizards of the Coast LLC.
+    </p>
+    <p class="mb-0">
+      Proyecto gratuito y sin ánimo de lucro. Librerías de terceros:
+      <a href="js/vendor/THIRD_PARTY_LICENSES.txt" target="_blank" rel="noopener" style="color: var(--rpg-gold);">licencias</a>.
+    </p>
+  </footer>
+
+  <!-- Modal / Diálogo Accesible para Tirador de Dados Rápido -->
+  <dialog id="dice-modal" class="rpg-dialog p-0">
+    <div class="rpg-card border-0">
+      <div class="rpg-card-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0 text-warning d-flex align-items-center gap-2">
+          <i data-lucide="dices"></i> Simulador de Tiradas TTRPG
+        </h5>
+        <button id="close-dice-modal" type="button" class="btn btn-sm btn-outline-light" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="p-4">
+        <!-- Botones rápidos de dados -->
+        <div class="row g-2 mb-3">
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="20">d20</button>
+          </div>
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="12">d12</button>
+          </div>
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="10">d10</button>
+          </div>
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="8">d8</button>
+          </div>
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="6">d6</button>
+          </div>
+          <div class="col-4 col-sm-2">
+            <button class="btn btn-rpg-secondary w-100 py-2 btn-roll-die" data-sides="4">d4</button>
+          </div>
+        </div>
+
+        <!-- Opciones de Tirada Especial -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button id="btn-roll-adv" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+            <i data-lucide="trending-up"></i> Con Ventaja
+          </button>
+          <button id="btn-roll-dis" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1">
+            <i data-lucide="trending-down"></i> Con Desventaja
+          </button>
+          <button id="btn-roll-4d6" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
+            <i data-lucide="sparkles"></i> 4d6 (Descarta Menor)
+          </button>
+        </div>
+
+        <!-- Expresión manual -->
+        <div class="input-group mb-3">
+          <input type="text" id="dice-custom-input" class="form-control bg-dark border-secondary text-light" placeholder="Ej: 2d6+4, 1d20+7, 8d6">
+          <button id="btn-custom-roll" class="btn btn-rpg-primary">Tirar Fórmula</button>
+        </div>
+
+        <!-- Área de Resultado de Dados -->
+        <div id="dice-result-box" class="p-3 rounded bg-dark border border-secondary text-center">
+          <div class="text-secondary small mb-1">Resultado de la Tirada</div>
+          <div id="dice-result-val" class="display-4 fw-bold text-warning">-</div>
+          <div id="dice-result-breakdown" class="text-light small mt-1">Haz clic en un dado para comenzar.</div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal de Respaldo de Datos y Restauración -->
+  <dialog id="backup-modal" class="rpg-dialog p-0">
+    <div class="rpg-card border-0">
+      <div class="rpg-card-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0 text-warning d-flex align-items-center gap-2">
+          <i data-lucide="database"></i> Gestión y Respaldo de Datos
+        </h5>
+        <button id="close-backup-modal" type="button" class="btn btn-sm btn-outline-light" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="p-4" style="max-height: 85vh; overflow-y: auto;">
+        <!-- SECCIÓN 1: REPOSITORIO DE FICHEROS FÍSICOS (DISCO / GOOGLE DRIVE) -->
+        <div class="p-3 mb-4 rounded border border-warning border-opacity-25 bg-dark bg-opacity-50">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="m-0 text-warning d-flex align-items-center gap-2">
+              <i data-lucide="folder-git-2"></i> Repositorio de Ficheros (Disco / Google Drive)
+            </h6>
+            <span id="repo-badge-status" class="badge bg-secondary">Sin vincular</span>
+          </div>
+          <p class="text-secondary small mb-3">
+            Guarda y lee automáticamente tus personajes y campañas directamente en archivos físicos <code>.json</code> en tu disco local o en tu cuenta de <strong>Google Drive</strong>. Los cambios se guardarán de forma continua sin perder nada al recargar o cerrar la web.
+          </p>
+
+          <!-- Aviso de compatibilidad para Firefox / Safari -->
+          <div id="firefox-repo-notice" class="alert alert-dark border-warning border-opacity-50 small mb-3 p-2 d-none">
+            <div class="fw-bold text-warning d-flex align-items-center gap-2 mb-1">
+              <i data-lucide="alert-circle"></i> Compatibilidad en Firefox
+            </div>
+            <div class="text-light">
+              Firefox bloquea el acceso directo a carpetas de tu disco por políticas de privacidad de Mozilla. Para guardar en carpetas locales o tu carpeta de Google Drive de escritorio, <strong>abre esta web en Google Chrome, Microsoft Edge o Brave</strong> (funciona al instante con un clic). O bien, conecta directamente con <strong>Google Drive en la Nube</strong> abajo.
+            </div>
+          </div>
+
+          <div id="repo-connected-details" class="mb-3 d-none p-2 rounded bg-black bg-opacity-25 small border border-secondary border-opacity-25">
+            <div class="text-light fw-bold d-flex align-items-center gap-2 mb-1">
+              <i data-lucide="folder-check" class="text-success"></i>
+              Repositorio vinculado: <span id="repo-folder-name" class="text-warning"></span>
+            </div>
+            <div class="text-secondary">
+              Último guardado: <span id="repo-last-sync" class="text-light">-</span>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column gap-2 mb-3">
+            <!-- Opción A: Carpeta Local -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <button id="btn-connect-folder" type="button" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-2">
+                <i data-lucide="folder-plus"></i>
+                <span id="btn-connect-folder-text">Vincular Carpeta en Disco (Chrome/Edge/Brave)</span>
+              </button>
+            </div>
+
+            <!-- Opción B: Google Drive Cloud -->
+            <div class="p-2 rounded bg-black bg-opacity-25 border border-secondary border-opacity-25 mt-2">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="small fw-bold text-light d-flex align-items-center gap-1">
+                    <i data-lucide="cloud"></i> Sincronización Google Drive (Nube)
+                  </span>
+                  <button type="button" class="btn btn-link text-warning p-0 text-decoration-none d-flex align-items-center gap-1" id="btn-toggle-gdrive-help" data-bs-toggle="collapse" data-bs-target="#gdrive-help-collapse" aria-expanded="false" aria-controls="gdrive-help-collapse" title="¿Cómo obtener tu Client ID de Google?">
+                    <i data-lucide="info" style="width: 15px; height: 15px;"></i>
+                    <span class="small" style="font-size: 0.75rem;">¿Cómo obtener el Client ID?</span>
+                  </button>
+                </div>
+                <span class="badge bg-secondary small">Compatible con Firefox y Móvil</span>
+              </div>
+
+              <!-- Guía desplegable para obtener el Client ID -->
+              <div id="gdrive-help-collapse" class="collapse mb-2 p-2 rounded bg-dark border border-secondary border-opacity-50 small text-light">
+                <div class="fw-bold text-warning mb-1 d-flex align-items-center gap-1">
+                  <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i> Pasos para obtener tu Client ID en Google Cloud (Gratuito):
+                </div>
+                <ol class="ps-3 mb-2 text-secondary" style="font-size: 0.8rem; line-height: 1.45;">
+                  <li>Accede a la consola de desarrollador: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="text-warning text-decoration-underline">Google Cloud Console &rarr; Credenciales</a>.</li>
+                  <li>Crea un proyecto nuevo (por ejemplo: <em>"DnD Master Hub"</em>) o selecciona uno existente.</li>
+                  <li>En el menú lateral, entra en <strong>Pantalla de consentimiento de OAuth</strong> &rarr; Elige tipo <strong>"Externo"</strong> &rarr; Asigna un nombre a la app y tu correo.</li>
+                  <li>En el menú lateral, ve a <strong>APIs y servicios &rarr; Biblioteca</strong>, busca <strong>Google Drive API</strong> y haz clic en <strong>HABILITAR</strong>.</li>
+                  <li>En <strong>Credenciales</strong>, pulsa <strong>+ Crear credenciales</strong> &rarr; <strong>ID de cliente de OAuth</strong>.</li>
+                  <li>En <em>Tipo de aplicación</em> elige <strong>"Aplicación web"</strong>.</li>
+                  <li>En <strong>Orígenes autorizados de JavaScript</strong> añade la URL exacta donde abres la app (ejemplo: <code>http://localhost:8080</code> o <code>http://127.0.0.1:5500</code> o tu dominio web).</li>
+                  <li>Haz clic en <strong>Crear</strong> y copia el <strong>ID de cliente</strong> resultante (terminado en <code>.apps.googleusercontent.com</code>).</li>
+                  <li><strong class="text-warning">Importante para evitar Error 403 (access_denied)</strong>: Ve a <strong>Pantalla de consentimiento de OAuth &rarr; Usuarios de prueba</strong> y añade tu propia cuenta de correo de Gmail con la que vas a iniciar sesión.</li>
+                </ol>
+                <div class="text-secondary fst-italic" style="font-size: 0.75rem;">
+                  Nota: Solo necesitas hacer esto una vez; la web recordará tu Client ID en futuras sesiones.
+                </div>
+              </div>
+
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-dark border-secondary text-secondary">Client ID</span>
+                <input type="text" id="gdrive-client-id-input" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="ej: 123456789-xxxx.apps.googleusercontent.com">
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#gdrive-help-collapse" title="Ver guía paso a paso">
+                  <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
+              <button id="btn-connect-gdrive" type="button" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-2">
+                <i data-lucide="log-in"></i> Conectar con Google Drive
+              </button>
+            </div>
+
+            <!-- Botones de gestión cuando está conectado -->
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <button id="btn-sync-all-folder" type="button" class="btn btn-sm btn-rpg-secondary d-none align-items-center gap-2">
+                <i data-lucide="refresh-cw"></i> Guardar Todo en el Repositorio
+              </button>
+              <button id="btn-load-all-folder" type="button" class="btn btn-sm btn-outline-info d-none align-items-center gap-2">
+                <i data-lucide="folder-down"></i> Recargar desde Repositorio
+              </button>
+              <button id="btn-disconnect-folder" type="button" class="btn btn-sm btn-outline-danger d-none align-items-center gap-2">
+                <i data-lucide="unlink"></i> Desvincular
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: COPIAS DE SEGURIDAD MANUALES Y RESTABLECIMIENTO -->
+        <h6 class="text-light small fw-bold mb-2 text-uppercase d-flex align-items-center gap-2">
+          <i data-lucide="file-code"></i> Copia Rápida en Archivo Unificado (JSON)
+        </h6>
+        <p class="text-secondary small">
+          Descarga o importa un archivo JSON único con toda la base de datos para transferir a otro dispositivo o crear copias de seguridad puntuales.
+        </p>
+        <div class="d-grid gap-2 mb-3">
+          <button id="btn-export-json" class="btn btn-sm btn-rpg-secondary d-flex align-items-center justify-content-center gap-2">
+            <i data-lucide="download"></i> Descargar Copia Completa (JSON)
+          </button>
+          <label class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center gap-2 m-0 cursor-pointer">
+            <i data-lucide="upload"></i> Cargar Archivo de Respaldo (JSON)
+            <input type="file" id="import-json-file" accept=".json" class="d-none">
+          </label>
+        </div>
+
+        <div class="border-top border-secondary border-opacity-25 pt-3">
+          <button id="btn-reset-data" class="btn btn-outline-danger btn-sm w-100">
+            Restablecer a Datos Iniciales Canónicos
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Contenedor para Notificaciones Toast -->
+  <div id="rpg-toast-container" class="rpg-toast-container"></div>
+
+  <!-- Bootstrap 5 JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+  <!-- Módulo Principal ES6 -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

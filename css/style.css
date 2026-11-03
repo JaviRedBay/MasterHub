@@ -1,0 +1,1331 @@
+/* ==========================================================================
+   Roleplay Master Utility Hub - Hoja de estilos de componentes
+   --------------------------------------------------------------------------
+   ESTE ARCHIVO NO CONTIENE COLORES FIJOS: todo se expresa con variables
+   (design tokens) para que el aspecto completo pueda cambiarse con un solo
+   atributo  <html data-theme="...">.
+
+     css/themes/theme-base.css      contrato de variables y valores derivados
+     css/themes/<tema>.css          paleta de cada estilo visual
+     css/themes/_plantilla.css      plantilla para crear un tema nuevo
+     js/constants/themes.js         registro de temas (nombre, modo, tipografías)
+     js/utils/themeManager.js       aplica, recuerda y expone el tema activo
+
+   Excepción deliberada: la hoja A4 imprimible (.sheet-a4-paper) y las reglas
+   @media print usan blanco/negro fijos, porque representan papel físico.
+   Optimizado para D&D 5.5, tablets e impresión A4.
+   ========================================================================== */
+
+/* Tipografía base y fondo inmersivo */
+body {
+  font-family: var(--font-body);
+  background-color: var(--rpg-dark-bg);
+  background-image: var(--rpg-body-bg-image);
+  background-attachment: fixed;
+  color: var(--rpg-text-main);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .rpg-font-title {
+  font-family: var(--font-title);
+  letter-spacing: var(--rpg-title-tracking);
+  text-transform: var(--rpg-title-transform);
+}
+
+/* ==========================================================================
+   Clases de Bootstrap con color fijo, redirigidas a la paleta del tema.
+   Sin esto, .bg-dark / .text-light / .text-warning ... serían idénticos en
+   todos los estilos y romperían los temas claros. Respetan las utilidades de
+   opacidad de Bootstrap (.bg-opacity-*, .text-opacity-*).
+   ========================================================================== */
+.bg-dark {
+  background-color: color-mix(in srgb, var(--rpg-u-bg-dark) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important;
+}
+
+.bg-black {
+  background-color: color-mix(in srgb, var(--rpg-u-bg-black) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important;
+}
+
+.bg-secondary {
+  background-color: color-mix(in srgb, var(--rpg-secondary) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-light {
+  color: color-mix(in srgb, var(--rpg-u-text-light) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-secondary {
+  color: color-mix(in srgb, var(--rpg-secondary) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-warning {
+  color: color-mix(in srgb, var(--rpg-warning) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-info {
+  color: color-mix(in srgb, var(--rpg-info) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-success {
+  color: color-mix(in srgb, var(--rpg-success) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.text-danger {
+  color: color-mix(in srgb, var(--rpg-danger) calc(var(--bs-text-opacity, 1) * 100%), transparent) !important;
+}
+
+.border-secondary {
+  border-color: color-mix(in srgb, var(--rpg-secondary) calc(var(--bs-border-opacity, 1) * 100%), transparent) !important;
+}
+
+.border-warning {
+  border-color: color-mix(in srgb, var(--rpg-warning) calc(var(--bs-border-opacity, 1) * 100%), transparent) !important;
+}
+
+/* Temas claros: variantes de Bootstrap pensadas para fondo oscuro */
+[data-bs-theme="light"] .btn-outline-light {
+  --bs-btn-color: var(--rpg-text-main);
+  --bs-btn-border-color: var(--rpg-btn2-border);
+  --bs-btn-hover-color: var(--rpg-text-light);
+  --bs-btn-hover-bg: var(--rpg-dark-card-hover);
+  --bs-btn-hover-border-color: var(--rpg-gold);
+  --bs-btn-active-color: var(--rpg-text-light);
+  --bs-btn-active-bg: var(--rpg-dark-card-hover);
+  --bs-btn-active-border-color: var(--rpg-gold);
+}
+
+.btn-outline-warning {
+  --bs-btn-color: var(--rpg-warning);
+  --bs-btn-border-color: var(--rpg-warning);
+  --bs-btn-hover-color: var(--rpg-text-on-gold, #fff);
+  --bs-btn-hover-bg: var(--rpg-warning);
+  --bs-btn-hover-border-color: var(--rpg-warning);
+  --bs-btn-active-color: var(--rpg-text-on-gold, #fff);
+  --bs-btn-active-bg: var(--rpg-warning);
+  --bs-btn-active-border-color: var(--rpg-warning);
+  color: var(--rpg-warning) !important;
+  border-color: var(--rpg-warning) !important;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:active,
+.btn-outline-warning:focus,
+.btn-outline-warning.active {
+  color: var(--rpg-text-on-gold, #fff) !important;
+  background-color: var(--rpg-warning) !important;
+  border-color: var(--rpg-warning) !important;
+}
+
+[data-bs-theme="light"] .btn-close-white {
+  filter: none;
+}
+
+[data-bs-theme="light"] .table-dark {
+  --bs-table-color: var(--rpg-text-main);
+  --bs-table-bg: var(--rpg-dark-card);
+  --bs-table-border-color: var(--rpg-dark-border);
+  --bs-table-striped-bg: var(--rpg-dark-card-hover);
+  --bs-table-striped-color: var(--rpg-text-main);
+  --bs-table-hover-bg: var(--rpg-dark-card-hover);
+  --bs-table-hover-color: var(--rpg-text-main);
+}
+
+/* Barra de navegación superior */
+.rpg-navbar {
+  background: var(--rpg-navbar-bg);
+  border-bottom: var(--rpg-border-w-strong) solid var(--rpg-gold);
+  box-shadow: var(--rpg-shadow-nav), var(--rpg-glow-soft);
+}
+
+.rpg-brand-title {
+  font-family: var(--font-title);
+  color: var(--rpg-navbar-brand);
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-shadow: var(--rpg-text-shadow), var(--rpg-text-glow);
+  letter-spacing: 1px;
+}
+
+.rpg-brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--rpg-navbar-fg-muted);
+  letter-spacing: 1px;
+}
+
+/* Pestañas de navegación superiores */
+.rpg-nav-tabs {
+  border-bottom: none;
+  gap: 6px;
+}
+
+.rpg-nav-tabs .nav-link {
+  color: var(--rpg-navbar-fg);
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: var(--rpg-border-w) solid transparent;
+  border-radius: var(--rpg-radius) var(--rpg-radius) 0 0;
+  background: var(--rpg-navbar-tab-bg);
+  transition: all 0.2s ease-in-out;
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.rpg-nav-tabs .nav-link:hover {
+  color: var(--rpg-navbar-hover-fg);
+  background: var(--rpg-tint-soft);
+  border-color: var(--rpg-line-mid) var(--rpg-line-mid) transparent;
+}
+
+.rpg-nav-tabs .nav-link.active {
+  color: var(--rpg-gold-light);
+  background: var(--rpg-tab-active-bg);
+  border-color: var(--rpg-gold) var(--rpg-gold) var(--rpg-dark-card);
+  border-bottom: 3px solid var(--rpg-crimson);
+  box-shadow: 0 -3px 12px color-mix(in srgb, var(--rpg-gold) min(100%, calc(25% * var(--rpg-glow-strength))), transparent);
+  text-shadow: var(--rpg-text-glow);
+}
+
+/* Tarjetas y Contenedores Temáticos */
+.rpg-card {
+  background: var(--rpg-card-bg);
+  border: var(--rpg-border-w) solid var(--rpg-line);
+  border-radius: var(--rpg-radius-lg);
+  box-shadow: var(--rpg-shadow-lg), var(--rpg-inset-highlight);
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rpg-card:hover {
+  border-color: var(--rpg-line-strong);
+}
+
+.rpg-card-header {
+  background: var(--rpg-card-header-bg);
+  border-bottom: var(--rpg-border-w-strong) solid var(--rpg-crimson);
+  padding: 12px 18px;
+  border-radius: var(--rpg-radius-lg) var(--rpg-radius-lg) 0 0;
+  box-shadow: inset 0 -1px 0 var(--rpg-line-mid);
+}
+
+/* Códice de Fantasía D&D (Hoja Oficial Interactiva) */
+.rpg-card-parchment {
+  background: var(--rpg-codex-bg) !important;
+  color: var(--rpg-text-main) !important;
+  border: var(--rpg-border-w-strong) solid var(--rpg-crimson);
+  box-shadow: 0 0 0 1px var(--rpg-line-mid), var(--rpg-shadow-xl), inset 0 0 50px rgb(var(--rpg-shadow-rgb) / calc(0.45 * var(--rpg-shadow-strength)));
+  border-radius: var(--rpg-radius-lg);
+  position: relative;
+}
+
+.rpg-card-parchment .rpg-card-header {
+  background: var(--rpg-card-header-strong-bg);
+  color: var(--rpg-card-header-strong-fg);
+  border-bottom: var(--rpg-border-w-strong) solid var(--rpg-gold);
+}
+
+/* Cajas y Contenedores de la Hoja de Personaje */
+.rpg-card-parchment,
+.rpg-parchment-box {
+  background-color: var(--rpg-parchment) !important;
+  color: var(--rpg-text-main) !important;
+}
+
+.rpg-parchment-box {
+  background: var(--rpg-box-bg) !important;
+  border: var(--rpg-border-w) solid var(--rpg-line) !important;
+  box-shadow: var(--rpg-shadow-md), var(--rpg-inset-highlight);
+  border-radius: var(--rpg-radius);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.rpg-parchment-box[title]:hover,
+.rpg-parchment-box:hover {
+  border-color: var(--rpg-line-strong) !important;
+  box-shadow: var(--rpg-shadow-lg), var(--rpg-glow-soft);
+}
+
+.rpg-parchment-box-header {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: var(--rpg-label-tracking);
+  color: var(--rpg-gold) !important;
+  border-bottom: var(--rpg-border-w-strong) solid var(--rpg-crimson);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  text-shadow: var(--rpg-text-shadow);
+}
+
+/* Legibilidad de textos secundarios dentro de la hoja en cualquier tema */
+.rpg-card-parchment .text-muted,
+.rpg-parchment-box .text-muted,
+.rpg-card-parchment .text-secondary,
+.rpg-parchment-box .text-secondary {
+  color: var(--rpg-text-muted) !important;
+}
+
+.rpg-card-parchment .text-dark,
+.rpg-parchment-box .text-dark {
+  color: var(--rpg-text-main) !important;
+}
+
+.rpg-label {
+  font-family: var(--font-title);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--rpg-label-tracking);
+  color: var(--rpg-gold);
+  margin-bottom: 3px;
+}
+
+.rpg-subdesc {
+  font-size: 0.8rem;
+  color: var(--rpg-text-soft) !important;
+  line-height: 1.4;
+}
+
+/* Píldoras de Navegación del Panel Inferior */
+.rpg-filter-pill {
+  background-color: var(--rpg-dark-surface);
+  color: var(--rpg-text-soft);
+  border: var(--rpg-border-w) solid var(--rpg-dark-border);
+  border-radius: var(--rpg-radius);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  user-select: none;
+}
+
+.rpg-filter-pill:hover {
+  background-color: var(--rpg-dark-card-hover);
+  color: var(--rpg-gold-light);
+  border-color: var(--rpg-line-strong);
+  box-shadow: var(--rpg-glow-soft);
+}
+
+.rpg-filter-pill.active {
+  background: var(--rpg-pill-active-bg);
+  color: var(--rpg-text-on-crimson) !important;
+  border-color: var(--rpg-gold);
+  box-shadow: var(--rpg-shadow-sm), var(--rpg-glow);
+}
+
+/* Scrollbars temáticos para pergamino y cajas RPG */
+.rpg-parchment-box::-webkit-scrollbar,
+.rpg-parchment-box *::-webkit-scrollbar,
+.rpg-card::-webkit-scrollbar,
+.rpg-card *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rpg-parchment-box::-webkit-scrollbar-track,
+.rpg-parchment-box *::-webkit-scrollbar-track,
+.rpg-card::-webkit-scrollbar-track,
+.rpg-card *::-webkit-scrollbar-track {
+  background: var(--rpg-scroll-track);
+  border-radius: 3px;
+}
+
+.rpg-parchment-box::-webkit-scrollbar-thumb,
+.rpg-parchment-box *::-webkit-scrollbar-thumb,
+.rpg-card::-webkit-scrollbar-thumb,
+.rpg-card *::-webkit-scrollbar-thumb {
+  background: var(--rpg-scroll-thumb);
+  border-radius: 3px;
+  border: 1px solid var(--rpg-line-faint);
+}
+
+.rpg-parchment-box::-webkit-scrollbar-thumb:hover,
+.rpg-parchment-box *::-webkit-scrollbar-thumb:hover,
+.rpg-card::-webkit-scrollbar-thumb:hover,
+.rpg-card *::-webkit-scrollbar-thumb:hover {
+  background: var(--rpg-crimson);
+  border-color: var(--rpg-gold);
+}
+
+/* Ajustes de tablas dentro de cajas de la Hoja de Personaje */
+.rpg-parchment-box .table,
+.rpg-card .table {
+  color: var(--rpg-text-main) !important;
+  background-color: transparent !important;
+  border-color: var(--rpg-line-faint) !important;
+}
+
+.rpg-parchment-box .table th,
+.rpg-card .table th {
+  background: var(--rpg-th-bg) !important;
+  color: var(--rpg-gold) !important;
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: var(--rpg-border-w-strong) solid var(--rpg-crimson) !important;
+  padding: 6px 8px;
+}
+
+.rpg-parchment-box .table td,
+.rpg-card .table td {
+  padding: 6px 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rpg-row-line) !important;
+}
+
+.rpg-parchment-box .table tbody tr:hover,
+.rpg-card .table tbody tr:hover {
+  background-color: var(--rpg-tint-hover) !important;
+}
+
+/* Tarjetas de Dotes y Bendiciones */
+.rpg-feat-card {
+  background: var(--rpg-feat-bg) !important;
+  border: var(--rpg-border-w) solid var(--rpg-line-faint) !important;
+  border-radius: var(--rpg-radius);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  color: var(--rpg-text-main) !important;
+  box-shadow: var(--rpg-shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rpg-feat-card:hover {
+  border-color: var(--rpg-line-strong) !important;
+  box-shadow: var(--rpg-shadow-md), var(--rpg-glow-soft);
+}
+
+.rpg-feat-title {
+  color: var(--rpg-gold-light) !important;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.rpg-feat-badge {
+  background: var(--rpg-tint-soft) !important;
+  color: var(--rpg-gold) !important;
+  border: var(--rpg-border-w) solid var(--rpg-line-mid) !important;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--rpg-radius-sm);
+  display: inline-block;
+}
+
+.rpg-blessing-badge {
+  background: var(--rpg-tint-medium) !important;
+  color: var(--rpg-gold-light) !important;
+  border: var(--rpg-border-w) solid var(--rpg-line-strong) !important;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--rpg-radius-sm);
+  display: inline-block;
+}
+
+/* Evitar texto ilegible sobre insignias/botones de advertencia (acento del tema) */
+.badge.bg-warning,
+.text-bg-warning,
+.btn-warning,
+[data-bs-theme="dark"] .badge.bg-warning,
+[data-bs-theme="dark"] .bg-warning.text-dark,
+[data-bs-theme="dark"] .badge.bg-warning.text-dark {
+  background-color: var(--rpg-gold) !important;
+  color: var(--rpg-text-on-gold) !important;
+  font-weight: 700;
+}
+
+.rpg-feat-desc {
+  color: var(--rpg-text-soft) !important;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-top: 5px;
+  white-space: pre-line;
+}
+
+/* Bloque destacado para elecciones en dotes */
+.rpg-feat-choices {
+  background: var(--rpg-crimson-tint) !important;
+  border: var(--rpg-border-w) solid var(--rpg-line-mid) !important;
+  border-left: 3px solid var(--rpg-crimson) !important;
+  border-radius: var(--rpg-radius-sm);
+  padding: 7px 12px;
+  margin: 8px 0;
+  color: var(--rpg-text-main) !important;
+}
+
+.rpg-feat-choices-title {
+  color: var(--rpg-crimson-text) !important;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.rpg-feat-choices-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--rpg-text-main) !important;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.rpg-feat-choices-list li {
+  color: var(--rpg-text-main) !important;
+  margin-bottom: 2px;
+}
+
+/* Insignias de Habilidades y Desglose Visual */
+.rpg-skill-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--rpg-gold);
+  background-color: var(--rpg-tint-soft);
+  border: var(--rpg-border-w) solid var(--rpg-line-mid);
+  border-radius: var(--rpg-radius-sm);
+}
+
+.rpg-skill-dot-proficient {
+  color: var(--rpg-dot-proficient);
+  font-size: 0.85rem;
+  text-shadow: 0 0 6px color-mix(in srgb, currentColor min(100%, calc(60% * var(--rpg-glow-strength))), transparent);
+}
+
+.rpg-skill-dot-expertise {
+  color: var(--rpg-dot-expertise);
+  font-size: 0.85rem;
+  text-shadow: 0 0 8px color-mix(in srgb, currentColor min(100%, calc(80% * var(--rpg-glow-strength))), transparent);
+}
+
+.rpg-skill-dot-untrained {
+  color: var(--rpg-dot-untrained);
+  font-size: 0.85rem;
+}
+
+/* Competencias de armadura/escudo sin dominar (legibles en cualquier tema) */
+.rpg-prof-off {
+  background-color: var(--rpg-dark-surface);
+  color: var(--rpg-text-soft);
+}
+
+/* Barra de monedas del inventario */
+.rpg-currency-bar {
+  background: var(--rpg-currency-bg);
+  border: var(--rpg-border-w) solid var(--rpg-line-mid);
+}
+
+/* Soporte visual para Desglose al hacer Hover */
+[title] {
+  cursor: help;
+}
+
+/* Botones Táctiles TTRPG */
+.btn-rpg-primary {
+  background: var(--rpg-btn-primary-bg);
+  color: var(--rpg-text-on-crimson);
+  border: var(--rpg-border-w) solid var(--rpg-gold);
+  border-radius: var(--rpg-radius);
+  font-family: var(--font-title);
+  font-weight: 600;
+  min-height: var(--touch-target);
+  padding: 8px 18px;
+  box-shadow: var(--rpg-shadow-md);
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-rpg-primary:hover {
+  background: var(--rpg-btn-primary-bg-hover);
+  color: var(--rpg-text-on-crimson);
+  border-color: var(--rpg-gold-light);
+  box-shadow: var(--rpg-shadow-lg), var(--rpg-glow);
+}
+
+.btn-rpg-gold {
+  background: var(--rpg-btn-gold-bg);
+  color: var(--rpg-text-on-gold);
+  border: var(--rpg-border-w) solid var(--rpg-gold-light);
+  border-radius: var(--rpg-radius);
+  font-family: var(--font-title);
+  font-weight: 700;
+  min-height: var(--touch-target);
+  padding: 8px 18px;
+  box-shadow: var(--rpg-shadow-md);
+}
+
+.btn-rpg-gold:hover {
+  background: var(--rpg-btn-gold-bg-hover);
+  color: var(--rpg-text-on-gold);
+  box-shadow: var(--rpg-shadow-lg), var(--rpg-glow);
+}
+
+.btn-rpg-secondary {
+  background: var(--rpg-btn2-bg);
+  color: var(--rpg-btn2-fg);
+  border: var(--rpg-border-w) solid var(--rpg-btn2-border);
+  border-radius: var(--rpg-radius);
+  font-family: var(--font-body);
+  font-weight: 500;
+  min-height: var(--touch-target);
+}
+
+.btn-rpg-secondary:hover {
+  background: var(--rpg-btn2-bg-hover);
+  color: var(--rpg-text-light);
+  border-color: var(--rpg-gold);
+}
+
+/* Botones circulares para contadores táctiles */
+.btn-counter {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Badges e Insignias RPG */
+.badge-rpg {
+  font-family: var(--font-title);
+  letter-spacing: 0.5px;
+  padding: 5px 10px;
+  border-radius: var(--rpg-radius-sm);
+}
+
+/* Rarezas de objetos: color semántico, igual en todos los temas */
+.badge-rarity-comun { background-color: #555e69; color: #fff; }
+.badge-rarity-uncomun { background-color: #1e7e34; color: #fff; }
+.badge-rarity-raro { background-color: #0b5ed7; color: #fff; }
+.badge-rarity-muy_raro { background-color: #6f42c1; color: #fff; }
+.badge-rarity-legendario { background-color: #d97706; color: #fff; }
+
+/* Control de Ranuras de Conjuro */
+.spell-slot-chip {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--rpg-gold);
+  background-color: var(--rpg-tint-medium);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.spell-slot-chip.available {
+  background-color: var(--rpg-gold);
+  box-shadow: var(--rpg-glow-strong);
+}
+
+.spell-slot-chip.used {
+  background-color: transparent;
+  border-color: var(--rpg-dot-untrained);
+  opacity: 0.4;
+}
+
+/* Barra de Puntos de Golpe */
+.hp-bar-container {
+  height: 20px;
+  background-color: var(--rpg-dark-surface);
+  border-radius: 10px;
+  border: var(--rpg-border-w) solid var(--rpg-dark-border);
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+}
+
+.hp-bar-healthy { background: var(--rpg-hp-healthy); }
+.hp-bar-wounded { background: var(--rpg-hp-wounded); }
+.hp-bar-critical { background: var(--rpg-hp-critical); }
+
+.hp-bar-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Inspiración Heroica */
+.heroic-inspiration-badge {
+  cursor: pointer;
+  border: 2px solid var(--rpg-gold);
+  border-radius: var(--rpg-radius-pill);
+  padding: 4px 12px;
+  font-weight: 700;
+  font-family: var(--font-title);
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  background: color-mix(in srgb, var(--rpg-text-main) 5%, transparent);
+}
+
+.heroic-inspiration-badge.active {
+  background: var(--rpg-btn-gold-bg);
+  color: var(--rpg-text-on-gold);
+  box-shadow: var(--rpg-glow);
+}
+
+/* Inspiración en Tabla Resumen Master Panel */
+.table-inspiration-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1.5px solid transparent;
+  flex-shrink: 0;
+}
+
+.table-inspiration-badge.active {
+  background: linear-gradient(135deg, #ffd700, #ff9800);
+  color: #1a1a1a;
+  border-color: #ffe082;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  font-weight: 900;
+}
+
+.table-inspiration-badge.active:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 1);
+}
+
+.table-inspiration-badge.inactive {
+  background: rgba(30, 34, 42, 0.7);
+  color: #717b85;
+  border: 1.5px dashed #495057;
+  opacity: 0.6;
+}
+
+.table-inspiration-badge.inactive:hover {
+  opacity: 1;
+  color: #adb5bd;
+  border-color: #adb5bd;
+  transform: scale(1.12);
+}
+
+/* Efecto de resaltado al navegar desde la tabla */
+@keyframes cardHighlightPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.8); transform: scale(1); }
+  50% { box-shadow: 0 0 25px 6px rgba(212, 175, 55, 0.95); transform: scale(1.015); border-color: var(--rpg-gold) !important; }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); transform: scale(1); }
+}
+
+.card-highlight-pulse {
+  animation: cardHighlightPulse 1.4s ease-in-out;
+}
+
+/* Modals y Diálogos RPG Accesibles */
+dialog.rpg-dialog {
+  background: var(--rpg-dialog-bg);
+  color: var(--rpg-text-light);
+  border: 2px solid var(--rpg-gold);
+  border-radius: calc(var(--rpg-radius-lg) + 2px);
+  box-shadow: var(--rpg-shadow-xl), 0 0 25px color-mix(in srgb, var(--rpg-gold) min(100%, calc(20% * var(--rpg-glow-strength))), transparent);
+  padding: 0;
+  max-width: 90vw;
+  width: 650px;
+}
+
+dialog.rpg-dialog::backdrop {
+  background: var(--rpg-backdrop);
+  backdrop-filter: blur(4px);
+}
+
+/* Controles de Formulario D&D */
+.form-control, .form-select {
+  background-color: var(--rpg-input-bg) !important;
+  color: var(--rpg-input-fg) !important;
+  border: var(--rpg-border-w) solid var(--rpg-input-border) !important;
+  border-radius: var(--rpg-radius);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--rpg-input-bg-focus) !important;
+  color: var(--rpg-input-fg-focus) !important;
+  border-color: var(--rpg-gold) !important;
+  box-shadow: var(--rpg-focus-ring) !important;
+}
+
+/* Sistema de Dados Flotante */
+.dice-roller-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1040;
+}
+
+.dice-fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--rpg-fab-bg);
+  border: 2px solid var(--rpg-gold);
+  color: var(--rpg-gold);
+  box-shadow: 0 4px 18px rgb(var(--rpg-shadow-rgb) / calc(0.7 * var(--rpg-shadow-strength))), var(--rpg-glow-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dice-fab-btn:hover {
+  transform: scale(1.1);
+  color: var(--rpg-text-on-crimson);
+  box-shadow: 0 6px 22px rgb(var(--rpg-shadow-rgb) / calc(0.7 * var(--rpg-shadow-strength))), var(--rpg-glow-primary), var(--rpg-glow);
+}
+
+/* Notificaciones Toast */
+.rpg-toast-container {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.rpg-toast {
+  background: var(--rpg-toast-bg);
+  border: var(--rpg-border-w) solid var(--rpg-gold);
+  border-left: 5px solid var(--rpg-crimson);
+  color: var(--rpg-text-light);
+  padding: 12px 16px;
+  border-radius: var(--rpg-radius);
+  box-shadow: var(--rpg-shadow-lg), var(--rpg-shadow-sm);
+  animation: slideIn 0.3s ease-out;
+  pointer-events: auto;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.rpg-toast-success {
+  border-left-color: var(--rpg-success) !important;
+}
+
+.rpg-toast-error {
+  border-left-color: var(--rpg-danger) !important;
+}
+
+.rpg-toast-warning {
+  border-left-color: var(--rpg-warning) !important;
+}
+
+.rpg-toast-info {
+  border-left-color: var(--rpg-info) !important;
+}
+
+.rpg-toast.fade-out {
+  opacity: 0;
+  transform: translateX(105%);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Tiradas de salvación contra la muerte */
+.btn-sheet-death-save {
+  display: inline-block;
+  user-select: none;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0 2px;
+  transition: transform 0.12s ease;
+}
+.btn-sheet-death-save:hover {
+  transform: scale(1.35);
+}
+
+/* ==========================================================================
+   SELECTOR DE ESTILO VISUAL (menú de la barra superior)
+   Cada muestra lleva su propio data-theme, de modo que se pinta con la
+   paleta real del tema que representa, sin duplicar colores en ningún sitio.
+   ========================================================================== */
+.rpg-theme-menu {
+  --bs-dropdown-bg: var(--rpg-dark-surface);
+  --bs-dropdown-border-color: var(--rpg-line-strong);
+  --bs-dropdown-color: var(--rpg-text-main);
+  --bs-dropdown-link-color: var(--rpg-text-main);
+  --bs-dropdown-link-hover-color: var(--rpg-text-light);
+  --bs-dropdown-link-hover-bg: var(--rpg-dark-card-hover);
+  --bs-dropdown-link-active-color: var(--rpg-text-light);
+  --bs-dropdown-link-active-bg: var(--rpg-tint-medium);
+  --bs-dropdown-divider-bg: var(--rpg-line-faint);
+  min-width: 320px;
+  max-height: min(75vh, 560px);
+  overflow-y: auto;
+  padding: 6px;
+  box-shadow: var(--rpg-shadow-xl);
+}
+
+.rpg-theme-menu-title {
+  font-family: var(--font-title);
+  font-size: 0.7rem;
+  letter-spacing: var(--rpg-label-tracking);
+  text-transform: uppercase;
+  color: var(--rpg-text-muted);
+  padding: 4px 10px 6px;
+}
+
+.rpg-theme-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--rpg-radius);
+  min-height: var(--touch-target);
+  text-align: left;
+}
+
+.rpg-theme-item[aria-current="true"] {
+  background: var(--rpg-tint-medium);
+  box-shadow: inset 0 0 0 1px var(--rpg-line-strong);
+}
+
+.rpg-theme-item-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.rpg-theme-item-desc {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--rpg-text-muted);
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.rpg-theme-check {
+  margin-left: auto;
+  color: var(--rpg-gold);
+  font-weight: 700;
+  visibility: hidden;
+}
+
+.rpg-theme-item[aria-current="true"] .rpg-theme-check {
+  visibility: visible;
+}
+
+.rpg-theme-swatch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  width: 52px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--rpg-line-mid);
+  background: var(--rpg-dark-bg);
+}
+
+/* Muestra: tarjeta con borde primario y franja de acento sobre el fondo del tema */
+.rpg-theme-swatch::before {
+  content: "";
+  position: absolute;
+  inset: 5px 17px 5px 5px;
+  background: var(--rpg-dark-card);
+  border-left: 3px solid var(--rpg-crimson);
+  border-radius: 2px;
+}
+
+.rpg-theme-swatch::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  bottom: 5px;
+  width: 7px;
+  border-radius: 2px;
+  background: var(--rpg-gold);
+}
+
+/* Opción "Automático": mitad tema claro, mitad tema oscuro */
+.rpg-theme-swatch--auto {
+  background: none;
+}
+
+.rpg-theme-swatch--auto::before,
+.rpg-theme-swatch--auto::after {
+  display: none;
+}
+
+.rpg-theme-swatch--auto > i {
+  flex: 1 1 50%;
+  background: var(--rpg-dark-bg);
+  position: relative;
+}
+
+.rpg-theme-swatch--auto > i::after {
+  content: "";
+  position: absolute;
+  inset: 9px 6px;
+  border-radius: 2px;
+  background: var(--rpg-gold);
+}
+
+/* ==========================================================================
+   VISTA IMPRIMIBLE A4 / HOJA FÍSICA EN PANTALLA
+   Garantiza contraste óptimo y negro puro/carbón sobre fondo blanco
+   ========================================================================== */
+.sheet-a4-paper {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65) !important;
+  border: 1px solid #212529 !important;
+  border-radius: 4px;
+}
+
+.sheet-a4-paper,
+.sheet-a4-paper div,
+.sheet-a4-paper span,
+.sheet-a4-paper p,
+.sheet-a4-paper li {
+  color: #1a1a1a;
+}
+
+.sheet-a4-paper h1,
+.sheet-a4-paper h2,
+.sheet-a4-paper h3,
+.sheet-a4-paper h4,
+.sheet-a4-paper h5,
+.sheet-a4-paper h6,
+.sheet-a4-paper strong,
+.sheet-a4-paper b {
+  color: #000000 !important;
+}
+
+/* Textos secundarios y aclaraciones legibles (inmunes al modo oscuro de Bootstrap) */
+.sheet-a4-paper .text-muted,
+.sheet-a4-paper small.text-muted,
+.sheet-a4-paper .text-secondary,
+.sheet-a4-paper small.text-secondary {
+  color: #495057 !important;
+  font-weight: 500;
+}
+
+.sheet-a4-paper .rpg-subdesc {
+  color: #212529 !important;
+  font-size: 8pt;
+  font-weight: 500;
+}
+
+.sheet-a4-paper .rpg-label {
+  color: #212529 !important;
+  font-weight: 700;
+}
+
+/* Insignias en hoja A4 */
+.sheet-a4-paper .badge {
+  background-color: #e9ecef !important;
+  color: #000000 !important;
+  border: 1px solid #6c757d !important;
+  font-weight: 600;
+}
+
+/* Bordes nítidos */
+.sheet-a4-paper .border-dark {
+  border-color: #212529 !important;
+}
+
+.sheet-a4-paper .border-light,
+.sheet-a4-paper .border-bottom {
+  border-color: #dee2e6 !important;
+}
+
+.sheet-a4-paper .border-dark.border-bottom {
+  border-bottom-color: #212529 !important;
+}
+
+.sheet-a4-paper em {
+  color: #333333 !important;
+}
+
+/* ==========================================================================
+   MODO "TODO EQUILIBRADO" - AJUSTE DINÁMICO DE SECCIONES Y ALTURAS
+   Las columnas se igualan en altura y las secciones aumentan para
+   llenar el espacio antes de generar barras de scroll.
+   ========================================================================== */
+/* ==========================================================================
+   BREAKPOINTS RESPONSIVOS DE LA HOJA INTERACTIVA:
+   - Móvil: < 768px -> 1 columna
+   - Tablet (hasta 1280px inclusive): 768px a 1280px -> 2 columnas (Col 1: 33.33%, Col 2: 66.67%, Col 3: 100% abajo)
+   - Escritorio: > 1280px (min-width: 1281px) -> 3 columnas lado a lado (25%, 41.67%, 33.33%)
+   ========================================================================== */
+@media (min-width: 768px) {
+  /* Fila Superior: soporte flex wrap para 2 columnas en tablet */
+  .sheet-balanced-top {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+  }
+
+  .sheet-balanced-top > [class*="col-"],
+  .sheet-balanced-top > .sheet-top-col-1,
+  .sheet-balanced-top > .sheet-top-col-2,
+  .sheet-balanced-top > .sheet-top-col-3 {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sheet-balanced-top #sheet-box-languages-tools,
+  .sheet-balanced-top #sheet-box-attacks {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sheet-balanced-top #sheet-box-attacks .table-responsive {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1280px) {
+  /* Modo Tablet (hasta 1280px inclusive): 2 columnas arriba, Habilidades abajo */
+  #sheet-top-row .sheet-top-col-1,
+  #sheet-top-row > #sheet-top-col-1 {
+    flex: 0 0 auto !important;
+    width: 33.33333333% !important;
+  }
+  #sheet-top-row .sheet-top-col-2,
+  #sheet-top-row > #sheet-top-col-2 {
+    flex: 0 0 auto !important;
+    width: 66.66666667% !important;
+  }
+  #sheet-top-row .sheet-top-col-3,
+  #sheet-top-row > #sheet-top-col-3 {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 1281px) {
+  /* Modo Escritorio (> 1280px): 3 columnas lado a lado sincronizadas al 100% de altura */
+  #sheet-top-row .sheet-top-col-1,
+  #sheet-top-row > #sheet-top-col-1 {
+    flex: 0 0 auto !important;
+    width: 25% !important;
+    height: 100% !important;
+  }
+  #sheet-top-row .sheet-top-col-2,
+  #sheet-top-row > #sheet-top-col-2 {
+    flex: 0 0 auto !important;
+    width: 41.66666667% !important;
+    height: 100% !important;
+  }
+  #sheet-top-row .sheet-top-col-3,
+  #sheet-top-row > #sheet-top-col-3 {
+    flex: 0 0 auto !important;
+    width: 33.33333333% !important;
+    height: 100% !important;
+  }
+  .sheet-balanced-top > [class*="col-"] {
+    height: 100% !important;
+  }
+}
+
+  /* Fila Inferior (2 Columnas: Rasgos/Dotes vs Inventario/Magia) */
+  .sheet-balanced-mode {
+    display: flex !important;
+    align-items: stretch !important;
+  }
+
+  .sheet-balanced-mode .sheet-col-features:not(.d-none),
+  .sheet-balanced-mode .sheet-col-gear:not(.d-none) {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+  }
+
+  .sheet-balanced-mode .sheet-col-features > .rpg-parchment-box:not(.d-none),
+  .sheet-balanced-mode .sheet-col-gear > .rpg-parchment-box:not(.d-none) {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+  }
+
+  /* Contenido interior: expandir para igualar la otra columna antes de generar scroll */
+  .sheet-balanced-mode .sheet-col-features .rpg-parchment-box:not(.d-none) > ul,
+  .sheet-balanced-mode .sheet-col-features .rpg-parchment-box:not(.d-none) > .rpg-box-scroll,
+  .sheet-balanced-mode .sheet-col-gear .rpg-parchment-box:not(.d-none) > .table-responsive,
+  .sheet-balanced-mode .sheet-col-gear .rpg-parchment-box:not(.d-none) > .rpg-box-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Prioridad absoluta de ocultación para filtros de la hoja interactiva */
+#sheet-lower-row .d-none,
+#sheet-lower-row.row .d-none,
+.sheet-balanced-mode .d-none,
+.sheet-col-features.d-none,
+.sheet-col-gear.d-none,
+.rpg-parchment-box.d-none {
+  display: none !important;
+}
+
+/* ==========================================================================
+   BOTONES DE PASOS DEL ASISTENTE (Adaptados a todos los estilos visuales)
+   ========================================================================== */
+.rpg-wizard-step-btn {
+  background: var(--rpg-dark-surface, #1e1e24);
+  color: var(--rpg-text-soft, var(--rpg-navbar-fg, #adb5bd));
+  border: 1px solid var(--rpg-line, rgba(255, 255, 255, 0.2));
+  transition: all 0.2s ease-in-out;
+  border-radius: var(--rpg-radius-sm, 4px);
+}
+
+.rpg-wizard-step-btn:hover {
+  background: var(--rpg-tint-soft, rgba(255, 255, 255, 0.08));
+  color: var(--rpg-text, #ffffff);
+  border-color: var(--rpg-gold, #ffc107);
+}
+
+.rpg-wizard-step-btn.completed {
+  background: color-mix(in srgb, var(--rpg-gold, #ffc107) 14%, transparent);
+  color: var(--rpg-gold-light, var(--rpg-gold, #ffc107));
+  border-color: color-mix(in srgb, var(--rpg-gold, #ffc107) 65%, transparent);
+}
+
+.rpg-wizard-step-btn.active {
+  background: var(--rpg-gold, #ffc107) !important;
+  color: var(--rpg-btn-primary-fg, #111111) !important;
+  border-color: var(--rpg-gold-light, #ffd54f) !important;
+  font-weight: 700;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--rpg-gold, #ffc107) 35%, transparent);
+}
+
+.rpg-wizard-step-badge {
+  background: var(--rpg-dark-card, #121214);
+  color: var(--rpg-text-soft, inherit);
+  border: 1px solid var(--rpg-line, #343a40);
+  border-radius: var(--rpg-radius-sm, 3px);
+  padding: 1px 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rpg-wizard-step-btn.completed .rpg-wizard-step-badge {
+  background: color-mix(in srgb, var(--rpg-gold, #ffc107) 22%, transparent);
+  color: var(--rpg-gold-light, var(--rpg-gold, #ffc107));
+  border-color: var(--rpg-gold, #ffc107);
+}
+
+.rpg-wizard-step-btn.active .rpg-wizard-step-badge {
+  background: var(--rpg-dark-card, #111111) !important;
+  color: var(--rpg-gold, #ffc107) !important;
+  border-color: var(--rpg-gold, #ffc107) !important;
+}
+
+/* ==========================================================================
+   ESTILOS DE IMPRESIÓN OFICIAL (A4 / Hoja de Personaje)
+   Conserva papel blanco y texto negro para no gastar tinta de impresora
+   ========================================================================== */
+@media print {
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+    font-size: 10pt;
+  }
+
+  .no-print,
+  .rpg-navbar,
+  .dice-roller-panel,
+  .btn,
+  .nav-tabs,
+  .modal,
+  .rpg-toast-container {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .rpg-card,
+  .rpg-card-parchment,
+  .rpg-parchment-box,
+  .sheet-a4-paper {
+    border: 1px solid #333 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .rpg-card-header,
+  .rpg-parchment-box-header {
+    background: #eee !important;
+    color: #000 !important;
+    border-bottom: 1px solid #000 !important;
+  }
+
+  .rpg-card-parchment .text-dark,
+  .rpg-parchment-box .text-dark,
+  .rpg-feat-card,
+  .rpg-feat-title,
+  .rpg-feat-desc,
+  .rpg-subdesc {
+    color: #000 !important;
+  }
+}

@@ -1,0 +1,57 @@
+/* ==========================================================================
+   TEMA · Oscuro  (id: oscuro · modo: dark)
+   Modo oscuro neutro y sobrio (pizarra azulada), acento azul y primario violeta.
+   ========================================================================== */
+[data-theme="oscuro"] {
+  --rpg-crimson: #6e40c9;
+  --rpg-crimson-light: #8957e5;
+  --rpg-crimson-dark: #3b2a73;
+  --rpg-crimson-text: #c4a6ff;
+
+  --rpg-gold: #58a6ff;
+  --rpg-gold-light: #a5d6ff;
+  --rpg-gold-dark: #1f6feb;
+  --rpg-gold-dim: #4493f8;
+
+  --rpg-dark-bg: #0d1117;
+  --rpg-dark-card: #161b22;
+  --rpg-dark-card-hover: #1c2230;
+  --rpg-dark-surface: #1b212b;
+  --rpg-dark-border: #30363d;
+  --rpg-parchment: #161b22;
+  --rpg-parchment-light: #1c2128;
+  --rpg-parchment-dark: #11161d;
+
+  --rpg-text-main: #e6edf3;
+  --rpg-text-light: #ffffff;
+  --rpg-text-muted: #8b949e;
+  --rpg-text-gold: #79c0ff;
+  --rpg-text-soft: #c9d1d9;
+  --rpg-text-on-crimson: #ffffff;
+  --rpg-text-on-gold: #04101f;
+  --rpg-link: #79c0ff;
+
+  --rpg-u-bg-dark: #21262d;
+  --rpg-u-bg-black: #010409;
+  --rpg-u-text-light: #e6edf3;
+
+  --rpg-secondary: #7d8590;
+  --rpg-dot-proficient: #f85149;
+  --rpg-dot-expertise: #e3b341;
+  --rpg-dot-untrained: #484f58;
+
+  --rpg-navbar-bg: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  --rpg-navbar-brand: var(--rpg-gold-light);
+  --rpg-navbar-fg: #a3adb8;
+  --rpg-navbar-fg-muted: #8b949e;
+
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rpg-gold) 8%, transparent) 0%, transparent 55%),
+    radial-gradient(circle at 90% 25%, color-mix(in srgb, var(--rpg-crimson) 7%, transparent) 0%, transparent 45%);
+
+  --rpg-glow-strength: 0.35;
+
+  --font-title: 'Montserrat', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
+  --rpg-title-tracking: 0;
+}

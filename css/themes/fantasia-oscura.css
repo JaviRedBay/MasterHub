@@ -1,0 +1,68 @@
+/* ==========================================================================
+   TEMA · Fantasía Oscura  (id: fantasia-oscura · modo: dark)  — POR DEFECTO
+   Dragón Carmesí (#8b0000), Oro Antiguo (#d4af37) y Obsidiana.
+   Este bloque también actúa como valor de reserva (:root): cualquier token
+   que otro tema no defina cae aquí.
+   ========================================================================== */
+:root,
+[data-theme="fantasia-oscura"] {
+  /* Primario (carmesí) */
+  --rpg-crimson: #8b0000;
+  --rpg-crimson-light: #ab1d29;
+  --rpg-crimson-dark: #4d0000;
+  --rpg-crimson-text: #ff9999;           /* carmesí legible sobre superficie */
+
+  /* Acento (oro) */
+  --rpg-gold: #d4af37;
+  --rpg-gold-light: #f3e5ab;
+  --rpg-gold-dark: #997814;
+  --rpg-gold-dim: #b8933b;
+
+  /* Superficies */
+  --rpg-dark-bg: #0c0e14;
+  --rpg-dark-card: #151922;
+  --rpg-dark-card-hover: #1b212e;
+  --rpg-dark-surface: #181d2a;
+  --rpg-dark-border: #2a3344;
+  --rpg-parchment: #141722;
+  --rpg-parchment-light: #191e2b;
+  --rpg-parchment-dark: #0f121a;
+
+  /* Texto */
+  --rpg-text-main: #f0ede6;
+  --rpg-text-light: #ffffff;             /* énfasis máximo (títulos, diálogos) */
+  --rpg-text-muted: #9aa3b2;
+  --rpg-text-gold: #e6c875;
+  --rpg-text-soft: #c9d1dc;
+  --rpg-text-on-crimson: #ffffff;
+  --rpg-text-on-gold: #120e03;
+  --rpg-link: #6ea8fe;
+
+  /* Utilidades de Bootstrap remapeadas (.bg-dark, .bg-black, .text-light) */
+  --rpg-u-bg-dark: #212529;
+  --rpg-u-bg-black: #000000;
+  --rpg-u-text-light: #f8f9fa;
+
+  /* Estados y marcadores */
+  --rpg-secondary: #6c757d;              /* .text-secondary / .border-secondary / .bg-secondary */
+  --rpg-success: #198754;
+  --rpg-danger: #dc3545;
+  --rpg-warning: #ffc107;
+  --rpg-info: #0dcaf0;
+  --rpg-dot-proficient: #e63946;
+  --rpg-dot-expertise: #ffd700;
+  --rpg-dot-untrained: #556075;
+  --rpg-hp-healthy: linear-gradient(90deg, #198754, #20c997);
+  --rpg-hp-wounded: linear-gradient(90deg, #ffc107, #fd7e14);
+  --rpg-hp-critical: linear-gradient(90deg, #dc3545, #b02a37);
+
+  /* Barra superior */
+  --rpg-navbar-brand: var(--rpg-gold);
+  --rpg-navbar-fg: #b5bcc9;
+  --rpg-navbar-fg-muted: #c9b382;
+  --rpg-navbar-tab-bg: rgb(255 255 255 / 0.04);
+
+  /* Tipografía y forma (valores de reserva, ver theme-base.css) */
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Montserrat', sans-serif;
+}

@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 JaviRedBay
+Copyright (c) 2026 Wargoth
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,33 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+-------------------------------------------------------------------------------
+ALCANCE DE LA LICENCIA / LICENSE SCOPE
+-------------------------------------------------------------------------------
+
+La licencia MIT anterior se aplica únicamente al código fuente original de este
+proyecto (JavaScript, CSS, HTML y textos propios). El siguiente contenido
+pertenece a sus respectivos titulares y NO queda cubierto por esta licencia:
+
+  - Material del System Reference Document 5.2.1 ("SRD 5.2.1") de Wizards of
+    the Coast LLC, disponible en https://www.dndbeyond.com/srd y licenciado
+    bajo Creative Commons Attribution 4.0 International
+    (https://creativecommons.org/licenses/by/4.0/legalcode).
+  - Cualquier otro material de Wizards of the Coast (incluida la plantilla
+    Hoja_personaje.pdf, basada en la hoja de personaje oficial), utilizado
+    como contenido de fans no oficial conforme a la Fan Content Policy
+    (https://company.wizards.com/es/legal/fancontentpolicy). No aprobado ni
+    respaldado por Wizards. ©Wizards of the Coast LLC. Dungeons & Dragons y
+    D&D son marcas registradas de Wizards of the Coast LLC.
+  - Las reglas y tablas del sistema BTRS (Breiel Three-Role System), propiedad
+    de su autor.
+  - Librerías de terceros (pdf-lib, Bootstrap, Lucide, Google Fonts), sujetas
+    a sus propias licencias: ver js/vendor/THIRD_PARTY_LICENSES.txt.
+
+The MIT License above applies only to the original source code of this project.
+Third-party game content (SRD 5.2.1 under CC-BY-4.0, Wizards of the Coast
+material used under its Fan Content Policy, the BTRS system and the character
+sheet template) and third-party libraries belong to their respective owners and
+are NOT covered by this license.
+

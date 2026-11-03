@@ -1,0 +1,52 @@
+# --- Material de referencia de desarrollo (NO publicar: derechos de terceros) ---
+BTRS.pdf
+Manual*.pdf
+SP_SRD_CC_v5.2.1.pdf
+
+# --- Datos personales de jugadores/campañas (NO publicar: privacidad) ---
+dnd55_characters.json
+dnd55_campaigns.json
+
+# Ficheros que genera el Repositorio de Ficheros (fileRepository.js)
+# si se elige la carpeta del proyecto como destino local
+campaigns.json
+btrs_history.json
+master_backup_full.json
+characters/
+
+# Exportaciones descargadas desde la app (storage.js / pdfExport.js)
+rpg_master_hub_backup_*.json
+*_DND55_Oficial_2024.pdf
+
+# --- Copias de seguridad y entorno local ---
+*.bak
+*.ps1
+.vscode/
+scratch/
+
+# --- Secretos / configuración local (p. ej. Client ID de Google Drive) ---
+.env
+.env.*
+
+# --- Editores e IDEs ---
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+*.tmp
+*.orig
+
+# --- Sistema operativo ---
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# --- Node / herramientas (por si se añade un empaquetador en el futuro) ---
+node_modules/
+dist/
+*.log
+npm-debug.log*

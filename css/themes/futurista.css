@@ -1,0 +1,81 @@
+/* ==========================================================================
+   TEMA · Futurista  (id: futurista · modo: dark)
+   Interfaz de nave espacial: azul profundo, cian glacial, esquinas suaves y
+   resplandor sutil. Tipografías Orbitron (títulos) y Exo 2 (texto), que se
+   cargan bajo demanda al activar el tema.
+   ========================================================================== */
+[data-theme="futurista"] {
+  --rpg-crimson: #1f6bff;
+  --rpg-crimson-light: #4d8bff;
+  --rpg-crimson-dark: #0f3a99;
+  --rpg-crimson-text: #8cb8ff;
+
+  --rpg-gold: #4cc9f0;
+  --rpg-gold-light: #b9ecff;
+  --rpg-gold-dark: #1a8bb0;
+  --rpg-gold-dim: #38b2d6;
+
+  --rpg-dark-bg: #050b18;
+  --rpg-dark-card: #0a1628;
+  --rpg-dark-card-hover: #0f2038;
+  --rpg-dark-surface: #0d1d36;
+  --rpg-dark-border: #1c3a5e;
+  --rpg-parchment: #091424;
+  --rpg-parchment-light: #0e1d33;
+  --rpg-parchment-dark: #060e1b;
+
+  --rpg-text-main: #e6f3ff;
+  --rpg-text-light: #ffffff;
+  --rpg-text-muted: #7f9bb8;
+  --rpg-text-gold: #8fdcf5;
+  --rpg-text-soft: #b8cfe6;
+  --rpg-text-on-crimson: #ffffff;
+  --rpg-text-on-gold: #031018;
+  --rpg-link: #6fd6ff;
+
+  --rpg-u-bg-dark: #0c1b31;
+  --rpg-u-bg-black: #030812;
+  --rpg-u-text-light: #e6f3ff;
+
+  --rpg-secondary: #6f8cab;
+  --rpg-success: #19c37d;
+  --rpg-warning: #ffcf40;
+  --rpg-info: #4cc9f0;
+  --rpg-dot-proficient: #ff5470;
+  --rpg-dot-expertise: #7df9ff;
+  --rpg-dot-untrained: #36506f;
+  --rpg-hp-healthy: linear-gradient(90deg, #19c37d, #7df9ff);
+  --rpg-hp-wounded: linear-gradient(90deg, #ffcf40, #ff8a3d);
+  --rpg-hp-critical: linear-gradient(90deg, #ff5470, #c2123f);
+
+  --rpg-navbar-bg: linear-gradient(180deg, #0b1c36 0%, #050b18 100%);
+  --rpg-navbar-brand: var(--rpg-gold);
+  --rpg-navbar-fg: #9bb6d2;
+  --rpg-navbar-fg-muted: #6fc4e0;
+  --rpg-navbar-tab-bg: rgb(76 201 240 / 0.06);
+
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--rpg-crimson) 28%, transparent) 0%, transparent 60%),
+    radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--rpg-gold) 10%, transparent) 0%, transparent 45%),
+    linear-gradient(rgb(76 201 240 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(76 201 240 / 0.035) 1px, transparent 1px);
+  --rpg-card-header-bg: linear-gradient(90deg, color-mix(in srgb, var(--rpg-crimson) 45%, transparent) 0%, color-mix(in srgb, var(--rpg-dark-card-hover) 80%, transparent) 100%);
+
+  --rpg-radius-sm: 6px;
+  --rpg-radius: 10px;
+  --rpg-radius-lg: 14px;
+  --rpg-glow-strength: 1.6;
+  --rpg-shadow-strength: 0.9;
+
+  --font-title: 'Orbitron', 'Segoe UI', sans-serif;
+  --font-body: 'Exo 2', 'Segoe UI', sans-serif;
+  --rpg-title-transform: none;
+  --rpg-title-tracking: 1.2px;
+  --rpg-label-tracking: 1.2px;
+}
+
+/* Rejilla holográfica fija de fondo */
+[data-theme="futurista"] body {
+  background-size: auto, auto, 38px 38px, 38px 38px;
+}
+

@@ -1,0 +1,117 @@
+/* ==========================================================================
+   TEMA · Ciberpunk  (id: ciberpunk · modo: dark)
+   Neón sobre negro violáceo: magenta, cian eléctrico y amarillo de aviso.
+   Esquinas rectas, rótulos en mayúsculas, texto monoespaciado, resplandores
+   intensos y una ligera trama de líneas de barrido (solo decorativa y oculta
+   al imprimir). Tipografías Rajdhani y Share Tech Mono, cargadas bajo demanda.
+   ========================================================================== */
+[data-theme="ciberpunk"] {
+  --rpg-crimson: #ff2a6d;
+  --rpg-crimson-light: #ff5c93;
+  --rpg-crimson-dark: #7a0f3a;
+  --rpg-crimson-text: #ff7fa8;
+
+  --rpg-gold: #00f0ff;
+  --rpg-gold-light: #9ffaff;
+  --rpg-gold-dark: #00808a;
+  --rpg-gold-dim: #00c4d1;
+
+  --rpg-dark-bg: #07040f;
+  --rpg-dark-card: #0e0a1c;
+  --rpg-dark-card-hover: #17102e;
+  --rpg-dark-surface: #130d26;
+  --rpg-dark-border: #3b1f6b;
+  --rpg-parchment: #0d0919;
+  --rpg-parchment-light: #150f29;
+  --rpg-parchment-dark: #080512;
+
+  --rpg-text-main: #e6e1ff;
+  --rpg-text-light: #ffffff;
+  --rpg-text-muted: #8f86b8;
+  --rpg-text-gold: #5ff6ff;
+  --rpg-text-soft: #c3bbec;
+  --rpg-text-on-crimson: #ffffff;
+  --rpg-text-on-gold: #001417;
+  --rpg-link: #5ff6ff;
+
+  --rpg-u-bg-dark: #120c24;
+  --rpg-u-bg-black: #04020a;
+  --rpg-u-text-light: #e6e1ff;
+
+  --rpg-secondary: #8a7fc0;
+  --rpg-success: #05ffa1;
+  --rpg-danger: #ff2a6d;
+  --rpg-warning: #fcee0a;
+  --rpg-info: #00f0ff;
+  --rpg-dot-proficient: #ff2a6d;
+  --rpg-dot-expertise: #fcee0a;
+  --rpg-dot-untrained: #3d3466;
+  --rpg-hp-healthy: linear-gradient(90deg, #05ffa1, #00f0ff);
+  --rpg-hp-wounded: linear-gradient(90deg, #fcee0a, #ff9f1c);
+  --rpg-hp-critical: linear-gradient(90deg, #ff2a6d, #b0003a);
+
+  --rpg-navbar-bg: linear-gradient(180deg, #14082b 0%, #07040f 100%);
+  --rpg-navbar-brand: #fcee0a;
+  --rpg-navbar-fg: #b9aee6;
+  --rpg-navbar-fg-muted: #ff7fa8;
+  --rpg-navbar-tab-bg: rgb(0 240 255 / 0.05);
+
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 15% 0%, color-mix(in srgb, var(--rpg-crimson) 22%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 15%, color-mix(in srgb, var(--rpg-gold) 14%, transparent) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgb(120 40 255 / 0.18) 0%, transparent 55%);
+  --rpg-card-header-bg: linear-gradient(90deg, color-mix(in srgb, var(--rpg-crimson) 55%, transparent) 0%, color-mix(in srgb, var(--rpg-dark-card-hover) 85%, transparent) 100%);
+
+  --rpg-radius-sm: 0;
+  --rpg-radius: 2px;
+  --rpg-radius-lg: 3px;
+  --rpg-radius-pill: 2px;
+  --rpg-glow-strength: 2.6;
+  --rpg-shadow-strength: 1;
+  --rpg-shadow-rgb: 0 0 0;
+
+  --font-title: 'Rajdhani', 'Segoe UI', sans-serif;
+  --font-body: 'Share Tech Mono', 'Consolas', monospace;
+  --rpg-title-transform: uppercase;
+  --rpg-title-tracking: 2px;
+  --rpg-label-tracking: 1.5px;
+}
+
+/* Rajdhani es estrecha: los títulos ganan peso para conservar presencia */
+[data-theme="ciberpunk"] h1,
+[data-theme="ciberpunk"] h2,
+[data-theme="ciberpunk"] h3,
+[data-theme="ciberpunk"] h4,
+[data-theme="ciberpunk"] h5,
+[data-theme="ciberpunk"] h6,
+[data-theme="ciberpunk"] .rpg-font-title,
+[data-theme="ciberpunk"] .rpg-brand-title,
+[data-theme="ciberpunk"] .rpg-nav-tabs .nav-link {
+  font-weight: 700;
+}
+
+/* Marco con neón dual (magenta + cian) en cajas y tarjetas */
+[data-theme="ciberpunk"] .rpg-card,
+[data-theme="ciberpunk"] .rpg-card-parchment,
+[data-theme="ciberpunk"] .rpg-parchment-box {
+  border-color: color-mix(in srgb, var(--rpg-gold) 45%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rpg-crimson) 35%, transparent), var(--rpg-shadow-md), inset 0 0 18px color-mix(in srgb, var(--rpg-gold) 6%, transparent);
+}
+
+/* Líneas de barrido CRT: capa decorativa que no intercepta clics */
+[data-theme="ciberpunk"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.16) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+
+@media print {
+  [data-theme="ciberpunk"] body::after {
+    display: none;
+  }
+}
+

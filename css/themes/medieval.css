@@ -1,0 +1,161 @@
+/* ==========================================================================
+   TEMA · Fantasía Medieval  (id: medieval · modo: light)
+   Pergamino envejecido, tinta marrón, rojo heráldico y bronce. Barra superior
+   de madera oscura. Tipografías MedievalSharp (títulos) y Crimson Pro (texto),
+   que se cargan bajo demanda al activar el tema.
+   ========================================================================== */
+[data-theme="medieval"] {
+  --rpg-crimson: #7a1c1c;
+  --rpg-crimson-light: #9a2a2a;
+  --rpg-crimson-dark: #4d0f0f;
+  --rpg-crimson-text: #8f1f1f;
+
+  --rpg-gold: #8a5a12;
+  --rpg-gold-light: #6e4308;
+  --rpg-gold-dark: #5c3906;
+  --rpg-gold-dim: #a1722a;
+
+  --rpg-dark-bg: #d8c59a;
+  --rpg-dark-card: #f3e6c4;
+  --rpg-dark-card-hover: #ecdcb0;
+  --rpg-dark-surface: #eddfb9;
+  --rpg-dark-border: #b39a62;
+  --rpg-parchment: #f6ebcd;
+  --rpg-parchment-light: #faf2dc;
+  --rpg-parchment-dark: #ead9ae;
+
+  --rpg-text-main: #2e1f10;
+  --rpg-text-light: #1a0f05;
+  --rpg-text-muted: #6b5232;
+  --rpg-text-gold: #6e4308;
+  --rpg-text-soft: #46321a;
+  --rpg-text-on-crimson: #fff3d6;
+  --rpg-text-on-gold: #fff6df;
+  --rpg-link: #7a1c1c;
+
+  --rpg-u-bg-dark: #e3d2a6;
+  --rpg-u-bg-black: #d3be8d;
+  --rpg-u-text-light: #2e1f10;
+
+  --rpg-secondary: #7a6340;
+  --rpg-success: #2f6b2f;
+  --rpg-danger: #9a1f1f;
+  --rpg-warning: #946200;
+  --rpg-info: #1f5f78;
+  --rpg-dot-proficient: #9a1f1f;
+  --rpg-dot-expertise: #a06a00;
+  --rpg-dot-untrained: #b6a37a;
+
+  /* Barra superior: madera oscura con letras de pergamino */
+  --rpg-navbar-bg: linear-gradient(180deg, #4a2e18 0%, #2b1a0c 100%);
+  --rpg-navbar-brand: #f0c860;
+  --rpg-navbar-fg: #e6d6ae;
+  --rpg-navbar-fg-muted: #cdb98a;
+  --rpg-navbar-tab-bg: rgb(255 240 200 / 0.07);
+
+  /* Pergamino con viñeta y fibra sutil */
+  --rpg-body-bg-image:
+    radial-gradient(ellipse at 50% 35%, rgb(255 244 214 / 0.55) 0%, transparent 65%),
+    radial-gradient(ellipse at 50% 110%, rgb(90 55 20 / 0.30) 0%, transparent 60%),
+    repeating-linear-gradient(92deg, rgb(120 85 40 / 0.035) 0 2px, transparent 2px 7px);
+  --rpg-card-header-bg: linear-gradient(90deg, color-mix(in srgb, var(--rpg-crimson) 18%, var(--rpg-dark-card)) 0%, var(--rpg-dark-card) 100%);
+  --rpg-card-header-strong-bg: linear-gradient(90deg, var(--rpg-crimson-dark) 0%, var(--rpg-crimson) 50%, var(--rpg-crimson-dark) 100%);
+  --rpg-card-header-strong-fg: #fff3d6;
+  --rpg-tab-active-bg: linear-gradient(180deg, #f6ebcd 0%, #f3e6c4 100%);
+  --rpg-backdrop: rgb(30 18 6 / 0.65);
+
+  --rpg-radius-sm: 2px;
+  --rpg-radius: 3px;
+  --rpg-radius-lg: 4px;
+  --rpg-border-w-strong: 2px;
+  --rpg-shadow-rgb: 70 40 10;
+  --rpg-shadow-strength: 0.45;
+  --rpg-glow-strength: 0;
+  --rpg-inset-highlight: inset 0 1px 0 rgb(255 250 230 / 0.6);
+
+  --font-title: 'MedievalSharp', 'Cinzel', serif;
+  --font-body: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+  --rpg-title-tracking: 0.8px;
+}
+
+/* El serif de lectura pide un punto más de tamaño */
+html[data-theme="medieval"] {
+  font-size: 106%;
+}
+
+/* Filete doble tipo manuscrito en tarjetas y cajas de la hoja */
+[data-theme="medieval"] .rpg-card,
+[data-theme="medieval"] .rpg-card-parchment,
+[data-theme="medieval"] .rpg-parchment-box {
+  outline: 1px solid color-mix(in srgb, var(--rpg-gold-dim) 45%, transparent);
+  outline-offset: -4px;
+}
+
+/* ==========================================================================
+   Botones en Fantasía Medieval:
+   Sustituye el amarillo chillón #ffc107 por bronce y oro viejo heráldico oscuro
+   para asegurar contraste óptimo sobre fondo de pergamino (#f6ebcd / #d8c59a).
+   ========================================================================== */
+[data-theme="medieval"] .btn-outline-warning {
+  --bs-btn-color: #6e4308;
+  --bs-btn-border-color: #8a5a12;
+  --bs-btn-hover-color: #fff6df;
+  --bs-btn-hover-bg: #8a5a12;
+  --bs-btn-hover-border-color: #6e4308;
+  --bs-btn-active-color: #fff6df;
+  --bs-btn-active-bg: #6e4308;
+  --bs-btn-active-border-color: #5c3906;
+  color: #6e4308 !important;
+  border-color: #8a5a12 !important;
+  background-color: color-mix(in srgb, var(--rpg-gold) 9%, transparent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(70 40 10 / 0.15);
+}
+
+[data-theme="medieval"] .btn-outline-warning:hover,
+[data-theme="medieval"] .btn-outline-warning:active,
+[data-theme="medieval"] .btn-outline-warning:focus,
+[data-theme="medieval"] .btn-outline-warning.active {
+  color: #fff6df !important;
+  background-color: #8a5a12 !important;
+  border-color: #6e4308 !important;
+  box-shadow: 0 2px 5px rgb(70 40 10 / 0.25);
+}
+
+[data-theme="medieval"] .btn-outline-warning:disabled,
+[data-theme="medieval"] .btn-outline-warning.disabled {
+  color: #9c8360 !important;
+  border-color: #c4b087 !important;
+  background-color: transparent !important;
+  opacity: 0.65;
+}
+
+[data-theme="medieval"] .btn-outline-warning * {
+  color: inherit !important;
+}
+
+[data-theme="medieval"] button.text-warning,
+[data-theme="medieval"] .btn.text-warning {
+  color: #6e4308 !important;
+}
+
+[data-theme="medieval"] button.border-warning,
+[data-theme="medieval"] .btn.border-warning {
+  border-color: #8a5a12 !important;
+}
+
+[data-theme="medieval"] .btn-warning,
+[data-theme="medieval"] .btn-warning.text-dark {
+  background-color: #8a5a12 !important;
+  color: #fff6df !important;
+  border-color: #6e4308 !important;
+}
+
+[data-theme="medieval"] .btn-warning:hover,
+[data-theme="medieval"] .btn-warning.text-dark:hover {
+  background-color: #6e4308 !important;
+  color: #ffffff !important;
+  border-color: #5c3906 !important;
+}
+
+

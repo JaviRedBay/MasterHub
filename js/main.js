@@ -21,6 +21,7 @@ import { exportStateToJsonFile, parseAndValidateBackup } from './utils/storage.j
 import { themeManager } from './utils/themeManager.js';
 import { fileRepo } from './utils/fileRepository.js';
 import { showConfirmModal, showAlertModal, showToast } from './utils/uiFeedback.js';
+import { APP_VERSION_LABEL } from './constants/version.js';
 
 class App {
   constructor() {
@@ -29,7 +30,12 @@ class App {
   }
 
   init() {
-    console.log('[App] Inicializando Roleplay Master Utility Hub...');
+    console.log(`[App] Inicializando Roleplay Master Utility Hub (${APP_VERSION_LABEL})...`);
+
+    const versionEl = document.getElementById('app-version-badge');
+    if (versionEl) {
+      versionEl.textContent = APP_VERSION_LABEL;
+    }
 
     // 0. Estilo visual (tema): lee la preferencia, la aplica y monta el selector de la barra superior
     themeManager.init();

@@ -9,6 +9,7 @@ import { DEFAULT_CAMPAIGNS, DEFAULT_CHARACTERS } from './constants/seedData.js';
 import { calculateHitPoints, getConsumableTraitsForCharacter } from './constants/dnd55Rules.js';
 import { showToast, showConfirmModal } from './utils/uiFeedback.js';
 import { fileRepo } from './utils/fileRepository.js';
+import { APP_VERSION } from './constants/version.js';
 
 export class EventEmitter {
   constructor() {
@@ -650,7 +651,7 @@ class AppStore extends EventEmitter {
       selectedCampaignId: this.selectedCampaignId,
       btrsHistory: this.btrsHistory,
       exportedAt: new Date().toISOString(),
-      version: '2.0.0-dnd55-btrs'
+      version: `${APP_VERSION}-dnd55-btrs`
     };
   }
 

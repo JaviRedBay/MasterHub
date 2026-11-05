@@ -327,9 +327,30 @@
             </h6>
             <span id="repo-badge-status" class="badge bg-secondary">Sin vincular</span>
           </div>
-          <p class="text-secondary small mb-3">
+          <p class="text-secondary small mb-2">
             Guarda y lee automáticamente tus personajes y campañas directamente en archivos físicos <code>.json</code> en tu disco local o en tu cuenta de <strong>Google Drive</strong>. Los cambios se guardarán de forma continua sin perder nada al recargar o cerrar la web.
           </p>
+
+          <!-- Aviso de sobrescritura al sincronizar con Google Drive o Carpeta Local -->
+          <div id="repo-overwrite-warning" class="alert alert-dark border-warning border-opacity-50 small mb-3 p-2">
+            <div class="fw-bold text-warning d-flex align-items-center gap-1 mb-1">
+              <i data-lucide="alert-triangle" style="width: 15px; height: 15px;"></i> Aviso de sobrescritura al sincronizar
+            </div>
+            <div class="text-light" style="font-size: 0.78rem; line-height: 1.4;">
+              Al conectar o recargar desde <strong>Google Drive</strong> o un <strong>Repositorio Local</strong> con datos existentes, <strong>se sobrescribirán los personajes y campañas actuales</strong> de la aplicación con los del repositorio. Si el repositorio está vacío o pulsas <em>Guardar Todo</em>, se sobrescribirá el repositorio con tus datos actuales.
+            </div>
+          </div>
+
+          <!-- Loader de bloqueo durante conexión y descarga/sincronización del repositorio -->
+          <div id="repo-busy-loader" class="d-none mb-3 p-3 rounded border border-warning bg-black bg-opacity-75 text-center" role="status" aria-live="polite">
+            <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+              <div class="spinner-border text-warning spinner-border-sm" style="width: 1.6rem; height: 1.6rem;" aria-hidden="true"></div>
+              <div id="repo-busy-text" class="fw-bold text-warning small">Conectando y descargando el repositorio...</div>
+              <div class="text-secondary" style="font-size: 0.75rem;">
+                Por favor, espera. Las opciones de carga y guardado están bloqueadas mientras finaliza la operación.
+              </div>
+            </div>
+          </div>
 
           <!-- Aviso de compatibilidad para Firefox / Safari -->
           <div id="firefox-repo-notice" class="alert alert-dark border-warning border-opacity-50 small mb-3 p-2 d-none">
@@ -434,7 +455,7 @@
           <button id="btn-export-json" class="btn btn-sm btn-rpg-secondary d-flex align-items-center justify-content-center gap-2">
             <i data-lucide="download"></i> Descargar Copia Completa (JSON)
           </button>
-          <label class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center gap-2 m-0 cursor-pointer">
+          <label id="label-import-json" class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center gap-2 m-0 cursor-pointer">
             <i data-lucide="upload"></i> Cargar Archivo de Respaldo (JSON)
             <input type="file" id="import-json-file" accept=".json" class="d-none">
           </label>

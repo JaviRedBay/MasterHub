@@ -7,7 +7,7 @@
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, sanitizeCharacter, sanitizeCampaign } from './utils/storage.js';
 import { DEFAULT_CAMPAIGNS, DEFAULT_CHARACTERS } from './constants/seedData.js';
 import { calculateHitPoints, getConsumableTraitsForCharacter } from './constants/dnd55Rules.js';
-import { showToast } from './utils/uiFeedback.js';
+import { showToast, showConfirmModal } from './utils/uiFeedback.js';
 import { fileRepo } from './utils/fileRepository.js';
 
 export class EventEmitter {
@@ -700,9 +700,11 @@ class AppStore extends EventEmitter {
    * Inicializa la conexión automática con el repositorio de archivos guardado previamente en IndexedDB.
    */
   async initRepository() {
+    if (fileRepo.isBusy) return;
     try {
       const connected = await fileRepo.initAutoConnect(false);
       if (connected) {
+        fileRepo.setBusy(true, `Sincronizando y descargando datos desde "${fileRepo.folderName}"...`);
         const repoData = await fileRepo.loadAllFromFolder();
         if (repoData.success && ((repoData.characters && repoData.characters.length > 0) || (repoData.campaigns && repoData.campaigns.length > 0))) {
           this.importState(repoData);
@@ -711,6 +713,8 @@ class AppStore extends EventEmitter {
       }
     } catch (err) {
       console.warn('[Store] No se pudo inicializar el repositorio de archivos:', err);
+    } finally {
+      fileRepo.setBusy(false);
     }
   }
 
@@ -718,53 +722,127 @@ class AppStore extends EventEmitter {
    * Conecta una carpeta local o de Google Drive Desktop mediante File System Access API.
    */
   async connectFileRepository() {
-    const res = await fileRepo.connectFolder();
-    if (!res.success) {
-      if (!res.cancelled && res.error) {
-        showToast(res.error, 'error', 'Error de Carpeta');
-      }
+    if (fileRepo.isBusy) {
+      showToast('Ya hay una sincronización en curso. Espera a que termine.', 'warning', 'Repositorio Ocupado');
+      return { success: false, busy: true };
+    }
+
+    if (!fileRepo.isLocalSupported()) {
+      const res = await fileRepo.connectFolder();
+      if (res.error) showToast(res.error, 'error', 'Error de Carpeta');
       return res;
     }
 
-    // Comprobar si la carpeta ya contiene datos
-    const existing = await fileRepo.loadAllFromFolder();
-    if (existing.success && ((existing.characters && existing.characters.length > 0) || (existing.campaigns && existing.campaigns.length > 0))) {
-      this.importState(existing);
-      showToast(`Carpeta "${res.folderName}" vinculada. Se han cargado ${existing.characters?.length || 0} personajes.`, 'success', 'Repositorio Conectado');
-    } else {
-      // Carpeta nueva/vacía: volcar el estado actual completo
-      await fileRepo.exportAllToFolder(this.exportState());
-      showToast(`Carpeta "${res.folderName}" vinculada. Todos los datos se han guardado en sus ficheros.`, 'success', 'Repositorio Conectado');
+    const confirmed = await showConfirmModal({
+      title: 'Vincular y Sincronizar Carpeta Local',
+      message: 'Al sincronizar con la carpeta local, si ésta ya contiene archivos guardados se sobrescribirán las campañas y personajes actuales que tienes en la aplicación. Si la carpeta está vacía, se guardarán en ella tus datos actuales. ¿Deseas continuar?',
+      confirmText: 'Seleccionar Carpeta y Sincronizar',
+      cancelText: 'Cancelar',
+      danger: false,
+      icon: 'folder-sync'
+    });
+    if (!confirmed) {
+      return { success: false, cancelled: true };
     }
 
-    return res;
+    fileRepo.setBusy(true, 'Seleccionando y vinculando carpeta local...');
+    try {
+      const res = await fileRepo.connectFolder();
+      if (!res.success) {
+        if (!res.cancelled && res.error) {
+          showToast(res.error, 'error', 'Error de Carpeta');
+        }
+        return res;
+      }
+
+      // Comprobar si la carpeta ya contiene datos
+      fileRepo.setBusy(true, `Descargando y comprobando archivos de "${res.folderName}"...`);
+      const existing = await fileRepo.loadAllFromFolder();
+      if (existing.success && ((existing.characters && existing.characters.length > 0) || (existing.campaigns && existing.campaigns.length > 0))) {
+        this.importState(existing);
+        showToast(`Carpeta "${res.folderName}" vinculada. Se han cargado ${existing.characters?.length || 0} personajes.`, 'success', 'Repositorio Conectado');
+      } else {
+        // Carpeta nueva/vacía: volcar el estado actual completo
+        fileRepo.setBusy(true, `Guardando tus personajes y campañas en "${res.folderName}"...`);
+        await fileRepo.exportAllToFolder(this.exportState());
+        showToast(`Carpeta "${res.folderName}" vinculada. Todos los datos se han guardado en sus ficheros.`, 'success', 'Repositorio Conectado');
+      }
+
+      return res;
+    } finally {
+      fileRepo.setBusy(false);
+    }
   }
 
   /**
    * Conecta con Google Drive mediante OAuth2 (compatible con Firefox, Safari y móviles).
    */
   async connectGoogleDrive(clientId = null) {
-    const res = await fileRepo.connectGoogleDrive(clientId);
-    if (!res.success) {
-      if (res.error) showToast(res.error, 'error', 'Google Drive');
-      return res;
+    if (fileRepo.isBusy) {
+      showToast('Ya hay una conexión o sincronización en curso. Espera a que termine.', 'warning', 'Google Drive');
+      return { success: false, busy: true };
     }
 
-    const existing = await fileRepo.loadAllFromFolder();
-    if (existing.success && ((existing.characters && existing.characters.length > 0) || (existing.campaigns && existing.campaigns.length > 0))) {
-      this.importState(existing);
-      showToast(`Google Drive vinculado. Se han cargado ${existing.characters?.length || 0} personajes.`, 'success', 'Google Drive');
-    } else {
-      await fileRepo.exportAllToFolder(this.exportState());
-      showToast('Google Drive vinculado. Tus personajes se han subido a la carpeta "DnD Master Hub".', 'success', 'Google Drive');
+    const effectiveClientId = (clientId || fileRepo.gdrive.clientId || '').trim();
+    if (!effectiveClientId) {
+      const error = 'Introduce tu Client ID de Google Cloud OAuth para conectar directamente con Google Drive.';
+      showToast(error, 'error', 'Google Drive');
+      return { success: false, requiresClientId: true, error };
     }
-    return res;
+
+    try {
+      fileRepo.setBusy(true, 'Preparando conexión con Google Drive...');
+      await fileRepo.preloadGoogleIdentity();
+    } catch (err) {
+      fileRepo.setBusy(false);
+      const error = err.message || 'No se pudo cargar el cliente de Google Identity.';
+      showToast(error, 'error', 'Google Drive');
+      return { success: false, error };
+    } finally {
+      fileRepo.setBusy(false);
+    }
+
+    const confirmed = await showConfirmModal({
+      title: 'Conectar y Sincronizar con Google Drive',
+      message: 'Al sincronizar con Google Drive, si el repositorio en la nube ("DnD Master Hub") ya contiene datos se sobrescribirán las campañas y personajes actuales que tienes en la aplicación. Si está vacío, se subirán tus datos actuales. ¿Deseas continuar?',
+      confirmText: 'Conectar y Sincronizar',
+      cancelText: 'Cancelar',
+      danger: false,
+      icon: 'cloud'
+    });
+    if (!confirmed) {
+      return { success: false, cancelled: true };
+    }
+
+    fileRepo.setBusy(true, 'Conectando con Google Drive...');
+    try {
+      const res = await fileRepo.connectGoogleDrive(effectiveClientId);
+      if (!res.success) {
+        if (!res.cancelled && res.error) showToast(res.error, 'error', 'Google Drive');
+        return res;
+      }
+
+      fileRepo.setBusy(true, 'Descargando campañas y personajes desde Google Drive...');
+      const existing = await fileRepo.loadAllFromFolder();
+      if (existing.success && ((existing.characters && existing.characters.length > 0) || (existing.campaigns && existing.campaigns.length > 0))) {
+        this.importState(existing);
+        showToast(`Google Drive vinculado. Se han cargado ${existing.characters?.length || 0} personajes.`, 'success', 'Google Drive');
+      } else {
+        fileRepo.setBusy(true, 'Subiendo campañas y personajes a Google Drive...');
+        await fileRepo.exportAllToFolder(this.exportState());
+        showToast('Google Drive vinculado. Tus personajes se han subido a la carpeta "DnD Master Hub".', 'success', 'Google Drive');
+      }
+      return res;
+    } finally {
+      fileRepo.setBusy(false);
+    }
   }
 
   /**
    * Desvincula la carpeta del repositorio.
    */
   async disconnectFileRepository() {
+    if (fileRepo.isBusy) return;
     await fileRepo.disconnectFolder();
     showToast('Carpeta desconectada. Los cambios continuarán guardándose en la caché del navegador.', 'info', 'Repositorio Desconectado');
   }
@@ -773,35 +851,49 @@ class AppStore extends EventEmitter {
    * Fuerza el volcado de todos los datos en memoria hacia los ficheros físicos.
    */
   async syncAllToFileRepository() {
+    if (fileRepo.isBusy) return false;
     if (!fileRepo.isConnected) {
       showToast('No hay ninguna carpeta vinculada.', 'warning', 'Repositorio');
       return false;
     }
-    const success = await fileRepo.exportAllToFolder(this.exportState());
-    if (success) {
-      showToast('Todos los personajes y campañas se han guardado en los ficheros.', 'success', 'Guardado en Disco');
-    } else {
-      showToast('Error al escribir en la carpeta.', 'error', 'Error');
+    const repoLabel = fileRepo.repoType === 'gdrive' ? 'Google Drive' : `la carpeta "${fileRepo.folderName}"`;
+    fileRepo.setBusy(true, `Guardando y sobrescribiendo todos los datos en ${repoLabel}...`);
+    try {
+      const success = await fileRepo.exportAllToFolder(this.exportState());
+      if (success) {
+        showToast('Todos los personajes y campañas se han guardado en los ficheros del repositorio.', 'success', 'Repositorio Actualizado');
+      } else {
+        showToast('Error al escribir en el repositorio.', 'error', 'Error');
+      }
+      return success;
+    } finally {
+      fileRepo.setBusy(false);
     }
-    return success;
   }
 
   /**
    * Recarga todos los datos desde los ficheros de la carpeta vinculada.
    */
   async loadAllFromFileRepository() {
+    if (fileRepo.isBusy) return false;
     if (!fileRepo.isConnected) {
       showToast('No hay ninguna carpeta vinculada.', 'warning', 'Repositorio');
       return false;
     }
-    const res = await fileRepo.loadAllFromFolder();
-    if (res.success) {
-      this.importState(res);
-      showToast(`Datos recargados desde la carpeta (${res.characters?.length || 0} PJs).`, 'success', 'Repositorio');
-      return true;
-    } else {
-      showToast(res.error || 'Error leyendo los ficheros.', 'error', 'Error');
-      return false;
+    const repoLabel = fileRepo.repoType === 'gdrive' ? 'Google Drive' : `la carpeta "${fileRepo.folderName}"`;
+    fileRepo.setBusy(true, `Descargando datos desde ${repoLabel}...`);
+    try {
+      const res = await fileRepo.loadAllFromFolder();
+      if (res.success) {
+        this.importState(res);
+        showToast(`Datos recargados desde el repositorio (${res.characters?.length || 0} PJs).`, 'success', 'Repositorio');
+        return true;
+      } else {
+        showToast(res.error || 'Error leyendo los ficheros.', 'error', 'Error');
+        return false;
+      }
+    } finally {
+      fileRepo.setBusy(false);
     }
   }
 

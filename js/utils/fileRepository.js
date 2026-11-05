@@ -96,6 +96,8 @@ export class FileRepositoryManager {
     this.statusListeners = new Set();
     this.debounceTimers = new Map();
     this.lastSyncTime = null;
+    this.isBusy = false;
+    this.busyMessage = '';
 
     // Google Drive state
     this.gdrive = {
@@ -145,8 +147,34 @@ export class FileRepositoryManager {
       repoType: this.repoType,
       folderName: this.folderName,
       lastSyncTime: this.lastSyncTime,
-      hasGdriveClientId: Boolean(this.gdrive.clientId)
+      hasGdriveClientId: Boolean(this.gdrive.clientId),
+      isBusy: this.isBusy,
+      busyMessage: this.busyMessage,
+      syncing: this.isBusy
     };
+  }
+
+  /**
+   * Establece el estado de bloqueo/loader mientras se conecta, descarga o sincroniza el repositorio.
+   * @param {boolean} isBusy
+   * @param {string} [message='']
+   */
+  setBusy(isBusy, message = '') {
+    this.isBusy = Boolean(isBusy);
+    this.busyMessage = this.isBusy ? (message || 'Sincronizando con el repositorio...') : '';
+    this.notifyStatus({
+      isBusy: this.isBusy,
+      busyMessage: this.busyMessage,
+      syncing: this.isBusy
+    });
+  }
+
+  /**
+   * Precarga la librería de Google Identity Services antes de solicitar confirmación,
+   * preservando la activación de clic del usuario para el popup OAuth.
+   */
+  async preloadGoogleIdentity() {
+    return await loadGsiClient();
   }
 
   // ==========================================
@@ -364,16 +392,25 @@ export class FileRepositoryManager {
 
     try {
       const oauth2 = await loadGsiClient();
+      this.setBusy(true, 'Esperando autorización en Google Drive...');
       return new Promise((resolve) => {
         const tokenClient = oauth2.initTokenClient({
           client_id: clientId,
           scope: 'https://www.googleapis.com/auth/drive.file',
+          error_callback: (err) => {
+            resolve({
+              success: false,
+              cancelled: err?.type === 'popup_closed',
+              error: err?.type === 'popup_closed' ? '' : (err?.message || 'Se canceló o cerró la ventana de Google Drive.')
+            });
+          },
           callback: async (resp) => {
             if (resp.error) {
               return resolve({ success: false, error: resp.error_description || resp.error });
             }
             this.gdrive.token = resp.access_token;
             try {
+              this.setBusy(true, 'Verificando carpetas en Google Drive...');
               await this.setupGoogleDriveFolders();
               this.repoType = 'gdrive';
               this.folderName = 'Google Drive: DnD Master Hub';

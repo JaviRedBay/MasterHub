@@ -20,6 +20,7 @@ import {
 import { exportStateToJsonFile, parseAndValidateBackup } from './utils/storage.js';
 import { themeManager } from './utils/themeManager.js';
 import { fileRepo } from './utils/fileRepository.js';
+import { showConfirmModal, showAlertModal, showToast } from './utils/uiFeedback.js';
 
 class App {
   constructor() {
@@ -278,14 +279,24 @@ class App {
     mobileOpenBtn?.addEventListener('click', () => dialog.showModal());
     repoPill?.addEventListener('click', () => dialog.showModal());
     mobileRepoBtn?.addEventListener('click', () => dialog.showModal());
-    closeBtn?.addEventListener('click', () => dialog.close());
+    closeBtn?.addEventListener('click', () => {
+      if (fileRepo.isBusy) return;
+      dialog.close();
+    });
 
     dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) dialog.close();
+      if (e.target === dialog && !fileRepo.isBusy) dialog.close();
+    });
+
+    dialog.addEventListener('cancel', (e) => {
+      if (fileRepo.isBusy) {
+        e.preventDefault();
+      }
     });
 
     // --- REPOSITORIO DE FICHEROS FÍSICOS (DISCO / GOOGLE DRIVE) ---
     document.getElementById('btn-connect-folder')?.addEventListener('click', async () => {
+      if (fileRepo.isBusy) return;
       await store.connectFileRepository();
     });
 
@@ -294,6 +305,7 @@ class App {
       gdriveInput.value = fileRepo.gdrive.clientId;
     }
     document.getElementById('btn-connect-gdrive')?.addEventListener('click', async () => {
+      if (fileRepo.isBusy) return;
       const clientId = gdriveInput?.value;
       await store.connectGoogleDrive(clientId);
     });
@@ -307,17 +319,48 @@ class App {
     });
 
     document.getElementById('btn-disconnect-folder')?.addEventListener('click', async () => {
-      if (confirm('¿Desvincular el repositorio? Tus ficheros y datos se conservarán, pero los cambios futuros dejarán de guardarse automáticamente en esa ubicación.')) {
+      if (fileRepo.isBusy) return;
+      const confirmed = await showConfirmModal({
+        title: 'Desvincular Repositorio',
+        message: '¿Desvincular el repositorio? Tus ficheros y datos actuales se conservarán, pero los cambios futuros dejarán de guardarse automáticamente en esa ubicación.',
+        confirmText: 'Desvincular',
+        cancelText: 'Cancelar',
+        danger: true,
+        icon: 'unlink'
+      });
+      if (confirmed) {
         await store.disconnectFileRepository();
       }
     });
 
     document.getElementById('btn-sync-all-folder')?.addEventListener('click', async () => {
-      await store.syncAllToFileRepository();
+      if (fileRepo.isBusy) return;
+      const repoLabel = fileRepo.repoType === 'gdrive' ? 'Google Drive' : `la carpeta local "${fileRepo.folderName}"`;
+      const confirmed = await showConfirmModal({
+        title: 'Sobrescribir Repositorio con Datos Actuales',
+        message: `¿Guardar todos tus datos actuales en ${repoLabel}? Se sobrescribirán los archivos guardados en el repositorio con las campañas y personajes que tienes ahora mismo en la aplicación.`,
+        confirmText: 'Guardar y Sobrescribir',
+        cancelText: 'Cancelar',
+        danger: false,
+        icon: 'refresh-cw'
+      });
+      if (confirmed) {
+        await store.syncAllToFileRepository();
+      }
     });
 
     document.getElementById('btn-load-all-folder')?.addEventListener('click', async () => {
-      if (confirm('¿Recargar todos los datos desde los ficheros del repositorio? Cualquier dato no guardado será sobrescrito con el contenido de los ficheros.')) {
+      if (fileRepo.isBusy) return;
+      const repoLabel = fileRepo.repoType === 'gdrive' ? 'Google Drive' : `la carpeta local "${fileRepo.folderName}"`;
+      const confirmed = await showConfirmModal({
+        title: 'Recargar y Sobrescribir desde Repositorio',
+        message: `¿Recargar todos los datos desde ${repoLabel}? Se sobrescribirán las campañas y personajes actuales de la aplicación con el contenido guardado en el repositorio.`,
+        confirmText: 'Recargar y Sobrescribir',
+        cancelText: 'Cancelar',
+        danger: true,
+        icon: 'folder-down'
+      });
+      if (confirmed) {
         await store.loadAllFromFileRepository();
       }
     });
@@ -325,6 +368,10 @@ class App {
     // --- COPIAS DE SEGURIDAD MANUALES EN JSON ---
     // Exportar JSON
     document.getElementById('btn-export-json')?.addEventListener('click', () => {
+      if (fileRepo.isBusy) {
+        showToast('Espera a que finalice la sincronización del repositorio antes de exportar.', 'warning', 'Sincronizando');
+        return;
+      }
       const state = store.exportState();
       exportStateToJsonFile(state);
     });
@@ -332,29 +379,57 @@ class App {
     // Importar JSON
     const fileInput = document.getElementById('import-json-file');
     fileInput?.addEventListener('change', (e) => {
+      if (fileRepo.isBusy) {
+        e.target.value = '';
+        showToast('Espera a que finalice la sincronización del repositorio antes de cargar un archivo.', 'warning', 'Sincronizando');
+        return;
+      }
       const file = e.target.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const content = event.target?.result;
         const parsed = parseAndValidateBackup(content);
+        e.target.value = '';
         if (parsed.success) {
+          const confirmed = await showConfirmModal({
+            title: 'Sobrescribir con Copia de Respaldo (JSON)',
+            message: 'Al cargar este archivo JSON se sobrescribirán las campañas y personajes actuales que tienes en la aplicación. ¿Deseas continuar?',
+            confirmText: 'Cargar y Sobrescribir',
+            cancelText: 'Cancelar',
+            danger: true,
+            icon: 'upload'
+          });
+          if (!confirmed) return;
           store.importState(parsed);
-          alert('¡Copia de respaldo importada con éxito!');
+          showToast('¡Copia de respaldo importada con éxito!', 'success', 'Respaldo Cargado');
           dialog.close();
         } else {
-          alert('Error al leer el archivo JSON: ' + (parsed.error || 'Formato desconocido'));
+          await showAlertModal({
+            title: 'Error de Archivo JSON',
+            message: 'Error al leer el archivo JSON: ' + (parsed.error || 'Formato desconocido'),
+            type: 'error'
+          });
         }
       };
       reader.readAsText(file);
     });
 
     // Restablecer a valores por defecto
-    document.getElementById('btn-reset-data')?.addEventListener('click', () => {
-      if (confirm('¿Restablecer todas las campañas y personajes a los datos canónicos iniciales?')) {
+    document.getElementById('btn-reset-data')?.addEventListener('click', async () => {
+      if (fileRepo.isBusy) return;
+      const confirmed = await showConfirmModal({
+        title: 'Restablecer a Datos Iniciales',
+        message: '¿Restablecer todas las campañas y personajes a los datos canónicos iniciales? Se sobrescribirán todos los datos actuales.',
+        confirmText: 'Restablecer Datos',
+        cancelText: 'Cancelar',
+        danger: true,
+        icon: 'rotate-ccw'
+      });
+      if (confirmed) {
         store.resetToDefaults();
-        alert('Se han restaurado los datos iniciales.');
+        showToast('Se han restaurado los datos canónicos iniciales.', 'info', 'Datos Restablecidos');
         dialog.close();
       }
     });
@@ -369,10 +444,37 @@ class App {
     const lastSyncEl = document.getElementById('repo-last-sync');
     const btnConnectText = document.getElementById('btn-connect-folder-text');
     const btnConnectFolder = document.getElementById('btn-connect-folder');
+    const btnConnectGdrive = document.getElementById('btn-connect-gdrive');
+    const gdriveClientIdInput = document.getElementById('gdrive-client-id-input');
     const firefoxNotice = document.getElementById('firefox-repo-notice');
     const btnSync = document.getElementById('btn-sync-all-folder');
     const btnLoad = document.getElementById('btn-load-all-folder');
     const btnDisconnect = document.getElementById('btn-disconnect-folder');
+    const btnExportJson = document.getElementById('btn-export-json');
+    const importJsonInput = document.getElementById('import-json-file');
+    const labelImportJson = document.getElementById('label-import-json');
+    const btnResetData = document.getElementById('btn-reset-data');
+    const closeBackupBtn = document.getElementById('close-backup-modal');
+    const busyLoader = document.getElementById('repo-busy-loader');
+    const busyText = document.getElementById('repo-busy-text');
+    const isBusy = Boolean(status.isBusy);
+
+    if (busyLoader) {
+      busyLoader.classList.toggle('d-none', !isBusy);
+    }
+    if (busyText && isBusy) {
+      busyText.textContent = status.busyMessage || 'Conectando y descargando el repositorio...';
+    }
+
+    // Bloquear/desbloquear controles de carga y guardado mientras conecta o descarga
+    [btnConnectGdrive, gdriveClientIdInput, btnSync, btnLoad, btnDisconnect, btnExportJson, importJsonInput, btnResetData, closeBackupBtn].forEach(el => {
+      if (el) el.disabled = isBusy;
+    });
+    if (labelImportJson) {
+      labelImportJson.classList.toggle('disabled', isBusy);
+      labelImportJson.style.pointerEvents = isBusy ? 'none' : '';
+      labelImportJson.style.opacity = isBusy ? '0.6' : '';
+    }
 
     // Comprobar soporte de carpetas locales (Firefox/Safari vs Chrome/Edge/Brave)
     if (!status.isLocalSupported) {
@@ -387,7 +489,7 @@ class App {
     } else {
       firefoxNotice?.classList.add('d-none');
       if (btnConnectFolder) {
-        btnConnectFolder.disabled = false;
+        btnConnectFolder.disabled = isBusy;
         btnConnectFolder.title = 'Vincular carpeta en disco o Google Drive Desktop';
       }
       if (btnConnectText) {
@@ -398,16 +500,20 @@ class App {
     if (status.isConnected) {
       const isDrive = status.repoType === 'gdrive';
       if (pill) {
-        pill.className = 'btn btn-sm btn-outline-success d-flex align-items-center gap-1';
+        pill.className = isBusy
+          ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
+          : 'btn btn-sm btn-outline-success d-flex align-items-center gap-1';
         pill.title = isDrive ? 'Sincronizado con Google Drive (Carpeta DnD Master Hub)' : `Carpeta: ${status.folderName} (Guardado automático activo)`;
       }
       if (pillLabel) {
-        pillLabel.textContent = isDrive ? 'Google Drive' : (status.folderName.length > 14 ? `${status.folderName.slice(0, 14)}…` : status.folderName);
+        pillLabel.textContent = isBusy
+          ? 'Sincronizando...'
+          : (isDrive ? 'Google Drive' : (status.folderName.length > 14 ? `${status.folderName.slice(0, 14)}…` : status.folderName));
       }
       if (badge) {
-        if (status.syncing) {
+        if (status.syncing || isBusy) {
           badge.className = 'badge bg-info text-dark';
-          badge.textContent = isDrive ? 'Subiendo a Drive...' : 'Guardando en disco...';
+          badge.textContent = status.busyMessage || (isDrive ? 'Sincronizando Drive...' : 'Sincronizando disco...');
         } else {
           badge.className = 'badge bg-success';
           badge.textContent = isDrive ? 'Conectado a Google Drive' : 'Conectado a Disco';
@@ -425,13 +531,20 @@ class App {
       btnDisconnect?.classList.add('d-flex');
     } else {
       if (pill) {
-        pill.className = 'btn btn-sm btn-outline-secondary d-flex align-items-center gap-1';
+        pill.className = isBusy
+          ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
+          : 'btn btn-sm btn-outline-secondary d-flex align-items-center gap-1';
         pill.title = 'Almacenamiento en memoria del navegador (Sin carpeta vinculada)';
       }
-      if (pillLabel) pillLabel.textContent = 'Modo Navegador';
+      if (pillLabel) pillLabel.textContent = isBusy ? 'Conectando...' : 'Modo Navegador';
       if (badge) {
-        badge.className = 'badge bg-secondary';
-        badge.textContent = 'Sin vincular';
+        if (isBusy) {
+          badge.className = 'badge bg-warning text-dark';
+          badge.textContent = 'Conectando...';
+        } else {
+          badge.className = 'badge bg-secondary';
+          badge.textContent = 'Sin vincular';
+        }
       }
       if (details) details.classList.add('d-none');
 

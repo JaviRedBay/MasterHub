@@ -13,10 +13,11 @@ Reglas normativas para mantener la coherencia matemática, visual y de datos en 
 - Distancias de movimiento, alcance de armas y conjuros: Siempre en **metros** (formateado con coma decimal: `1,5 m`, `9 m`, `18 m`, `36 m`).
 - Pesos de inventario, objetos y capacidad de carga: Siempre en **kilogramos** (`kg`).
 
-## 3. Responsividad y Breakpoints
+## 3. Responsividad, Breakpoints y Compacidad Multi-dispositivo (PC, Tablet y Móvil)
+- **Diseño para PC, Tablet y Móvil**: La web se utiliza en sesiones en vivo desde ordenadores, tablets y móviles. Al crear o modificar elementos visuales (botones de acción, controles de experiencia/PG, selectores, etiquetas), utiliza tamaños reducidos y compactos (`py-0 px-1`, `font-size: 0.68rem-0.78rem`, `flex-wrap`, `gap-1`) para evitar que ocupen demasiado espacio o empujen el contenido en pantallas de móvil y tablet.
 - **Móvil (< 768px)**: 1 columna secuencial (`col-12`). Barra superior recogida en botón de menú `[ ☰ ]`.
 - **Tablet (768px a 1280px inclusive)**:
-  - Fila superior de la hoja interactiva en **2 columnas**:
+  - Fila superior de la Hoja Interactiva en **2 columnas**:
     - Columna 1 (Atributos y salvaciones): `33.33%`
     - Columna 2 (Combate y Ataques): `66.67%` (holgura amplia para la tabla de ataques)
     - Columna 3 (Habilidades): `100%` en la fila inferior.

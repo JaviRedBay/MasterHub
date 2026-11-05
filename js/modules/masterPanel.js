@@ -27,10 +27,13 @@ import {
   getCharacterHitDicePool,
   getClassLevel,
   formatModifier,
-  getAbilityShortName
+  getAbilityShortName,
+  getMinXpForLevel,
+  getNextLevelXp
 } from '../constants/dnd55Rules.js';
 import { escapeHtml } from '../utils/formatters.js';
 import { rollDie, rollWithAdvantage, rollWithDisadvantage } from '../utils/dice.js';
+import { isSafeAvatarDataUrl } from '../utils/imageValidator.js';
 import { showToast, showSecretRollModal } from '../utils/uiFeedback.js';
 
 export class MasterPanelModule {
@@ -42,6 +45,7 @@ export class MasterPanelModule {
   initListeners() {
     store.on('characters:updated', () => this.render());
     store.on('character:hp-changed', () => this.render());
+    store.on('character:xp-changed', () => this.render());
     store.on('character:inspiration-toggled', () => this.render());
     store.on('character:spellslot-changed', () => this.render());
     store.on('character:trait-changed', () => this.render());
@@ -100,19 +104,20 @@ export class MasterPanelModule {
                 <th class="text-start ps-3">Personaje</th>
                 <th>Clase</th>
                 <th>Nivel</th>
+                <th>PX</th>
                 <th>CA</th>
                 <th>Percepción Pasiva</th>
                 <th>Investigación Pasiva</th>
                 <th>Perspicacia Pasiva</th>
                 <th>Iniciativa</th>
                 <th>CD Conjuros</th>
-                <th>Hoja Oficial</th>
+                <th>Hoja Interactiva</th>
               </tr>
             </thead>
             <tbody>
               ${characters.length === 0 ? `
                 <tr>
-                  <td colspan="10" class="text-muted py-4">No hay personajes asignados a esta campaña. Ve al Asistente de Creación o Campañas para añadir aventureros.</td>
+                  <td colspan="11" class="text-muted py-4">No hay personajes asignados a esta campaña. Ve al Asistente de Creación o Campañas para añadir aventureros.</td>
                 </tr>
               ` : characters.map(char => {
                 const acInfo = calculateArmorClass(char);
@@ -124,6 +129,9 @@ export class MasterPanelModule {
                 const className = getClassName(char.classId);
                 const subclassName = getSubclassName(char.subclassId);
                 const fullClass = getCharacterFullClassTitle(char);
+                const charXp = Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0);
+                const nextXp = getNextLevelXp(char.level);
+                const hasSafeAvatar = isSafeAvatarDataUrl(char.avatarThumb);
 
                 return `
                   <tr>
@@ -132,6 +140,7 @@ export class MasterPanelModule {
                         <button class="table-inspiration-badge ${char.heroicInspiration ? 'active' : 'inactive'} btn-toggle-inspiration" data-char-id="${char.id}" title="${char.heroicInspiration ? 'Tiene Inspiración Heroica (haz clic para gastar)' : 'Sin inspiración (haz clic para otorgar)'}">
                           ${char.heroicInspiration ? '★' : '☆'}
                         </button>
+                        ${hasSafeAvatar ? `<img src="${escapeHtml(char.avatarThumb)}" alt="" class="rounded-circle border border-warning flex-shrink-0" style="width: 24px; height: 24px; object-fit: cover;">` : ''}
                         <button class="btn btn-link text-warning p-0 text-decoration-none fw-bold text-start btn-scroll-to-card" data-char-id="${char.id}" title="Ver tarjeta de ${escapeHtml(char.name)} en este panel">
                           ${escapeHtml(char.name)}
                         </button>
@@ -139,6 +148,7 @@ export class MasterPanelModule {
                     </td>
                     <td><span class="badge bg-dark border border-secondary text-warning">${escapeHtml(fullClass)}</span></td>
                     <td><span class="badge bg-warning text-dark fw-bold">Nv ${char.level}</span></td>
+                    <td class="text-warning small fw-semibold" title="${nextXp ? `Siguiente nivel (${char.level + 1}): ${nextXp.toLocaleString('es-ES')} PX` : 'Nivel máximo alcanzado'}" style="cursor: help;">${charXp.toLocaleString('es-ES')} PX</td>
                     <td class="fw-bold text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</td>
                     <td class="fw-bold text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">${passPerc.value}</td>
                     <td title="${escapeHtml(passInv.formula)}" style="cursor: help;">${passInv.value}</td>
@@ -146,8 +156,8 @@ export class MasterPanelModule {
                     <td class="text-secondary" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">${formatModifier(initInfo.bonus)}</td>
                     <td title="${escapeHtml(spellInfo?.dcFormula || '')}" style="cursor: help;">${spellInfo?.spellSaveDc ? `<span class="badge bg-primary">CD ${spellInfo.spellSaveDc}</span>` : '<span class="text-muted">-</span>'}</td>
                     <td>
-                      <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center gap-1" data-char-id="${char.id}" title="Abrir Hoja Oficial de ${escapeHtml(char.name)}">
-                        <i data-lucide="scroll" style="width: 12px; height: 12px;"></i> Hoja Oficial
+                      <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center gap-1" data-char-id="${char.id}" title="Abrir Hoja Interactiva de ${escapeHtml(char.name)}">
+                        <i data-lucide="scroll" style="width: 12px; height: 12px;"></i> Hoja Interactiva
                       </button>
                     </td>
                   </tr>
@@ -189,6 +199,8 @@ export class MasterPanelModule {
     const acInfo = calculateArmorClass(char);
     const initInfo = calculateInitiative(char);
     const passPerc = calculatePassivePerceptionDetails(char);
+    const charXp = Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0);
+    const nextXp = getNextLevelXp(char.level);
 
     // Dados de Golpe y Tiradas de Muerte
     const classDef = DND55_CLASSES.find(c => c.id === char.classId);
@@ -227,32 +239,55 @@ export class MasterPanelModule {
     const layOnHandsPool = paladinLvl * 5;
     const layOnHandsUsed = char.restTraitsState ? (char.restTraitsState['Imposición de Manos'] || 0) : 0;
     const layOnHandsRemaining = Math.max(0, layOnHandsPool - layOnHandsUsed);
+    const hasSafeAvatar = isSafeAvatarDataUrl(char.avatarThumb);
 
     return `
       <div class="col-12 col-lg-6" id="master-card-${char.id}">
         <div class="rpg-card h-100 p-3">
           <!-- Header de Personaje -->
           <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary pb-2">
-            <div>
-              <div class="d-flex align-items-center gap-2">
-                <h4 class="h5 m-0 text-light fw-bold">${escapeHtml(char.name)}</h4>
-                <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center gap-1 py-0 px-2" data-char-id="${char.id}" title="Abrir Hoja Oficial de ${escapeHtml(char.name)}">
-                  <i data-lucide="scroll" style="width: 11px; height: 11px;"></i> Hoja Oficial
-                </button>
-              </div>
-              <div class="text-secondary small mt-1">
-                ${escapeHtml(fullSpecies)} &bull; ${escapeHtml(fullClass)} Nivel ${char.level}
-              </div>
-              <div class="d-flex gap-2 mt-1">
-                <span class="badge bg-dark border border-secondary text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">CA ${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</span>
-                <span class="badge bg-dark border border-secondary text-light" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">Inic ${formatModifier(initInfo.bonus)}</span>
-                <span class="badge bg-dark border border-secondary text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">Per. Pasiva ${passPerc.value}</span>
+            <div class="d-flex align-items-start gap-2">
+              ${hasSafeAvatar ? `
+                <img src="${escapeHtml(char.avatarThumb)}" alt="${escapeHtml(char.name)}" class="rounded-circle border border-warning flex-shrink-0 mt-1" style="width: 38px; height: 38px; object-fit: cover;" title="${escapeHtml(char.name)} (Avatar ≤ 20 KB)">
+              ` : ''}
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <h4 class="h5 m-0 text-light fw-bold">${escapeHtml(char.name)}</h4>
+                  <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center gap-1 py-0 px-2" data-char-id="${char.id}" title="Abrir Hoja Interactiva de ${escapeHtml(char.name)}">
+                    <i data-lucide="scroll" style="width: 11px; height: 11px;"></i> Hoja Interactiva
+                  </button>
+                </div>
+                <div class="text-secondary small mt-1">
+                  ${escapeHtml(fullSpecies)} &bull; ${escapeHtml(fullClass)} Nivel ${char.level}
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-1">
+                  <span class="badge bg-dark border border-secondary text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">CA ${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</span>
+                  <span class="badge bg-dark border border-secondary text-light" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">Inic ${formatModifier(initInfo.bonus)}</span>
+                  <span class="badge bg-dark border border-secondary text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">Per. Pasiva ${passPerc.value}</span>
+                  <span class="badge bg-dark border border-warning text-warning" title="${nextXp ? `Mínimo Nv ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX | Sig. Nivel (${char.level + 1}): ${nextXp.toLocaleString('es-ES')} PX` : 'Nivel Máximo (20)'}" style="cursor: help;">✨ ${charXp.toLocaleString('es-ES')}${nextXp ? ` / ${nextXp.toLocaleString('es-ES')}` : ''} PX</span>
+                </div>
               </div>
             </div>
             <!-- Botón de Inspiración Heroica -->
             <button class="heroic-inspiration-badge ${char.heroicInspiration ? 'active' : ''} btn-toggle-inspiration" data-char-id="${char.id}" title="${char.heroicInspiration ? 'Tiene Inspiración Heroica (haz clic para gastar)' : 'Sin inspiración (haz clic para otorgar)'}">
               <span>★</span> Inspiración Heroica
             </button>
+          </div>
+
+          <!-- Control de Experiencia (PX) -->
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 p-1 px-2 rounded bg-dark border border-secondary mb-2">
+            <div class="d-flex flex-wrap align-items-center gap-1">
+              <span class="small text-warning fw-bold me-1" style="font-size: 0.7rem;">PX:</span>
+              <button type="button" class="btn btn-xs btn-outline-secondary btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="-100" title="Restar 100 PX">-100</button>
+              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="50" title="Otorgar 50 PX">+50</button>
+              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="100" title="Otorgar 100 PX">+100</button>
+              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="500" title="Otorgar 500 PX">+500</button>
+              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="1000" title="Otorgar 1000 PX">+1000</button>
+            </div>
+            <div class="input-group input-group-sm ms-auto" style="width: 118px;">
+              <span class="input-group-text bg-secondary border-secondary text-light py-0 px-1" style="font-size: 0.68rem;">Total</span>
+              <input type="number" class="form-control bg-dark border-secondary text-warning fw-bold text-center py-0 px-1 input-mp-xp" style="font-size: 0.75rem; height: 22px;" data-char-id="${char.id}" value="${charXp}" min="0" step="1">
+            </div>
           </div>
 
           <!-- Barra y Controles de Puntos de Golpe -->
@@ -495,7 +530,7 @@ export class MasterPanelModule {
               const nm = (it.name || '').toLowerCase();
               if (cat === 'sortilegio' || nm.startsWith('sortilegio')) return false;
               if (Number(it.maxCharges) > 0) return false;
-              return cat === 'pergamino' || cat === 'consumible' || nm.startsWith('pergamino') || nm.startsWith('poción') || nm.startsWith('pocion');
+              return cat === 'pergamino' || cat === 'consumible' || cat === 'pocion' || nm.startsWith('pergamino') || nm.startsWith('poción') || nm.startsWith('pocion') || nm.startsWith('antídoto') || nm.startsWith('antidoto') || nm.startsWith('antorcha') || nm.startsWith('racion') || nm.startsWith('ración');
             });
             if (invConsumables.length === 0) return '';
             return `
@@ -525,25 +560,6 @@ export class MasterPanelModule {
             `;
           })()}
 
-          <!-- Consumibles Rápidos -->
-          <div class="mb-3">
-            <div class="small text-secondary fw-bold mb-1">Consumibles Rápidos</div>
-            <div class="row g-2">
-              ${(char.customConsumables || []).map((cons, index) => `
-                <div class="col-6">
-                  <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded bg-dark border border-secondary">
-                    <span class="small text-truncate me-1" title="${escapeHtml(cons.name)}">${escapeHtml(cons.name)}</span>
-                    <div class="d-flex align-items-center gap-1">
-                      <button class="btn btn-sm btn-outline-danger btn-counter btn-consumable-adjust" data-char-id="${char.id}" data-index="${index}" data-delta="-1">-</button>
-                      <span class="fw-bold small px-1">${cons.quantity}</span>
-                      <button class="btn btn-sm btn-outline-success btn-counter btn-consumable-adjust" data-char-id="${char.id}" data-index="${index}" data-delta="1">+</button>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
           <!-- Acciones de Descanso Individual y Enlaces -->
           <div class="d-flex justify-content-between align-items-center border-top border-secondary pt-2 mt-auto">
             <div class="d-flex gap-2">
@@ -555,7 +571,7 @@ export class MasterPanelModule {
               </button>
             </div>
             <button class="btn btn-sm btn-rpg-secondary btn-open-sheet" data-char-id="${char.id}">
-              Ver Hoja Completa &rarr;
+              Ver Hoja Interactiva &rarr;
             </button>
           </div>
         </div>
@@ -607,6 +623,24 @@ export class MasterPanelModule {
         if (char) {
           store.updateCharacterHp(charId, char.currentHp, val);
         }
+      });
+    });
+
+    // Ajuste de Experiencia (PX) con botones rápidos
+    this.container.querySelectorAll('.btn-xp-adjust').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        const delta = parseInt(e.currentTarget.dataset.delta, 10) || 0;
+        store.applyXpDelta(charId, delta);
+      });
+    });
+
+    // Experiencia (PX) directa desde input numérico
+    this.container.querySelectorAll('.input-mp-xp').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        const val = Math.max(0, parseInt(e.currentTarget.value, 10) || 0);
+        store.updateCharacterXp(charId, val);
       });
     });
 

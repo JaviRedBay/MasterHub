@@ -64,12 +64,15 @@ import {
   characterHasFeat,
   characterQualifiesForFightingStyle,
   getInnateSpellsForCharacter,
-  getSpellAttackInfo
+  getSpellAttackInfo,
+  getMinXpForLevel,
+  getNextLevelXp
 } from '../constants/dnd55Rules.js';
 import { escapeHtml, formatWeight, repairMojibake } from '../utils/formatters.js';
 import { downloadFilledDndPdf, createFilledDndPdfBlobUrl } from '../utils/pdfExport.js';
 import { showToast, showConfirmModal } from '../utils/uiFeedback.js';
 import { rollDie } from '../utils/dice.js';
+import { generateMasterPanelAvatarFromUrl, isSafeAvatarDataUrl, isSafeExternalImageUrl } from '../utils/imageValidator.js';
 
 export class CharacterSheetModule {
   constructor(containerId = 'sheet-container') {
@@ -141,6 +144,7 @@ export class CharacterSheetModule {
     store.on('characters:updated', () => this.render());
     store.on('campaign:selected', () => this.render());
     store.on('character:hp-changed', () => this.render());
+    store.on('character:xp-changed', () => this.render());
     store.on('character:spellslot-changed', () => this.render());
   }
 
@@ -227,10 +231,11 @@ export class CharacterSheetModule {
       modified = true;
     }
 
-    // Si tiene armorId pero no está en inventario, añadirla
-    if (char.armorId && char.armorId !== 'sin_armadura' && char.armorId !== 'none') {
-      const hasArmorInInv = char.inventory.some(i => i.id === char.armorId || i.armorType === char.armorId);
-      if (!hasArmorInInv) {
+    const hasInventory = Array.isArray(char.inventory) && char.inventory.length > 0;
+
+    // Si tiene armorId pero no tiene inventario inicializado, añadirla; si ya tiene inventario, sincronizar char.armorId desde el inventario
+    if (!hasInventory) {
+      if (char.armorId && char.armorId !== 'sin_armadura' && char.armorId !== 'none') {
         const armorDef = DND55_ARMORS.find(a => a.id === char.armorId);
         if (armorDef) {
           char.inventory.push({
@@ -249,12 +254,7 @@ export class CharacterSheetModule {
           modified = true;
         }
       }
-    }
-
-    // Si tiene escudo pero no está en inventario
-    if (char.hasShield) {
-      const hasShieldInInv = char.inventory.some(i => i.id === 'escudo' || i.armorType === 'escudo' || i.name.toLowerCase().includes('escudo'));
-      if (!hasShieldInInv) {
+      if (char.hasShield) {
         char.inventory.push({
           id: 'escudo',
           name: 'Escudo (+2 CA)',
@@ -269,13 +269,8 @@ export class CharacterSheetModule {
         });
         modified = true;
       }
-    }
-
-    // Armas equipadas aseguradas en inventario
-    if (char.equippedWeapons && char.equippedWeapons.length > 0) {
-      char.equippedWeapons.forEach(wId => {
-        const hasWeaponInInv = char.inventory.some(i => i.id === wId || i.weaponType === wId);
-        if (!hasWeaponInInv) {
+      if (char.equippedWeapons && char.equippedWeapons.length > 0) {
+        char.equippedWeapons.forEach(wId => {
           const wDef = DND55_WEAPONS.find(w => w.id === wId);
           if (wDef) {
             char.inventory.push({
@@ -294,8 +289,30 @@ export class CharacterSheetModule {
             });
             modified = true;
           }
+        });
+      }
+    } else {
+      // El inventario es la fuente de verdad cuando ya existe: limpiar referencias residuales en armorId, hasShield y equippedWeapons
+      const eqArmor = char.inventory.find(i => i.isEquipped && (i.category === 'armadura' || (i.armorType && i.armorType !== 'escudo')) && i.armorType !== 'escudo' && !(i.name || '').toLowerCase().includes('escudo'));
+      const expectedArmorId = eqArmor ? (eqArmor.armorType || eqArmor.id) : 'sin_armadura';
+      if (char.armorId !== expectedArmorId) {
+        char.armorId = expectedArmorId;
+        modified = true;
+      }
+      const eqShield = char.inventory.some(i => i.isEquipped && (i.armorType === 'escudo' || i.category === 'escudo' || i.category === 'shield' || (i.name || '').toLowerCase().includes('escudo')));
+      if (Boolean(char.hasShield) !== eqShield) {
+        char.hasShield = eqShield;
+        modified = true;
+      }
+      if (Array.isArray(char.equippedWeapons) && char.equippedWeapons.length > 0) {
+        const validEquippedWeapons = char.equippedWeapons.filter(wId =>
+          char.inventory.some(i => i.isEquipped && (i.id === wId || i.weaponType === wId))
+        );
+        if (validEquippedWeapons.length !== char.equippedWeapons.length) {
+          char.equippedWeapons = validEquippedWeapons;
+          modified = true;
         }
-      });
+      }
     }
 
     // Auto-reparar mojibake residual en inventario
@@ -516,22 +533,42 @@ export class CharacterSheetModule {
       <div class="rpg-card-parchment p-3 p-md-4 mb-3">
         <!-- Encabezado de Identidad -->
         <div class="row g-2 mb-3 border-bottom pb-3 align-items-center" style="border-color: var(--rpg-line) !important;">
-          <div class="col-md-3">
-            <h1 class="h3 m-0 fw-bold" style="color: var(--rpg-gold-light); font-family: var(--font-title); text-shadow: var(--rpg-heading-shadow);">${escapeHtml(char.name)}</h1>
-            <div class="rpg-subdesc mt-1">Jugador: <strong>${escapeHtml(char.playerName || 'Anónimo')}</strong></div>
-            <button id="btn-sheet-edit-identity" class="btn btn-xs btn-outline-warning d-inline-flex align-items-center gap-1 mt-2" title="Editar Nombre, Jugador, Especie, Trasfondo y Alineamiento">
-              <i data-lucide="user-cog" style="width: 12px; height: 12px;"></i> Editar Identidad
-            </button>
+          <div class="col-md-4 col-lg-3">
+            <div class="d-flex align-items-center gap-3">
+              ${(isSafeExternalImageUrl(char.imageUrl) || isSafeAvatarDataUrl(char.avatarThumb)) ? `
+                <img
+                  id="sheet-char-avatar-img"
+                  src="${escapeHtml(isSafeExternalImageUrl(char.imageUrl) ? char.imageUrl : char.avatarThumb)}"
+                  ${isSafeAvatarDataUrl(char.avatarThumb) ? `data-fallback-avatar="${escapeHtml(char.avatarThumb)}" onerror="if(this.dataset.fallbackAvatar && this.src !== this.dataset.fallbackAvatar){this.src = this.dataset.fallbackAvatar;}"` : ''}
+                  referrerpolicy="no-referrer"
+                  alt="${escapeHtml(char.name)}"
+                  title="Haz clic para ver la imagen en grande"
+                  class="rounded-circle border border-2 border-warning flex-shrink-0 shadow-sm sheet-avatar-thumb"
+                  style="width: 80px; height: 80px; object-fit: cover; cursor: zoom-in;"
+                >
+              ` : ''}
+              <div class="d-flex flex-column justify-content-center align-items-start min-w-0">
+                <h1 class="h3 m-0 fw-bold text-break" style="color: var(--rpg-gold-light); font-family: var(--font-title); text-shadow: var(--rpg-heading-shadow); line-height: 1.15;">${escapeHtml(char.name)}</h1>
+                <div class="rpg-subdesc mt-1">Jugador: <strong>${escapeHtml(char.playerName || 'Anónimo')}</strong></div>
+                <button id="btn-sheet-edit-identity" class="btn btn-xs btn-outline-warning d-inline-flex align-items-center gap-1 mt-1" style="white-space: nowrap;" title="Editar Nombre, Jugador, Imagen, Especie, Trasfondo y Alineamiento">
+                  <i data-lucide="user-cog" style="width: 12px; height: 12px;"></i> Editar Identidad
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="col-md-9">
+          <div class="col-md-8 col-lg-9">
             <div class="row g-2 text-center text-md-start">
-              <div class="col-6 col-md-3">
+              <div class="col-6 col-md-2">
                 <span class="rpg-label d-block">Clase</span>
                 <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(classDisplayTitle)}">${escapeHtml(classDisplayTitle)}</strong>
               </div>
               <div class="col-6 col-md-1" title="Nivel Total del Personaje: ${char.level}">
                 <span class="rpg-label d-block">Nivel</span>
                 <span class="badge bg-warning text-dark fw-bold fs-6">Nv. ${char.level}</span>
+              </div>
+              <div class="col-6 col-md-2" title="Experiencia actual: ${(Number(char.xp) || 0).toLocaleString('es-ES')} PX (Mínimo Nv. ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX${getNextLevelXp(char.level) ? ` | Sig. nivel: ${getNextLevelXp(char.level).toLocaleString('es-ES')} PX` : ' | Nivel Máximo'})">
+                <span class="rpg-label d-block">Experiencia (PX)</span>
+                <input type="number" id="input-sheet-xp" class="form-control form-control-sm bg-dark border-secondary text-warning fw-bold text-center text-md-start py-0 px-2" value="${Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0)}" min="0" step="1" style="max-width: 115px; height: 26px; font-size: 0.85rem; margin: 0 auto 0 0;">
               </div>
               <div class="col-6 col-md-2">
                 <span class="rpg-label d-block">Especie</span>
@@ -550,14 +587,13 @@ export class CharacterSheetModule {
                 <strong class="fs-6 text-light">${escapeHtml(char.alignment || 'Neutral')}</strong>
               </div>
               <div class="col-4 col-md-1" title="Bono de Competencia: +${pb} para nivel ${char.level} (nv 1-4 = +2, nv 5-8 = +3, nv 9-12 = +4, nv 13-16 = +5, nv 17-20 = +6)" style="cursor: help;">
-                <span class="rpg-label d-block">BC</span>
-                <strong class="text-danger fs-5">+${pb}</strong>
-              </div>
-              <div class="col-6 col-md-1">
-                <span class="rpg-label d-block">Inspiración</span>
-                <button id="btn-sheet-toggle-inspiration" class="badge border-0 ${char.heroicInspiration ? 'bg-warning text-dark fw-bold' : 'bg-secondary text-light'}" title="Hacer clic para activar o consumir la Inspiración Heroica" style="cursor: pointer;">
-                  ${char.heroicInspiration ? '★ Activa' : '☆ No'}
-                </button>
+                <span class="rpg-label d-block">BC / Insp.</span>
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-1">
+                  <strong class="text-danger fs-6">+${pb}</strong>
+                  <button id="btn-sheet-toggle-inspiration" class="badge border-0 ${char.heroicInspiration ? 'bg-warning text-dark fw-bold' : 'bg-secondary text-light'}" title="Hacer clic para activar o consumir la Inspiración Heroica" style="cursor: pointer;">
+                    ${char.heroicInspiration ? '★' : '☆'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1189,7 +1225,7 @@ export class CharacterSheetModule {
                   <span class="rpg-label m-0 fw-bold" style="color: var(--rpg-gold);">RIQUEZA:</span>
                   <span class="badge bg-warning text-dark fw-bold" title="Piezas de Oro: ${currency.gp || 0} po (Peso: ${formatWeight((Number(currency.gp) || 0) * 0.01)})" style="cursor: help;">🪙 ${currency.gp || 0} po</span>
                   <span class="badge bg-secondary text-light border border-secondary" title="Piezas de Plata: ${currency.sp || 0} pp (Peso: ${formatWeight((Number(currency.sp) || 0) * 0.01)})" style="cursor: help;">🥈 ${currency.sp || 0} pp</span>
-                  <span class="badge text-light" style="background-color: #b87333; cursor: help;" title="Piezas de Cobre: ${currency.cp || 0} pc (Peso: ${formatWeight((Number(currency.cp) || 0) * 0.01)})">🥉 ${currency.cp || 0} pc</span>
+                  <span class="badge badge-copper" style="cursor: help;" title="Piezas de Cobre: ${currency.cp || 0} pc (Peso: ${formatWeight((Number(currency.cp) || 0) * 0.01)})">🥉 ${currency.cp || 0} pc</span>
                   <span class="badge bg-secondary text-light" title="Piezas de Electro: ${currency.ep || 0} pe (Peso: ${formatWeight((Number(currency.ep) || 0) * 0.01)})" style="cursor: help;">⚡ ${currency.ep || 0} pe</span>
                   <span class="badge bg-info text-dark" title="Piezas de Platino: ${currency.pp || 0} ppt (Peso: ${formatWeight((Number(currency.pp) || 0) * 0.01)})" style="cursor: help;">💎 ${currency.pp || 0} ppt</span>
                   <span class="badge bg-dark text-warning border border-warning border-opacity-50" title="Peso total de todas las monedas transportadas (${carry.totalCoins || 0} monedas: 50 monedas = 0,5 kg)" style="cursor: help;">⚖️ ${formatWeight(carry.coinsWeightKg || 0)}</span>
@@ -2431,7 +2467,7 @@ export class CharacterSheetModule {
           </div>
 
           <div class="row g-2 mb-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label small text-secondary mb-1">Especie</label>
               <select id="select-edit-species" class="form-select form-select-sm bg-dark text-light border-secondary">
                 ${DND55_SPECIES.map(sp => `
@@ -2439,7 +2475,7 @@ export class CharacterSheetModule {
                 `).join('')}
               </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label small text-secondary mb-1">Alineamiento</label>
               <select id="select-edit-alignment" class="form-select form-select-sm bg-dark text-light border-secondary">
                 ${[
@@ -2450,6 +2486,10 @@ export class CharacterSheetModule {
                   <option value="${al}" ${char.alignment === al ? 'selected' : ''}>${al}</option>
                 `).join('')}
               </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Experiencia (PX)</label>
+              <input type="number" id="input-edit-char-xp" class="form-control form-control-sm bg-dark text-warning fw-bold border-secondary" min="0" step="1" value="${Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0)}">
             </div>
           </div>
 
@@ -2468,6 +2508,11 @@ export class CharacterSheetModule {
           <div class="mb-3 ${char.backgroundId === 'personalizado' ? '' : 'd-none'}" id="container-custom-bg-name">
             <label class="form-label small text-secondary mb-1">Nombre del Trasfondo Personalizado</label>
             <input type="text" id="input-edit-custom-bg-name" class="form-control form-control-sm bg-dark text-light border-secondary" value="${escapeHtml(char.customBackground?.name || char.customBackgroundName || '')}" placeholder="Ej: Explorador de Mazmorras">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-secondary mb-1">🖼️ Imagen del Personaje (URL Externa — genera avatar ≤ 20 KB)</label>
+            <input type="url" id="input-edit-char-image-url" class="form-control form-control-sm bg-dark text-light border-secondary" value="${escapeHtml(char.imageUrl || '')}" placeholder="https://ejemplo.com/retrato.jpg (dejar vacío para quitar)">
           </div>
 
           <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-3 mt-3">
@@ -2567,6 +2612,26 @@ export class CharacterSheetModule {
           </div>
         </form>
       </dialog>
+
+      <!-- Expositor / Lightbox de Imagen del Personaje -->
+      ${(isSafeExternalImageUrl(char.imageUrl) || isSafeAvatarDataUrl(char.avatarThumb)) ? `
+        <dialog id="modal-sheet-image-lightbox" class="rpg-image-lightbox" aria-label="Imagen de ${escapeHtml(char.name)}">
+          <div class="rpg-lightbox-wrapper">
+            <div class="rpg-lightbox-figure">
+              <button type="button" class="rpg-lightbox-close" id="btn-close-image-lightbox" title="Cerrar (Esc)">&times;</button>
+              <img
+                id="lightbox-char-img"
+                src="${escapeHtml(isSafeExternalImageUrl(char.imageUrl) ? char.imageUrl : char.avatarThumb)}"
+                ${isSafeAvatarDataUrl(char.avatarThumb) ? `data-fallback-avatar="${escapeHtml(char.avatarThumb)}" onerror="if(this.dataset.fallbackAvatar && this.src !== this.dataset.fallbackAvatar){this.src = this.dataset.fallbackAvatar;}"` : ''}
+                referrerpolicy="no-referrer"
+                alt="${escapeHtml(char.name)}"
+                class="rpg-lightbox-img"
+              >
+              <div class="rpg-lightbox-caption">${escapeHtml(char.name)}</div>
+            </div>
+          </div>
+        </dialog>
+      ` : ''}
     `;
   }
 
@@ -2587,16 +2652,18 @@ export class CharacterSheetModule {
       }
     });
 
-    // 2. Armas en char.equippedWeapons que no estén cubiertas
-    (char.equippedWeapons || []).forEach(wId => {
-      if (!addedIds.has(wId)) {
-        const wDef = DND55_WEAPONS.find(w => w.id === wId);
-        if (wDef) {
-          list.push(wDef);
-          addedIds.add(wId);
+    // 2. Armas en char.equippedWeapons solo si el personaje no tiene inventario gestionado
+    if (!Array.isArray(char.inventory) || char.inventory.length === 0) {
+      (char.equippedWeapons || []).forEach(wId => {
+        if (!addedIds.has(wId)) {
+          const wDef = DND55_WEAPONS.find(w => w.id === wId);
+          if (wDef) {
+            list.push(wDef);
+            addedIds.add(wId);
+          }
         }
-      }
-    });
+      });
+    }
 
     // 3. Añadir de forma predeterminada siempre "Ataque sin armas" a la tabla de ataques
     const hasUnarmed = addedIds.has('desarmado') || list.some(w => {
@@ -3487,6 +3554,14 @@ export class CharacterSheetModule {
     // Selector de personaje: solo los de esta campaña
     this.container.querySelector('#sheet-char-select')?.addEventListener('change', (e) => {
       store.setSelectedCharacterId(e.target.value);
+    });
+
+    // Experiencia (PX) en el encabezado de la hoja interactiva
+    this.container.querySelector('#input-sheet-xp')?.addEventListener('change', (e) => {
+      const activeChar = store.getSelectedCharacter() || char;
+      if (!activeChar) return;
+      const val = Math.max(0, Math.round(Number(e.target.value) || 0));
+      store.updateCharacterXp(activeChar.id, val);
     });
 
     // Alternar modo de impresión
@@ -4667,6 +4742,21 @@ export class CharacterSheetModule {
       showToast.success('Historia y personalidad actualizadas');
     });
 
+    // Expositor / Lightbox de Imagen del Personaje (clic en la imagen abre, clic fuera cierra)
+    const imgLightbox = this.container.querySelector('#modal-sheet-image-lightbox');
+    const avatarImg = this.container.querySelector('#sheet-char-avatar-img');
+    if (avatarImg && imgLightbox) {
+      avatarImg.addEventListener('click', () => {
+        imgLightbox.showModal();
+      });
+      imgLightbox.addEventListener('click', (e) => {
+        const fullImg = imgLightbox.querySelector('#lightbox-char-img');
+        if (e.target !== fullImg) {
+          imgLightbox.close();
+        }
+      });
+    }
+
     // Modal Editar Identidad y Origen
     const idDialog = this.container.querySelector('#modal-sheet-edit-identity');
     this.container.querySelector('#btn-sheet-edit-identity')?.addEventListener('click', () => {
@@ -4676,12 +4766,16 @@ export class CharacterSheetModule {
       const playerInp = idDialog?.querySelector('#input-edit-player-name');
       const speciesSel = idDialog?.querySelector('#select-edit-species');
       const alignSel = idDialog?.querySelector('#select-edit-alignment');
+      const xpInp = idDialog?.querySelector('#input-edit-char-xp');
       const bgSel = idDialog?.querySelector('#select-edit-background');
 
       if (nameInp) nameInp.value = activeChar.name || '';
       if (playerInp) playerInp.value = activeChar.playerName || '';
       if (speciesSel) speciesSel.value = activeChar.speciesId || 'humano';
       if (alignSel) alignSel.value = activeChar.alignment || 'Neutral Bueno';
+      if (xpInp) xpInp.value = Math.max(getMinXpForLevel(activeChar.level), Number(activeChar.xp) || 0);
+      const imgUrlInp = idDialog?.querySelector('#input-edit-char-image-url');
+      if (imgUrlInp) imgUrlInp.value = activeChar.imageUrl || '';
       if (bgSel) {
         bgSel.value = activeChar.backgroundId || 'soldado';
         const customBgContainer = idDialog?.querySelector('#container-custom-bg-name');
@@ -4708,7 +4802,7 @@ export class CharacterSheetModule {
     this.container.querySelector('#btn-close-identity-modal')?.addEventListener('click', () => idDialog?.close());
     this.container.querySelector('#btn-cancel-identity-modal')?.addEventListener('click', () => idDialog?.close());
 
-    this.container.querySelector('#form-sheet-edit-identity')?.addEventListener('submit', (e) => {
+    this.container.querySelector('#form-sheet-edit-identity')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const activeChar = store.getSelectedCharacter() || char;
       if (!activeChar) return;
@@ -4717,12 +4811,29 @@ export class CharacterSheetModule {
       const playerName = idDialog?.querySelector('#input-edit-player-name')?.value?.trim() || '';
       const speciesId = idDialog?.querySelector('#select-edit-species')?.value || 'humano';
       const alignment = idDialog?.querySelector('#select-edit-alignment')?.value || 'Neutral';
+      const xpVal = Math.max(0, Math.round(Number(idDialog?.querySelector('#input-edit-char-xp')?.value) || 0));
       const backgroundId = idDialog?.querySelector('#select-edit-background')?.value || 'soldado';
+      const rawImgUrl = idDialog?.querySelector('#input-edit-char-image-url')?.value?.trim() || '';
+
+      if (!rawImgUrl) {
+        activeChar.imageUrl = '';
+        activeChar.avatarThumb = '';
+      } else if (rawImgUrl !== activeChar.imageUrl || !isSafeAvatarDataUrl(activeChar.avatarThumb)) {
+        try {
+          const imgRes = await generateMasterPanelAvatarFromUrl(rawImgUrl, 20 * 1024);
+          activeChar.imageUrl = imgRes.validUrl;
+          activeChar.avatarThumb = imgRes.avatarThumb;
+        } catch (err) {
+          showToast.error(err.message || 'La URL indicada no es una imagen válida o segura.', 'Seguridad de Imagen');
+          return;
+        }
+      }
 
       activeChar.name = name;
       activeChar.playerName = playerName;
       activeChar.speciesId = speciesId;
       activeChar.alignment = alignment;
+      activeChar.xp = xpVal;
       if (activeChar.backgroundId !== backgroundId) {
         activeChar.backgroundId = backgroundId;
         const bgDef = DND55_BACKGROUNDS.find(b => b.id === backgroundId);
@@ -5394,9 +5505,9 @@ export class CharacterSheetModule {
       if (item.armorType === 'escudo' || item.category === 'shield' || item.name.toLowerCase().includes('escudo')) {
         char.hasShield = false;
       }
-      if (Array.isArray(char.equippedWeapons)) {
-        char.equippedWeapons = char.equippedWeapons.filter(w => w !== item.id && w !== item.weaponType);
-      }
+    }
+    if (Array.isArray(char.equippedWeapons)) {
+      char.equippedWeapons = char.equippedWeapons.filter(w => w !== item.id && w !== item.weaponType);
     }
 
     char.inventory = char.inventory.filter(i => String(i.id) !== String(itemId));

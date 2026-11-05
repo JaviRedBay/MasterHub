@@ -59,12 +59,22 @@
   --rpg-u-bg-black: #000000;
   --rpg-u-text-light: #f8f9fa;
 
-  /* ---- Estados ---- */
+  /* ---- Estados y Placas (.badge) ---- */
   --rpg-secondary: #6c757d;         /* .text-secondary / .border-secondary / .bg-secondary */
   --rpg-success: #198754;
   --rpg-danger: #dc3545;
   --rpg-warning: #ffc107;           /* .text-warning */
   --rpg-info: #0dcaf0;              /* .text-info */
+  --rpg-badge-secondary-bg: #495057;
+  --rpg-badge-secondary-fg: #f8f9fa;
+  --rpg-badge-primary-bg: #1d4ed8;
+  --rpg-badge-primary-fg: #ffffff;
+  --rpg-badge-danger-bg: #c92a2a;
+  --rpg-badge-danger-fg: #ffffff;
+  --rpg-badge-success-bg: #198754;
+  --rpg-badge-success-fg: #ffffff;
+  --rpg-badge-info-bg: #0dcaf0;
+  --rpg-badge-info-fg: #051b24;
 
   /* ---- Barra superior ---- */
   --rpg-navbar-brand: var(--rpg-gold);

@@ -53,16 +53,16 @@ Base de datos canónica de contenido expandido y catálogo de objetos/conjuros.
 ---
 
 ### 3. `js/modules/characterSheet.js` (~6070 líneas)
-Hoja oficial de personaje interactiva e imprimible.
+Hoja Interactiva de personaje y vista oficial imprimible.
 
 | Método / Lógica | Línea aprox. | Descripción |
 | :--- | :--- | :--- |
 | `isProtectedTool` | L88 | Comprueba si una herramienta proviene de clase o trasfondo para impedir borrarla |
-| `renderInteractiveSheet` | L384 | Maquetación interactiva principal (Parchment Box, Combate, Atributos) |
+| `renderInteractiveSheet` | L384 | Maquetación de la Hoja Interactiva principal (Parchment Box, Combate, Atributos) |
 | **Breakpoints Top Row** | L566 - L860 | Distribución responsiva: 1 col (<768px), 2 cols (768px-1280px tablet), 3 cols (>1280px desktop) |
 | `getEquippedWeapons` | L2576 | Obtención de armas equipadas en inventario |
 | `calculateWeaponAttack` | L2627 | Cálculo dinámico de ataque, modificador (FUE/DES/CAR), daño, propiedades y maestría |
-| `renderPrintableSheet` | L2965 | Generador de vista A4 imprimible/exportable |
+| `renderPrintableSheet` | L2965 | Generador de Hoja Oficial Imprimible/exportable A4 |
 | `applyLowerSectionFilter`| L3381 | Filtros de pestañas inferiores (`all`, `features`, `inventory`, `spells`, `bio`) |
 | `attachEventListeners` | L3476 | Eventos de combate, descanso, gestión de inventario, equipar armas/armaduras |
 
@@ -81,7 +81,7 @@ Asistente guiado de creación y edición (7 Pasos).
 | `renderStep5` | L947 | Paso 5: Clase, herramientas de clase, equipo inicial oficial (Paquete, Oro, Manual) |
 | `renderStep6` | L1475 | Paso 6: Subclases por clase, dotes de nivel y mejoras de características (ASI) |
 | `renderStep7` | L1667 | Paso 7: Resumen final y validaciones |
-| `finishAndSaveCharacter` | L2509 | Guarda el personaje en el Store y redirige a la Hoja Oficial |
+| `finishAndSaveCharacter` | L2509 | Guarda el personaje en el Store y redirige a la Hoja Interactiva |
 
 ---
 
@@ -122,6 +122,10 @@ Usa el binario de Node disponible en el sistema para ejecutar pruebas unitarias 
    - Distancias en **metros** ($1,5\text{ m} = 5\text{ pies}$, $9\text{ m} = 30\text{ pies}$).
    - Pesos en **kilogramos** ($1\text{ lb} \approx 0,45\text{ kg}$).
    - Las herramientas fijas o elegidas por clase/trasfondo están protegidas de borrado accidental en la hoja.
+
+4. **Diseño Multi-dispositivo (PC, Tablet y Móvil) y Compacidad de UI**:
+   - La aplicación web está diseñada para utilizarse activamente tanto en **PCs como en tablets y teléfonos móviles**.
+   - **Regla obligatoria al generar nuevos elementos de interfaz**: Cualquier botón, control, input, badge o bloque nuevo debe ser **compacto y contenido** (`py-0 px-1`, `btn-sm`, `form-control-sm`, `flex-wrap`, fuentes y márgenes ajustados) para **no ocupar demasiado espacio vertical ni horizontal en la vista móvil o tablet**. Evita botoneras grandes, paddings excesivos o anchos fijos que desborden en pantallas pequeñas.
    - Breakpoints de la Hoja Interactiva:
      - **Móvil (< 768px)**: 1 columna.
      - **Tablet (768px a 1280px inclusive)**: 2 columnas (Combate/Ataques ocupa el 66.7%).

@@ -92,6 +92,45 @@ export const DEFAULT_CHARACTERS = [
     ],
     "inventory": [
       {
+        "id": "cota_malla",
+        "name": "Cota de Malla",
+        "quantity": 1,
+        "weight": 27.5,
+        "category": "armadura",
+        "armorType": "cota_malla",
+        "baseAc": 16,
+        "maxDexBonus": 0,
+        "isEquipped": true,
+        "requiresAttunement": false,
+        "isAttuned": false
+      },
+      {
+        "id": "escudo",
+        "name": "Escudo (+2 CA)",
+        "quantity": 1,
+        "weight": 3,
+        "category": "escudo",
+        "armorType": "escudo",
+        "baseAc": 2,
+        "isEquipped": true,
+        "requiresAttunement": false,
+        "isAttuned": false
+      },
+      {
+        "id": "espada_larga",
+        "name": "Espada Larga",
+        "quantity": 1,
+        "weight": 1.5,
+        "category": "arma",
+        "weaponType": "espada_larga",
+        "damage": "1d8",
+        "damageType": "Cortante",
+        "masteryProperty": "Debilitar",
+        "isEquipped": true,
+        "requiresAttunement": false,
+        "isAttuned": false
+      },
+      {
         "id": "item_guantes_fuerza_ogro",
         "name": "Guantes de Fuerza de Ogro",
         "quantity": 1,
@@ -111,96 +150,12 @@ export const DEFAULT_CHARACTERS = [
         ]
       },
       {
-        "id": "item_cinturon_piel_dragon",
-        "name": "Cinturón de Piel de Dragón",
-        "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Aumenta la CD de salvación de tus habilidades de monje en 1. Además, una vez por descanso largo, puedes usar una acción para recuperar un número de puntos de concentración (foco) igual a una tirada de tu dado de Artes Marciales.",
-        "statModifiers": [
-          {
-            "target": "monkDc",
-            "mode": "bonus",
-            "value": 1,
-            "description": "+1 a la CD de salvación de habilidades de monje"
-          }
-        ]
-      },
-      {
-        "id": "item_diadema_intelecto",
-        "name": "Diadema del Intelecto",
-        "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Tu Inteligencia se convierte en 19 mientras lleves puesta esta diadema. No tiene efecto si tu Inteligencia ya es 19 o mayor.",
-        "statModifiers": [
-          {
-            "target": "int",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Inteligencia fijada en 19 si es inferior"
-          }
-        ]
-      },
-      {
-        "id": "item_amuleto_salud",
-        "name": "Amuleto de Salud",
-        "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Tu Constitución se convierte en 19 mientras lleves puesto este amuleto. No tiene efecto si tu Constitución ya es 19 o mayor.",
-        "statModifiers": [
-          {
-            "target": "con",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Constitución fijada en 19 si es inferior"
-          }
-        ]
-      },
-      {
-        "id": "item_capa_proteccion",
-        "name": "Capa de Protección",
-        "quantity": 1,
-        "weight": 1,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Ganas un bonificador de +1 a la Clase de Armadura y a las tiradas de salvación mientras lleves puesta esta capa.",
-        "statModifiers": [
-          {
-            "target": "ac",
-            "mode": "bonus",
-            "value": 1,
-            "description": "+1 a la Clase de Armadura"
-          }
-        ]
-      },
-      {
         "id": "item_potion_heal",
         "name": "Poción de Curación",
         "quantity": 2,
         "weight": 0.25,
         "category": "consumible",
         "description": "Beberla recupera 2d4 + 2 puntos de golpe como acción adicional."
-      },
-      {
-        "id": "item_potion_heal_greater",
-        "name": "Poción de Curación Mayor",
-        "quantity": 1,
-        "weight": 0.25,
-        "category": "consumible",
-        "description": "Beberla recupera 4d4 + 4 puntos de golpe."
       }
     ],
     "spells": [],
@@ -281,80 +236,45 @@ export const DEFAULT_CHARACTERS = [
     ],
     "inventory": [
       {
-        "id": "item_guantes_fuerza_ogro",
-        "name": "Guantes de Fuerza de Ogro",
+        "id": "cuero_tachonado",
+        "name": "Cuero Tachonado",
+        "quantity": 1,
+        "weight": 6.5,
+        "category": "armadura",
+        "armorType": "cuero_tachonado",
+        "baseAc": 12,
+        "maxDexBonus": null,
+        "isEquipped": true,
+        "requiresAttunement": false,
+        "isAttuned": false
+      },
+      {
+        "id": "espada_corta",
+        "name": "Espada Corta",
         "quantity": 1,
         "weight": 1,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
+        "category": "arma",
+        "weaponType": "espada_corta",
+        "damage": "1d6",
+        "damageType": "Perforante",
+        "masteryProperty": "Molestar",
         "isEquipped": true,
-        "description": "Tu puntuación de Fuerza se convierte en 19 mientras lleves puestos estos guantes. No tienen efecto si tu Fuerza ya es de 19 o superior.",
-        "statModifiers": [
-          {
-            "target": "str",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Fuerza fijada en 19 si es inferior"
-          }
-        ]
+        "requiresAttunement": false,
+        "isAttuned": false
       },
       {
-        "id": "item_cinturon_piel_dragon",
-        "name": "Cinturón de Piel de Dragón",
+        "id": "arco_corto",
+        "name": "Arco Corto",
         "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
+        "weight": 1,
+        "category": "arma",
+        "weaponType": "arco_corto",
+        "damage": "1d6",
+        "damageType": "Perforante",
+        "masteryProperty": "Molestar",
         "isEquipped": true,
-        "description": "Aumenta la CD de salvación de tus habilidades de monje en 1. Además, una vez por descanso largo, puedes usar una acción para recuperar un número de puntos de concentración (foco) igual a una tirada de tu dado de Artes Marciales.",
-        "statModifiers": [
-          {
-            "target": "monkDc",
-            "mode": "bonus",
-            "value": 1,
-            "description": "+1 a la CD de salvación de habilidades de monje"
-          }
-        ]
-      },
-      {
-        "id": "item_diadema_intelecto",
-        "name": "Diadema del Intelecto",
-        "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Tu Inteligencia se convierte en 19 mientras lleves puesta esta diadema. No tiene efecto si tu Inteligencia ya es 19 o mayor.",
-        "statModifiers": [
-          {
-            "target": "int",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Inteligencia fijada en 19 si es inferior"
-          }
-        ]
-      },
-      {
-        "id": "item_amuleto_salud",
-        "name": "Amuleto de Salud",
-        "quantity": 1,
-        "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Tu Constitución se convierte en 19 mientras lleves puesto este amuleto. No tiene efecto si tu Constitución ya es 19 o mayor.",
-        "statModifiers": [
-          {
-            "target": "con",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Constitución fijada en 19 si es inferior"
-          }
-        ]
+        "requiresAttunement": false,
+        "isAttuned": false
       },
       {
         "id": "item_capa_proteccion",
@@ -382,14 +302,6 @@ export const DEFAULT_CHARACTERS = [
         "weight": 0.25,
         "category": "consumible",
         "description": "Beberla recupera 2d4 + 2 puntos de golpe como acción adicional."
-      },
-      {
-        "id": "item_potion_heal_greater",
-        "name": "Poción de Curación Mayor",
-        "quantity": 1,
-        "weight": 0.25,
-        "category": "consumible",
-        "description": "Beberla recupera 4d4 + 4 puntos de golpe."
       }
     ],
     "spells": [],
@@ -476,42 +388,18 @@ export const DEFAULT_CHARACTERS = [
     ],
     "inventory": [
       {
-        "id": "item_guantes_fuerza_ogro",
-        "name": "Guantes de Fuerza de Ogro",
-        "quantity": 1,
-        "weight": 1,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
-        "isEquipped": true,
-        "description": "Tu puntuación de Fuerza se convierte en 19 mientras lleves puestos estos guantes. No tienen efecto si tu Fuerza ya es de 19 o superior.",
-        "statModifiers": [
-          {
-            "target": "str",
-            "mode": "override_if_lower",
-            "value": 19,
-            "description": "Fuerza fijada en 19 si es inferior"
-          }
-        ]
-      },
-      {
-        "id": "item_cinturon_piel_dragon",
-        "name": "Cinturón de Piel de Dragón",
+        "id": "daga",
+        "name": "Daga",
         "quantity": 1,
         "weight": 0.5,
-        "category": "magico",
-        "requiresAttunement": true,
-        "isAttuned": true,
+        "category": "arma",
+        "weaponType": "daga",
+        "damage": "1d4",
+        "damageType": "Perforante",
+        "masteryProperty": "Mellar",
         "isEquipped": true,
-        "description": "Aumenta la CD de salvación de tus habilidades de monje en 1. Además, una vez por descanso largo, puedes usar una acción para recuperar un número de puntos de concentración (foco) igual a una tirada de tu dado de Artes Marciales.",
-        "statModifiers": [
-          {
-            "target": "monkDc",
-            "mode": "bonus",
-            "value": 1,
-            "description": "+1 a la CD de salvación de habilidades de monje"
-          }
-        ]
+        "requiresAttunement": false,
+        "isAttuned": false
       },
       {
         "id": "item_diadema_intelecto",
@@ -577,14 +465,6 @@ export const DEFAULT_CHARACTERS = [
         "weight": 0.25,
         "category": "consumible",
         "description": "Beberla recupera 2d4 + 2 puntos de golpe como acción adicional."
-      },
-      {
-        "id": "item_potion_heal_greater",
-        "name": "Poción de Curación Mayor",
-        "quantity": 1,
-        "weight": 0.25,
-        "category": "consumible",
-        "description": "Beberla recupera 4d4 + 4 puntos de golpe."
       }
     ],
     "spells": [

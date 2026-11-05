@@ -1,15 +1,17 @@
 ---
 name: sheet-and-wizard
 description: >-
-  Guía técnica para modificar la Hoja Oficial (characterSheet.js), el Asistente de Creación (characterWizard.js) y el Master Panel (masterPanel.js).
-  Activa esta habilidad cuando vayas a implementar cambios de interfaz, responsividad de columnas, controles táctiles, visualización de ataques o flujos de pasos.
+  Guía técnica para modificar la Hoja Interactiva (characterSheet.js), el Asistente de Creación (characterWizard.js) y el Master Panel (masterPanel.js).
+  Activa esta habilidad cuando vayas a implementar cambios de interfaz, responsividad de columnas, controles táctiles compactos para móvil/tablet, visualización de ataques o flujos de pasos.
 ---
 
-# Guía de Interfaz: Hoja Oficial, Asistente y Master Panel
+# Guía de Interfaz: Hoja Interactiva, Asistente y Master Panel
 
 Esta habilidad contiene las convenciones de maquetación, breakpoints responsivos y estructura de componentes para evitar búsquedas a ciegas.
 
-## 📱 Breakpoints Responsivos Canónicos
+## 📱 Diseño Multi-dispositivo (PC, Tablet y Móvil) y Breakpoints Canónicos
+
+> **Regla de Compacidad para Móvil y Tablet**: La web está diseñada para verse tanto en **PCs como en tablets y móviles**. Cualquier elemento nuevo (botones como los de añadir PX/PG, inputs numéricos, píldoras de estado o barras de herramientas) debe diseñarse con dimensiones reducidas (`py-0 px-1`, `font-size: 0.68rem - 0.78rem`, `flex-wrap`, `gap-1`) para **no ocupar demasiado espacio en vistas móvil/tablet** ni provocar desbordamientos horizontales.
 
 El proyecto sigue una política estricta de 3 fases responsivas en `#sheet-top-row`:
 
@@ -34,7 +36,7 @@ El proyecto sigue una política estricta de 3 fases responsivas en `#sheet-top-r
 
 ---
 
-## 📜 Hoja Oficial (`js/modules/characterSheet.js`)
+## 📜 Hoja Interactiva (`js/modules/characterSheet.js`)
 
 - **L88 `isProtectedTool(toolName, char)`**:
   - Verifica si una herramienta fue concedida por clase o trasfondo (`char.classTools`, herramientas fijas).

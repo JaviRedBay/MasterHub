@@ -163,6 +163,11 @@ export class FileRepositoryManager {
         if (storedHandle) {
           const hasPerm = await this.verifyPermission(storedHandle, promptUser);
           if (hasPerm) {
+            if (await this.isProtectedAppDirectory(storedHandle)) {
+              console.warn('[FileRepository] Se detectó la carpeta de código fuente de la aplicación. Desvinculando por seguridad.');
+              await this.disconnectFolder();
+              return false;
+            }
             this.repoType = 'local';
             this.dirHandle = storedHandle;
             this.folderName = storedHandle.name || 'Carpeta Vinculada';
@@ -205,6 +210,25 @@ export class FileRepositoryManager {
     return false;
   }
 
+  /**
+   * Verifica si la carpeta seleccionada es el propio directorio raíz de la aplicación web
+   * (contiene index.html, server.ps1 o subcarpeta js/) para impedir modificar los ficheros de la web.
+   * @param {FileSystemDirectoryHandle} handle
+   * @returns {Promise<boolean>}
+   */
+  async isProtectedAppDirectory(handle) {
+    if (!handle) return false;
+    try {
+      await handle.getFileHandle('index.html', { create: false });
+      return true;
+    } catch {}
+    try {
+      await handle.getFileHandle('server.ps1', { create: false });
+      return true;
+    } catch {}
+    return false;
+  }
+
   async connectFolder() {
     if (!this.isLocalSupported()) {
       return {
@@ -223,6 +247,13 @@ export class FileRepositoryManager {
       const hasPerm = await this.verifyPermission(handle, true);
       if (!hasPerm) {
         return { success: false, error: 'No se otorgaron permisos de lectura/escritura para la carpeta seleccionada.' };
+      }
+
+      if (await this.isProtectedAppDirectory(handle)) {
+        return {
+          success: false,
+          error: 'Por seguridad, no se permite vincular ni modificar la carpeta de ficheros de la aplicación web. Selecciona o crea otra carpeta dedicada para tus partidas.'
+        };
       }
 
       this.repoType = 'local';
@@ -259,6 +290,16 @@ export class FileRepositoryManager {
   }
 
   async writeLocalJson(fileName, data, subfolder = null) {
+    if (!/^[a-zA-Z0-9_-]+\.json$/.test(fileName)) {
+      throw new Error(`Nombre de archivo no permitido por seguridad: ${fileName}`);
+    }
+    if (subfolder !== null && subfolder !== 'characters') {
+      throw new Error(`Subcarpeta no permitida por seguridad: ${subfolder}`);
+    }
+    if (await this.isProtectedAppDirectory(this.dirHandle)) {
+      await this.disconnectFolder();
+      throw new Error('Escritura bloqueada: no se permite modificar la carpeta de la aplicación web.');
+    }
     let targetDir = this.dirHandle;
     if (subfolder) {
       targetDir = await this.getLocalSubdirectory(subfolder, true);
@@ -577,9 +618,13 @@ export class FileRepositoryManager {
     if (!this.isConnected) return false;
     if (this.repoType === 'local') {
       try {
+        if (await this.isProtectedAppDirectory(this.dirHandle)) {
+          await this.disconnectFolder();
+          return false;
+        }
         const charsDir = await this.getLocalSubdirectory('characters', false);
         for await (const [name, handle] of charsDir.entries()) {
-          if (handle.kind === 'file' && name.includes(characterId)) {
+          if (handle.kind === 'file' && name.endsWith('.json') && name.includes(characterId)) {
             await charsDir.removeEntry(name);
             return true;
           }

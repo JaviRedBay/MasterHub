@@ -96,7 +96,7 @@ class App {
     const tabTitles = {
       'master-panel': 'Master Panel',
       'wizard': 'Asistente Creación',
-      'sheet': 'Hoja Oficial',
+      'sheet': 'Hoja Interactiva',
       'btrs': 'Calculadora BTRS',
       'campaigns': 'Campañas & Roster',
       'names': 'Generador de Nombres'

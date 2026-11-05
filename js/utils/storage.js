@@ -5,6 +5,8 @@
 
 import { repairMojibake } from './formatters.js';
 import { DND55_PRESET_ITEMS } from '../constants/spellsAndItems.js';
+import { getMinXpForLevel } from '../constants/dnd55Rules.js';
+import { isSafeExternalImageUrl, isSafeAvatarDataUrl } from './imageValidator.js';
 
 export const STORAGE_KEYS = {
   CHARACTERS: 'dnd55_characters',
@@ -23,6 +25,7 @@ export const STORAGE_KEYS = {
  */
 export function deepRepairMojibake(val) {
   if (typeof val === 'string') {
+    if (val.startsWith('data:image/')) return val;
     return repairMojibake(val);
   }
   if (Array.isArray(val)) {
@@ -99,13 +102,19 @@ export function sanitizeCharacter(char) {
 
   const defaultScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
   const baseScores = { ...defaultScores, ...(char.baseAbilityScores || {}) };
+  const sanitizedLevel = Math.max(1, Math.min(20, Number(char.level) || 1));
+  const minXp = getMinXpForLevel(sanitizedLevel);
+  const currentXp = Math.max(0, Math.round(Number(char.xp) || 0));
+  const sanitizedXp = currentXp < minXp ? minXp : currentXp;
 
   return {
     ...char,
     id: char.id || `char_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
     campaignId: char.campaignId || 'camp_strahd',
     name: char.name || 'Héroe Desconocido',
-    level: Math.max(1, Math.min(20, Number(char.level) || 1)),
+    imageUrl: isSafeExternalImageUrl(char.imageUrl) ? char.imageUrl.trim() : '',
+    avatarThumb: isSafeAvatarDataUrl(char.avatarThumb) ? char.avatarThumb : '',
+    level: sanitizedLevel,
     alignment: char.alignment || 'Neutral',
     playerName: char.playerName || 'Jugador',
     speciesId: char.speciesId || 'humano',
@@ -184,16 +193,12 @@ export function sanitizeCharacter(char) {
         }
       : { cp: 0, sp: 0, ep: 0, gp: char.gp !== undefined ? Number(char.gp) : 50, pp: 0 },
     gp: char.gp !== undefined ? Number(char.gp) : (char.currency?.gp ?? 50),
-    xp: Number(char.xp) || 0,
+    xp: sanitizedXp,
     appearance: char.appearance || '',
     backstory: char.backstory || '',
     notes: char.notes || '',
     heroicInspiration: Boolean(char.heroicInspiration),
-    customConsumables: Array.isArray(char.customConsumables) ? char.customConsumables : [
-      { name: 'Pociones de Curación', quantity: 2 },
-      { name: 'Antorchas', quantity: 3 },
-      { name: 'Raciones de Viaje', quantity: 5 }
-    ],
+    customConsumables: Array.isArray(char.customConsumables) ? char.customConsumables : [],
     restTraitsState: typeof char.restTraitsState === 'object' && char.restTraitsState !== null ? char.restTraitsState : {},
     createdAt: char.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()

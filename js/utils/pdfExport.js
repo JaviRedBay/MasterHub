@@ -337,7 +337,7 @@ export async function generateFilledDndPdfBytes(char) {
   const speciesDef = DND55_SPECIES.find(s => s.id === char.speciesId);
   const charSize = speciesDef?.size || 'Mediano';
   safeSetTextField(form, 'SIZE', charSize);
-  safeSetTextField(form, 'XP Points', char.xp ? String(char.xp) : '');
+  safeSetTextField(form, 'XP Points', '');
   safeSetTextField(form, 'PROF BONUS', `+${pb}`);
   safeCheck(form, 'Check Heroic Insp', Boolean(char.heroicInspiration));
 

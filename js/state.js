@@ -356,6 +356,36 @@ class AppStore extends EventEmitter {
   }
 
   /**
+   * Actualiza los puntos de experiencia (PX) de un personaje.
+   * @param {string} charId 
+   * @param {number} xp 
+   */
+  updateCharacterXp(charId, xp) {
+    const char = this.getCharacter(charId);
+    if (!char) return;
+
+    char.xp = Math.max(0, Math.round(Number(xp) || 0));
+    this.saveCharacter(char);
+    this.emit('character:xp-changed', { charId, xp: char.xp });
+  }
+
+  /**
+   * Añade o resta puntos de experiencia (PX) a un personaje.
+   * @param {string} charId 
+   * @param {number} delta 
+   */
+  applyXpDelta(charId, delta) {
+    const char = this.getCharacter(charId);
+    if (!char) return;
+
+    const prevXp = Math.max(0, Math.round(Number(char.xp) || 0));
+    const numDelta = Math.round(Number(delta) || 0);
+    char.xp = Math.max(0, prevXp + numDelta);
+    this.saveCharacter(char);
+    this.emit('character:xp-changed', { charId, xp: char.xp });
+  }
+
+  /**
    * Gasta o recupera un espacio de conjuro de nivel N.
    * @param {string} charId 
    * @param {number} level Nivel del espacio (1-9)

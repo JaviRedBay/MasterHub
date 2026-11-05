@@ -1667,6 +1667,37 @@ function formatModifier(mod) {
   if (mod === undefined || mod === null || isNaN(mod)) return '+0';
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
+const DND55_XP_THRESHOLDS = {
+  1: 0,
+  2: 300,
+  3: 900,
+  4: 2700,
+  5: 6500,
+  6: 14000,
+  7: 23000,
+  8: 34000,
+  9: 48000,
+  10: 64000,
+  11: 85000,
+  12: 100000,
+  13: 120000,
+  14: 140000,
+  15: 165000,
+  16: 195000,
+  17: 225000,
+  18: 265000,
+  19: 305000,
+  20: 355000
+};
+function getMinXpForLevel(level) {
+  const lvl = Math.max(1, Math.min(20, Number(level) || 1));
+  return DND55_XP_THRESHOLDS[lvl] || 0;
+}
+function getNextLevelXp(level) {
+  const lvl = Math.max(1, Math.min(20, Number(level) || 1));
+  if (lvl >= 20) return null;
+  return DND55_XP_THRESHOLDS[lvl + 1] || null;
+}
 function getProficiencyBonus(level) {
   if (level >= 17)
     return 6;
@@ -5965,5 +5996,8 @@ export {
   DND55_CLASS_STARTING_EQUIPMENT,
   getClassStartingEquipment,
   getCharacterVisionSense,
-  getMaxAllowedExpertiseCount
+  getMaxAllowedExpertiseCount,
+  DND55_XP_THRESHOLDS,
+  getMinXpForLevel,
+  getNextLevelXp
 };

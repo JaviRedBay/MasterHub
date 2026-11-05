@@ -36,6 +36,16 @@
   --rpg-u-text-light: #e6edf3;
 
   --rpg-secondary: #7d8590;
+  --rpg-badge-secondary-bg: #3b434d;
+  --rpg-badge-secondary-fg: #f0f6fc;
+  --rpg-badge-primary-bg: #1f6feb;
+  --rpg-badge-primary-fg: #ffffff;
+  --rpg-badge-danger-bg: #c92a2a;
+  --rpg-badge-danger-fg: #ffffff;
+  --rpg-badge-success-bg: #198754;
+  --rpg-badge-success-fg: #ffffff;
+  --rpg-badge-info-bg: #39c5cf;
+  --rpg-badge-info-fg: #041619;
   --rpg-dot-proficient: #f85149;
   --rpg-dot-expertise: #e3b341;
   --rpg-dot-untrained: #484f58;

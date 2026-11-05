@@ -43,7 +43,8 @@ import {
   getClassFeatureChoices,
   getMaxAllowedExpertiseCount,
   characterQualifiesForFightingStyle,
-  getInnateSpellsForCharacter
+  getInnateSpellsForCharacter,
+  getMinXpForLevel
 } from '../constants/dnd55Rules.js';
 import { 
   DND55_ALL_48_SUBCLASSES, 
@@ -53,6 +54,7 @@ import {
 import { escapeHtml } from '../utils/formatters.js';
 import { roll4d6DropLowest } from '../utils/dice.js';
 import { showToast, showConfirmModal } from '../utils/uiFeedback.js';
+import { generateMasterPanelAvatarFromUrl, isSafeAvatarDataUrl, isSafeExternalImageUrl } from '../utils/imageValidator.js';
 
 export class CharacterWizardModule {
   constructor(containerId = 'wizard-container') {
@@ -68,7 +70,7 @@ export class CharacterWizardModule {
     this.statGenMethod = 'standard'; // 'standard', 'pointbuy', '4d6', 'manual'
     this.rolledStats = [];
 
-    // Escuchar evento para editar un personaje existente desde la Hoja Oficial
+    // Escuchar evento para editar un personaje existente desde la Hoja Interactiva
     store.on('wizard:edit-character', (char) => {
       this.loadCharacterForEdit(char);
     });
@@ -103,6 +105,13 @@ export class CharacterWizardModule {
     this.wizardState.classId = this.wizardState.classes[0].classId;
     this.wizardState.subclassId = this.wizardState.classes[0].subclassId || '';
     this.wizardState.level = this.wizardState.classes.reduce((sum, c) => sum + (Number(c.level) || 0), 0) || 1;
+    const minXp = getMinXpForLevel(this.wizardState.level);
+    const curXp = Math.max(0, Number(this.wizardState.xp) || 0);
+    if (curXp < minXp) {
+      this.wizardState.xp = minXp;
+    } else if (this.wizardState.xp === undefined || this.wizardState.xp === null) {
+      this.wizardState.xp = 0;
+    }
     this.wizardState.multiclass = this.wizardState.classes.slice(1);
     if (!this.wizardState.classAsiChoices || typeof this.wizardState.classAsiChoices !== 'object') {
       this.wizardState.classAsiChoices = {};
@@ -193,12 +202,15 @@ export class CharacterWizardModule {
       campaignId: store.getSelectedCampaignId() || 'camp_strahd',
       playerName: '',
       name: '',
+      imageUrl: '',
+      avatarThumb: '',
       alignment: 'Neutral Bueno',
       classes: [
         { classId: 'guerrero', level: 1, subclassId: '' }
       ],
       classId: 'guerrero',
       level: 1,
+      xp: 0,
       subclassId: '',
       classAsiChoices: {},
       speciesId: 'humano',
@@ -312,7 +324,7 @@ export class CharacterWizardModule {
               ${this.isEditing ? 'Cancelar Edición y Volver a la Hoja' : 'Reiniciar'}
             </button>
             ${(this.isEditing && this.currentStep < this.totalSteps && this.canQuickSaveInEditMode().canSave) ? `
-              <button id="btn-wizard-quick-save" class="btn btn-success text-light fw-bold shadow-sm" tabindex="0" title="Guardar cambios realizados y volver a la Hoja Oficial">
+              <button id="btn-wizard-quick-save" class="btn btn-success text-light fw-bold shadow-sm" tabindex="0" title="Guardar cambios realizados y volver a la Hoja Interactiva">
                 ✓ Guardar Cambios
               </button>
             ` : ''}
@@ -451,6 +463,37 @@ export class CharacterWizardModule {
               <option value="${escapeHtml(al)}" ${this.wizardState.alignment === al ? 'selected' : ''}>${escapeHtml(al)}</option>
             `).join('')}
           </select>
+        </div>
+
+        <div class="col-12">
+          <div class="p-2 px-3 rounded bg-dark border border-secondary">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+              <label for="w-char-image-url" class="form-label text-warning fw-bold m-0 small">🖼️ Imagen del Personaje (URL Externa)</label>
+              <span id="w-char-image-status" class="small ${this.wizardState.avatarThumb ? 'text-success fw-semibold' : 'text-secondary'}" style="font-size: 0.72rem;">
+                ${this.wizardState.avatarThumb
+                  ? `✓ Verificada · Avatar Master Panel (${(this.wizardState.avatarThumb.length / 1024).toFixed(1)} KB ≤ 20 KB)`
+                  : 'Se verificará que sea una imagen real (Magic Bytes) y se generará un avatar ≤ 20 KB'}
+              </span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <div id="w-char-avatar-preview-wrap" class="d-flex align-items-center justify-content-center rounded-circle border border-warning bg-black overflow-hidden flex-shrink-0" style="width: 42px; height: 42px;" title="Vista previa del avatar compacto para el Master Panel">
+                ${this.wizardState.avatarThumb
+                  ? `<img src="${escapeHtml(this.wizardState.avatarThumb)}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">`
+                  : `<span class="text-secondary small">🛡️</span>`}
+              </div>
+              <div class="flex-grow-1" style="min-width: 180px;">
+                <input type="url" id="w-char-image-url" class="form-control form-control-sm bg-black border-secondary text-light" value="${escapeHtml(this.wizardState.imageUrl || '')}" placeholder="https://ejemplo.com/retrato.jpg (JPG, PNG, WebP, GIF)">
+              </div>
+              <div class="d-flex align-items-center gap-1">
+                <button type="button" id="btn-verify-char-image" class="btn btn-sm btn-outline-warning py-1 px-2" style="font-size: 0.75rem;">
+                  🔍 Verificar y Generar Avatar
+                </button>
+                <button type="button" id="btn-clear-char-image" class="btn btn-sm btn-outline-secondary py-1 px-2 ${this.wizardState.imageUrl || this.wizardState.avatarThumb ? '' : 'd-none'}" title="Quitar imagen" style="font-size: 0.75rem;">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="col-12 mt-2">
@@ -1804,21 +1847,32 @@ export class CharacterWizardModule {
 
     // Navegación por números de paso (escritorio y selector móvil)
     this.container.querySelectorAll('.btn-step-nav').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
+        const targetStep = parseInt(e.currentTarget.dataset.step, 10);
+        const ok = await this.ensureStep1ImageVerifiedIfChanged();
+        if (!ok) return;
         this.saveStepInputs();
-        this.currentStep = parseInt(e.currentTarget.dataset.step, 10);
+        this.currentStep = targetStep;
         this.render();
       });
     });
 
-    this.container.querySelector('#w-mobile-step-select')?.addEventListener('change', (e) => {
+    this.container.querySelector('#w-mobile-step-select')?.addEventListener('change', async (e) => {
+      const targetStep = parseInt(e.target.value, 10) || 1;
+      const ok = await this.ensureStep1ImageVerifiedIfChanged();
+      if (!ok) {
+        e.target.value = String(this.currentStep);
+        return;
+      }
       this.saveStepInputs();
-      this.currentStep = parseInt(e.target.value, 10) || 1;
+      this.currentStep = targetStep;
       this.render();
     });
 
     // Anterior / Siguiente
-    this.container.querySelector('#btn-wizard-prev')?.addEventListener('click', () => {
+    this.container.querySelector('#btn-wizard-prev')?.addEventListener('click', async () => {
+      const ok = await this.ensureStep1ImageVerifiedIfChanged();
+      if (!ok) return;
       this.saveStepInputs();
       if (this.currentStep > 1) {
         this.currentStep--;
@@ -1826,12 +1880,29 @@ export class CharacterWizardModule {
       }
     });
 
-    this.container.querySelector('#btn-wizard-next')?.addEventListener('click', () => {
+    this.container.querySelector('#btn-wizard-next')?.addEventListener('click', async () => {
+      const ok = await this.ensureStep1ImageVerifiedIfChanged();
+      if (!ok) return;
       this.saveStepInputs();
       if (this.currentStep < this.totalSteps) {
         this.currentStep++;
         this.render();
       }
+    });
+
+    // Verificación y generación de avatar de 20 KB en Paso 1
+    this.container.querySelector('#btn-verify-char-image')?.addEventListener('click', async () => {
+      const urlInp = this.container.querySelector('#w-char-image-url');
+      await this.verifyAndApplyWizardImage(urlInp ? urlInp.value : '');
+    });
+
+    this.container.querySelector('#btn-clear-char-image')?.addEventListener('click', () => {
+      this.wizardState.imageUrl = '';
+      this.wizardState.avatarThumb = '';
+      const urlInp = this.container.querySelector('#w-char-image-url');
+      if (urlInp) urlInp.value = '';
+      this.render();
+      showToast.info('Imagen del personaje eliminada.');
     });
 
     // Reiniciar o Cancelar Edición
@@ -2376,22 +2447,21 @@ export class CharacterWizardModule {
     }
 
     const armorSelect = this.container.querySelector('#w-armor-select');
-    if (armorSelect) this.wizardState.armorId = armorSelect.value;
-
     const shieldCheck = this.container.querySelector('#w-shield-check');
-    if (shieldCheck) this.wizardState.hasShield = shieldCheck.checked;
-
     const weaponSelect = this.container.querySelector('#w-weapon-select');
-    if (weaponSelect) {
-      const val = weaponSelect.value;
-      const existing = Array.isArray(this.wizardState.equippedWeapons) ? this.wizardState.equippedWeapons : [];
-      this.wizardState.equippedWeapons = [val, ...existing.filter(w => w !== val)];
-    }
-
-    // Modo de equipo inicial
     const equipModeRadio = this.container.querySelector('input[name="w-starting-equipment-mode"]:checked');
     if (equipModeRadio) {
       this.wizardState.startingEquipmentMode = equipModeRadio.value;
+    }
+
+    if (this.wizardState.startingEquipmentMode !== 'keep') {
+      if (armorSelect) this.wizardState.armorId = armorSelect.value;
+      if (shieldCheck) this.wizardState.hasShield = shieldCheck.checked;
+      if (weaponSelect) {
+        const val = weaponSelect.value;
+        const existing = Array.isArray(this.wizardState.equippedWeapons) ? this.wizardState.equippedWeapons : [];
+        this.wizardState.equippedWeapons = [val, ...existing.filter(w => w !== val)];
+      }
     }
 
     // Elección de herramientas de clase
@@ -2506,7 +2576,69 @@ export class CharacterWizardModule {
     this.syncWizardClassState();
   }
 
-  finishAndSaveCharacter() {
+  async verifyAndApplyWizardImage(rawUrl, { silentSuccess = false } = {}) {
+    const trimmed = (rawUrl || '').trim();
+    if (!trimmed) {
+      this.wizardState.imageUrl = '';
+      this.wizardState.avatarThumb = '';
+      this.render();
+      return true;
+    }
+
+    const statusEl = this.container?.querySelector('#w-char-image-status');
+    const verifyBtn = this.container?.querySelector('#btn-verify-char-image');
+    if (statusEl) {
+      statusEl.className = 'small text-info fw-semibold';
+      statusEl.textContent = '⏳ Verificando firma binaria (Magic Bytes) y generando avatar ≤ 20 KB...';
+    }
+    if (verifyBtn) verifyBtn.disabled = true;
+
+    try {
+      const result = await generateMasterPanelAvatarFromUrl(trimmed, 20 * 1024);
+      this.saveStepInputs();
+      this.wizardState.imageUrl = result.validUrl;
+      this.wizardState.avatarThumb = result.avatarThumb;
+      if (!silentSuccess) {
+        showToast.success(
+          `Imagen verificada (${result.detectedMime}) y avatar generado (${result.kbSize} KB ≤ 20 KB).`,
+          'Imagen Segura'
+        );
+      }
+      this.render();
+      return true;
+    } catch (err) {
+      this.wizardState.imageUrl = '';
+      this.wizardState.avatarThumb = '';
+      if (statusEl) {
+        statusEl.className = 'small text-danger fw-bold';
+        statusEl.textContent = `❌ Rechazada: ${err.message}`;
+      }
+      showToast.error(err.message || 'URL de imagen inválida o insegura.', 'Bloqueo de Seguridad');
+      return false;
+    } finally {
+      if (verifyBtn) verifyBtn.disabled = false;
+    }
+  }
+
+  async ensureStep1ImageVerifiedIfChanged() {
+    if (!this.container) return true;
+    const urlInp = this.container.querySelector('#w-char-image-url');
+    if (!urlInp) return true;
+    const rawVal = urlInp.value.trim();
+    if (!rawVal) {
+      this.wizardState.imageUrl = '';
+      this.wizardState.avatarThumb = '';
+      return true;
+    }
+    if (rawVal === this.wizardState.imageUrl && isSafeAvatarDataUrl(this.wizardState.avatarThumb)) {
+      return true;
+    }
+    return await this.verifyAndApplyWizardImage(rawVal, { silentSuccess: false });
+  }
+
+  async finishAndSaveCharacter() {
+    const imgOk = await this.ensureStep1ImageVerifiedIfChanged();
+    if (!imgOk) return;
     this.saveStepInputs();
     const wasEditing = this.isEditing;
 
@@ -2582,7 +2714,7 @@ export class CharacterWizardModule {
     this.isEditing = false;
     this.editingCharacterId = null;
 
-    // Redirigir a la Hoja Oficial
+    // Redirigir a la Hoja Interactiva
     const sheetTabBtn = document.getElementById('tab-sheet-btn');
     if (sheetTabBtn) sheetTabBtn.click();
   }

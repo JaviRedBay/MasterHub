@@ -920,7 +920,7 @@ const DND55_CLASSES = [
     featuresByLevel: [
       { level: 1, name: "Lanzamiento de Conjuros", description: "Magia art\xEDstica de ilusi\xF3n, encantamiento, adivinaci\xF3n y sanaci\xF3n con Carisma." },
       { level: 1, name: "Inspiraci\xF3n B\xE1rdica (d6)", description: "Como acci\xF3n adicional, otorgas un dado de inspiraci\xF3n (d6) a un aliado a 18 m para sumar a una prueba de d20 o curarse como reacci\xF3n si recibe da\xF1o." },
-      { level: 2, name: "Aprendiz de Mucho", description: "A\xF1ades la mitad de tu bonificador de competencia (redondeado hacia abajo) a cualquier prueba de caracter\xEDstica en la que no seas competente." },
+      { level: 2, name: "Aprendiz de Mucho", description: "A\xF1ades la mitad de tu bonificador de competencia (redondeado hacia abajo) a cualquier prueba de caracter\xEDstica que utilice una habilidad en la que no tengas competencia." },
       { level: 2, name: "Pericia", description: "Tu bonificador de competencia se duplica en 2 habilidades de tu elecci\xF3n." },
       { level: 3, name: "Subclase de Bardo", description: "Elige un colegio b\xE1rdico (Valor, Saber, Danza o Glamour)." },
       { level: 4, name: "Mejora de Caracter\xEDstica o Dote", description: "Aumento de puntuaci\xF3n (+2 / +1+1) o una dote general de nivel 4+." },
@@ -2503,8 +2503,11 @@ function calculateInitiative(char) {
     bonusModifiers += pb;
     bonusDetails.push(`Dote Vigilante de Helm (+${pb} BC)`);
   }
+  // En D&D 2024 (5.5), Aprendiz de Mucho solo aplica a pruebas de característica que utilicen una habilidad (skill),
+  // por lo que NO se suma a la Iniciativa (solo aplicaría si explícitamente se indica edición 2014).
+  const is2014Edition = char.edition === "2014" || char.rulesEdition === "2014";
   const bardLvl = getClassLevel(char, "bardo");
-  if (bardLvl >= 2 && !hasAlert && !hasHelm) {
+  if (is2014Edition && bardLvl >= 2 && !hasAlert && !hasHelm) {
     const jackBonus = Math.floor(pb / 2);
     if (jackBonus > 0) {
       bonusModifiers += jackBonus;

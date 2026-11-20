@@ -137,6 +137,19 @@ export class CharacterWizardModule {
     // Clon profundo para preservar id, inventario, conjuros, tiradas de vida y rasgos
     this.wizardState = JSON.parse(JSON.stringify(char));
 
+    // Limpiar residuos de especie específica si la especie actual no corresponde
+    if (this.wizardState.speciesId !== 'humano') {
+      this.wizardState.speciesSkillChoice = '';
+      this.wizardState.speciesOriginFeat = '';
+      this.wizardState.speciesOriginFeatChoices = null;
+    }
+    if (this.wizardState.speciesId !== 'elfo') {
+      this.wizardState.speciesCantripChoice = '';
+    }
+    if (this.wizardState.speciesId !== 'draconido') {
+      this.wizardState.dragonAncestry = '';
+    }
+
     // Garantizar estructuras mínimas requeridas por el asistente
     if (!this.wizardState.baseAbilityScores) {
       this.wizardState.baseAbilityScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
@@ -1958,6 +1971,20 @@ export class CharacterWizardModule {
     this.container.querySelector('#w-species-select')?.addEventListener('change', (e) => {
       this.wizardState.speciesId = e.target.value;
       this.wizardState.sublineageId = '';
+      if (e.target.value !== 'humano') {
+        this.wizardState.speciesSkillChoice = '';
+        this.wizardState.speciesOriginFeat = '';
+        this.wizardState.speciesOriginFeatChoices = null;
+      } else {
+        if (!this.wizardState.speciesSkillChoice) this.wizardState.speciesSkillChoice = 'Percepción';
+        if (!this.wizardState.speciesOriginFeat) this.wizardState.speciesOriginFeat = 'Alerta';
+      }
+      if (e.target.value !== 'elfo') {
+        this.wizardState.speciesCantripChoice = '';
+      }
+      if (e.target.value !== 'draconido') {
+        this.wizardState.dragonAncestry = '';
+      }
       this.render();
     });
 
@@ -2301,13 +2328,26 @@ export class CharacterWizardModule {
     if (subSelect) this.wizardState.sublineageId = subSelect.value;
 
     const elfCantrip = this.container.querySelector('#w-elf-cantrip');
-    if (elfCantrip) this.wizardState.speciesCantripChoice = elfCantrip.value;
+    if (elfCantrip) {
+      this.wizardState.speciesCantripChoice = elfCantrip.value;
+    } else if (this.wizardState.speciesId !== 'elfo') {
+      this.wizardState.speciesCantripChoice = '';
+    }
 
     const humSkill = this.container.querySelector('#w-human-skill');
-    if (humSkill) this.wizardState.speciesSkillChoice = humSkill.value;
+    if (humSkill) {
+      this.wizardState.speciesSkillChoice = humSkill.value;
+    } else if (this.wizardState.speciesId !== 'humano') {
+      this.wizardState.speciesSkillChoice = '';
+    }
 
     const humFeat = this.container.querySelector('#w-human-origin-feat');
-    if (humFeat) this.wizardState.speciesOriginFeat = humFeat.value;
+    if (humFeat) {
+      this.wizardState.speciesOriginFeat = humFeat.value;
+    } else if (this.wizardState.speciesId !== 'humano') {
+      this.wizardState.speciesOriginFeat = '';
+      this.wizardState.speciesOriginFeatChoices = null;
+    }
 
     // Paso 3
     if (this.wizardState.backgroundId === 'personalizado') {
@@ -2705,6 +2745,19 @@ export class CharacterWizardModule {
         this.wizardState.spells.push({ ...innate, isPrepared: true, isInnate: true });
       }
     });
+
+    // Asegurar limpieza de rasgos exclusivos de especie
+    if (this.wizardState.speciesId !== 'humano') {
+      this.wizardState.speciesSkillChoice = '';
+      this.wizardState.speciesOriginFeat = '';
+      this.wizardState.speciesOriginFeatChoices = null;
+    }
+    if (this.wizardState.speciesId !== 'elfo') {
+      this.wizardState.speciesCantripChoice = '';
+    }
+    if (this.wizardState.speciesId !== 'draconido') {
+      this.wizardState.dragonAncestry = '';
+    }
 
     const saved = store.saveCharacter(this.wizardState);
     store.setSelectedCharacterId(saved.id);

@@ -1744,7 +1744,7 @@ function characterQualifiesForFightingStyle(char) {
 
   const explicitFeatIds = [
     char.originFeat,
-    char.speciesOriginFeat,
+    (char.speciesId === 'humano' ? char.speciesOriginFeat : null),
     char.customBackground?.originFeat,
     char.level4Choice?.featId,
     char.level6Choice?.featId,
@@ -2727,7 +2727,7 @@ function calculateSkills(char) {
   const bgDef = char.customBackground || DND55_BACKGROUNDS.find((b) => b.id === char.backgroundId);
   const bgSkills = bgDef?.skills || [];
   const classSkills = char.chosenClassSkills || [];
-  const speciesSkill = char.speciesSkillChoice;
+  const speciesSkill = char.speciesId === 'humano' ? char.speciesSkillChoice : null;
   const isElf = char.speciesId === "elfo";
   const rogueLvl = getClassLevel(char, "picaro");
   const isRogue = rogueLvl >= 1;
@@ -5720,7 +5720,7 @@ function getConsumableTraitsForCharacter(character) {
   const featKeys = [];
   if (character.originFeat)
     featKeys.push(character.originFeat);
-  if (character.speciesOriginFeat)
+  if (character.speciesId === 'humano' && character.speciesOriginFeat)
     featKeys.push(character.speciesOriginFeat);
   if (character.customBackground?.originFeat)
     featKeys.push(character.customBackground.originFeat);

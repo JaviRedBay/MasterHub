@@ -5,27 +5,27 @@
  */
 
 export const SHOP_MODIFIERS = [
-  { id: 'vecindario', name: 'Tienda de barrio', rollMod: 0, pricePercentFixed: 0.0, description: 'Establecimiento local común, precios y oferta estándar.' },
-  { id: 'gremio', name: 'Tienda de gremio', rollMod: 1, pricePercentFixed: 0.10, description: 'Comercio respaldado por gremios comerciales (+10% precio fijo).' },
-  { id: 'lujo', name: 'Tienda de lujo', rollMod: 2, pricePercentFixed: 0.20, description: 'Boutique de alta gama para nobles y mecenas (+20% precio fijo).' },
-  { id: 'negro', name: 'Mercado negro', rollMod: 4, pricePercentFixed: 0.40, description: 'Tráfico clandestino de reliquias raras y contrabandeadas (+40% precio fijo).' },
-  { id: 'especializado', name: 'Mercado especializado', rollMod: -1, pricePercentFixed: -0.10, description: 'Bazar temático donde los objetos del tipo son más accesibles (-10% precio fijo).' },
+  { id: 'vecindario', name: 'Tienda de barrio', rollMod: 0, pricePercentFixed: 0.0, description: 'Establecimiento local común, precios y oferta estándar (0%).' },
+  { id: 'gremio', name: 'Tienda de gremio', rollMod: 1, pricePercentFixed: 0.10, description: 'Comercio respaldado por gremios comerciales (+10% precio).' },
+  { id: 'lujo', name: 'Tienda de lujo', rollMod: 2, pricePercentFixed: 0.20, description: 'Boutique de alta gama para nobles y mecenas (+20% precio).' },
+  { id: 'negro', name: 'Mercado negro', rollMod: 4, pricePercentFixed: 0.40, description: 'Tráfico clandestino de reliquias raras y contrabandeadas (+40% precio).' },
+  { id: 'especializado', name: 'Mercado especializado', rollMod: -1, pricePercentFixed: -0.10, description: 'Bazar temático donde los objetos del tipo son más accesibles (-10% precio).' },
 ];
 
 export const POPULATION_MODIFIERS = [
-  { id: 'aldea', name: 'Aldea (Hamlet)', priceMod: 2, description: 'Asentamiento pequeño con recursos muy limitados. Los objetos son escasos y caros.' },
-  { id: 'pueblo', name: 'Pueblo (Town)', priceMod: 1, description: 'Población modesta con comercio regular y artesanos básicos.' },
-  { id: 'ciudad_peq', name: 'Ciudad pequeña (Small City)', priceMod: 0, description: 'Centro comercial regional con acceso a suministros estándar.' },
-  { id: 'ciudad_gra', name: 'Ciudad grande (Large City)', priceMod: -1, description: 'Gran urbe con alta competencia entre comerciantes y gran oferta.' },
-  { id: 'metropolis', name: 'Metrópolis (Metropolis)', priceMod: -2, description: 'Capital o megalópolis comercial con los mejores precios y máxima variedad.' },
+  { id: 'aldea', name: 'Aldea (Hamlet)', rollMod: 2, priceMod: 2, pricePercentFixed: 0.20, description: 'Asentamiento pequeño con recursos muy limitados. Los objetos son escasos y caros (+20% precio).' },
+  { id: 'pueblo', name: 'Pueblo (Town)', rollMod: 1, priceMod: 1, pricePercentFixed: 0.10, description: 'Población modesta con comercio regular y artesanos básicos (+10% precio).' },
+  { id: 'ciudad_peq', name: 'Ciudad pequeña (Small City)', rollMod: 0, priceMod: 0, pricePercentFixed: 0.00, description: 'Centro comercial regional con acceso a suministros estándar (precio base).' },
+  { id: 'ciudad_gra', name: 'Ciudad grande (Large City)', rollMod: -1, priceMod: -1, pricePercentFixed: -0.10, description: 'Gran urbe con alta competencia entre comerciantes y gran oferta (-10% precio).' },
+  { id: 'metropolis', name: 'Metrópolis (Metropolis)', rollMod: -2, priceMod: -2, pricePercentFixed: -0.20, description: 'Capital o megalópolis comercial con los mejores precios y máxima variedad (-20% precio).' },
 ];
 
 export const RARITY_MODIFIERS = [
-  { id: 'comun', name: 'Común', priceMod: 0, color: '#6c757d' },
-  { id: 'uncomun', name: 'Poco común', priceMod: 1, color: '#198754' },
-  { id: 'raro', name: 'Raro', priceMod: 2, color: '#0d6efd' },
-  { id: 'muy_raro', name: 'Muy raro', priceMod: 3, color: '#6f42c1' },
-  { id: 'legendario', name: 'Legendario', priceMod: 4, color: '#fd7e14' },
+  { id: 'comun', name: 'Común', rollMod: 0, priceMod: 0, color: '#6c757d' },
+  { id: 'uncomun', name: 'Poco común', rollMod: 1, priceMod: 1, color: '#198754' },
+  { id: 'raro', name: 'Raro', rollMod: 2, priceMod: 2, color: '#0d6efd' },
+  { id: 'muy_raro', name: 'Muy raro', rollMod: 3, priceMod: 3, color: '#6f42c1' },
+  { id: 'legendario', name: 'Legendario', rollMod: 4, priceMod: 4, color: '#fd7e14' },
 ];
 
 export const CONDITION_FACTORS = [
@@ -75,23 +75,21 @@ export const AVAILABILITY_THRESHOLDS = {
   'metropolis_legendario': 17,
 };
 
-// Tablas de Precios según Rareza y resultado de Tirada Final BTRS
+// Tablas de Precios según Rareza y resultado de Tirada Final BTRS (Canónicas según BTRS.pdf)
 export const PRICE_TABLES = {
   'comun': [
-    { maxRoll: 2, price: 50, label: '50 p.o.' },
-    { maxRoll: 6, price: 75, label: '75 p.o.' },
-    { maxRoll: 10, price: 100, label: '100 p.o.' },
-    { maxRoll: 15, price: 150, label: '150 p.o.' },
-    { maxRoll: 19, price: 200, label: '200 p.o.' },
-    { maxRoll: 999, price: 300, label: '300 p.o.' },
+    { maxRoll: 4, price: 50, label: '50 p.o.' },
+    { maxRoll: 8, price: 60, label: '60 p.o.' },
+    { maxRoll: 12, price: 75, label: '75 p.o.' },
+    { maxRoll: 16, price: 90, label: '90 p.o.' },
+    { maxRoll: 999, price: 100, label: '100 p.o.' },
   ],
   'uncomun': [
-    { maxRoll: 2, price: 100, label: '100 p.o.' },
-    { maxRoll: 6, price: 250, label: '250 p.o.' },
-    { maxRoll: 10, price: 500, label: '500 p.o.' },
-    { maxRoll: 15, price: 750, label: '750 p.o.' },
-    { maxRoll: 19, price: 1000, label: '1.000 p.o.' },
-    { maxRoll: 999, price: 1500, label: '1.500 p.o.' },
+    { maxRoll: 4, price: 100, label: '100 p.o.' },
+    { maxRoll: 8, price: 200, label: '200 p.o.' },
+    { maxRoll: 12, price: 300, label: '300 p.o.' },
+    { maxRoll: 16, price: 400, label: '400 p.o.' },
+    { maxRoll: 999, price: 500, label: '500 p.o.' },
   ],
   'raro': [
     { maxRoll: 2, price: 500, label: '500 p.o.' },
@@ -103,28 +101,28 @@ export const PRICE_TABLES = {
   ],
   'muy_raro': [
     { maxRoll: 2, price: 5000, label: '5.000 p.o.' },
-    { maxRoll: 6, price: 10000, label: '10.000 p.o.' },
-    { maxRoll: 10, price: 15000, label: '15.000 p.o.' },
-    { maxRoll: 15, price: 25000, label: '25.000 p.o.' },
-    { maxRoll: 19, price: 40000, label: '40.000 p.o.' },
+    { maxRoll: 6, price: 15000, label: '15.000 p.o.' },
+    { maxRoll: 10, price: 25000, label: '25.000 p.o.' },
+    { maxRoll: 15, price: 35000, label: '35.000 p.o.' },
+    { maxRoll: 19, price: 45000, label: '45.000 p.o.' },
     { maxRoll: 999, price: 50000, label: '50.000 p.o.' },
   ],
   'legendario': [
-    { maxRoll: 2, price: 50000, label: '50.000 p.o.' },
-    { maxRoll: 6, price: 100000, label: '100.000 p.o.' },
-    { maxRoll: 10, price: 150000, label: '150.000 p.o.' },
-    { maxRoll: 15, price: 250000, label: '250.000 p.o.' },
-    { maxRoll: 19, price: 400000, label: '400.000 p.o.' },
-    { maxRoll: 999, price: 500000, label: '500.000 p.o.' },
+    { maxRoll: 2, price: 55000, label: '55.000 p.o.' },
+    { maxRoll: 6, price: 75000, label: '75.000 p.o.' },
+    { maxRoll: 10, price: 120000, label: '120.000 p.o.' },
+    { maxRoll: 15, price: 175000, label: '175.000 p.o.' },
+    { maxRoll: 19, price: 225000, label: '225.000 p.o.' },
+    { maxRoll: 999, price: 250000, label: '250.000 p.o.' },
   ],
 };
 
-// Tabla de Regateo (Bargaining) según Tirada de Carisma / Persuasión
+// Tabla de Regateo (Bargaining) según Tirada de Carisma / Persuasión (Tabla 10 en BTRS.pdf)
 export const BARGAIN_RULES = [
-  { maxRoll: 5, discountPercent: 0.20, label: '+20% recargo (Fallo estrepitoso, el mercader se ofende)' },
-  { maxRoll: 9, discountPercent: 0.10, label: '+10% recargo (Negociación torpe, desconfianza)' },
-  { maxRoll: 14, discountPercent: 0.00, label: '0% sin cambios (Precio fijado sin variación)' },
-  { maxRoll: 18, discountPercent: -0.10, label: '-10% descuento (Buena conversación y cortesía)' },
-  { maxRoll: 20, discountPercent: -0.15, label: '-15% descuento (Argumento comercial convincente)' },
-  { maxRoll: 999, discountPercent: -0.20, label: '-20% descuento (Maestría en regateo, trato excepcional)' },
+  { maxRoll: 5, discountPercent: -0.10, priceMultiplier: 1.10, label: '+10% recargo (Fallo en la negociación, el mercader desconfía)' },
+  { maxRoll: 10, discountPercent: 0.00, priceMultiplier: 1.00, label: '0% sin cambios (Precio fijado sin variación)' },
+  { maxRoll: 15, discountPercent: 0.05, priceMultiplier: 0.95, label: '-5% descuento (Cortesía y trato amable)' },
+  { maxRoll: 20, discountPercent: 0.10, priceMultiplier: 0.90, label: '-10% descuento (Buena conversación y argumento comercial)' },
+  { maxRoll: 25, discountPercent: 0.15, priceMultiplier: 0.85, label: '-15% descuento (Negociación muy convincente)' },
+  { maxRoll: 999, discountPercent: 0.20, priceMultiplier: 0.80, label: '-20% descuento (Maestría en regateo, trato excepcional)' },
 ];

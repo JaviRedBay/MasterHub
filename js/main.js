@@ -113,16 +113,8 @@ class App {
       respTitleEl.textContent = tabTitles[tabId];
     }
 
-    // Cerrar menú responsivo automáticamente al seleccionar una pestaña
-    const respMenu = document.getElementById('rpg-responsive-menu');
-    if (respMenu && respMenu.classList.contains('show') && window.innerWidth < 992) {
-      if (window.bootstrap?.Collapse) {
-        const bsCollapse = window.bootstrap.Collapse.getInstance(respMenu) || new window.bootstrap.Collapse(respMenu, { toggle: false });
-        bsCollapse.hide();
-      } else {
-        respMenu.classList.remove('show');
-      }
-    }
+    // Cerrar menú responsivo automáticamente al seleccionar una pestaña o interactuar
+    this.closeResponsiveMenu();
 
     // Actualizar visibilidad de secciones
     const views = {
@@ -177,6 +169,25 @@ class App {
     }
   }
 
+  /**
+   * Cierra automáticamente el menú desplegable en pantallas móviles y tablets.
+   */
+  closeResponsiveMenu() {
+    const respMenu = document.getElementById('rpg-responsive-menu');
+    if (respMenu && respMenu.classList.contains('show')) {
+      if (window.bootstrap?.Collapse) {
+        const bsCollapse = window.bootstrap.Collapse.getInstance(respMenu) || new window.bootstrap.Collapse(respMenu, { toggle: false });
+        bsCollapse.hide();
+      } else {
+        respMenu.classList.remove('show');
+      }
+      const toggleBtn = document.getElementById('btn-responsive-menu-toggle');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
+
   setupGlobalCampaignSelect() {
     const select = document.getElementById('global-campaign-select');
     const mobileSelect = document.getElementById('mobile-campaign-select');
@@ -204,6 +215,7 @@ class App {
 
     mobileSelect?.addEventListener('change', (e) => {
       store.setSelectedCampaignId(e.target.value);
+      this.closeResponsiveMenu();
     });
 
     store.on('campaigns:updated', () => populate());
@@ -219,7 +231,10 @@ class App {
     if (!dialog) return;
 
     openBtn?.addEventListener('click', () => dialog.showModal());
-    mobileOpenBtn?.addEventListener('click', () => dialog.showModal());
+    mobileOpenBtn?.addEventListener('click', () => {
+      this.closeResponsiveMenu();
+      dialog.showModal();
+    });
     closeBtn?.addEventListener('click', () => dialog.close());
 
     // Cierre al pulsar fuera
@@ -282,9 +297,15 @@ class App {
     if (!dialog) return;
 
     openBtn?.addEventListener('click', () => dialog.showModal());
-    mobileOpenBtn?.addEventListener('click', () => dialog.showModal());
+    mobileOpenBtn?.addEventListener('click', () => {
+      this.closeResponsiveMenu();
+      dialog.showModal();
+    });
     repoPill?.addEventListener('click', () => dialog.showModal());
-    mobileRepoBtn?.addEventListener('click', () => dialog.showModal());
+    mobileRepoBtn?.addEventListener('click', () => {
+      this.closeResponsiveMenu();
+      dialog.showModal();
+    });
     closeBtn?.addEventListener('click', () => {
       if (fileRepo.isBusy) return;
       dialog.close();

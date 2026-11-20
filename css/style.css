@@ -155,13 +155,30 @@ h1, h2, h3, h4, h5, h6, .rpg-font-title {
   letter-spacing: 1px;
 }
 
-.rpg-brand-version {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--rpg-gold);
-  letter-spacing: 0.8px;
-  line-height: 1.2;
-  margin-top: 1px;
+/* Cabecera compacta en móvil y tablet (< 992px, donde aparece el menú desplegable) */
+@media (max-width: 991.98px) {
+  .rpg-navbar > .container-fluid {
+    padding: 0.25rem 0.5rem !important;
+    gap: 0.25rem !important;
+    flex-wrap: nowrap !important;
+  }
+  .rpg-navbar .rpg-brand-title {
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .rpg-navbar .rpg-brand-subtitle {
+    display: none;
+  }
+  .rpg-navbar .fs-3 {
+    font-size: 1.1rem !important;
+    line-height: 1;
+  }
+  .rpg-navbar #btn-responsive-menu-toggle {
+    padding: 0.1rem 0.4rem;
+    font-size: 0.75rem;
+  }
 }
 
 /* Pestañas de navegación superiores */
@@ -870,6 +887,40 @@ dialog.rpg-dialog::backdrop {
   backdrop-filter: blur(4px);
 }
 
+/* Banner y Overlay de Carga Centralizado para Sincronización y Google Drive */
+#repo-busy-loader:not(.d-none) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: var(--rpg-backdrop, rgba(0, 0, 0, 0.75)) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
+}
+
+#repo-busy-loader .repo-busy-card {
+  max-width: 440px;
+  width: 90%;
+  background: var(--rpg-dialog-bg, #1a1a1a);
+  border: 2px solid var(--rpg-gold, #c8aa6e);
+  border-radius: var(--rpg-radius-lg, 12px);
+  box-shadow: var(--rpg-shadow-xl, 0 10px 25px rgba(0,0,0,0.8)), 0 0 25px color-mix(in srgb, var(--rpg-gold) 35%, transparent);
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+/* Scroll margin limpio para tarjetas del Master Panel teniendo en cuenta el navbar sticky */
+[id^="master-card-"] {
+  scroll-margin-top: 85px;
+}
+
 /* Avatar en Hoja Interactiva y Expositor Lightbox */
 .sheet-avatar-thumb {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1235,6 +1286,16 @@ dialog.rpg-image-lightbox::backdrop {
 .sheet-a4-paper strong,
 .sheet-a4-paper b {
   color: #000000 !important;
+}
+
+/* Límite máximo de tamaño tipográfico para evitar que textos cortos destaquen en exceso */
+.sheet-a4-paper h1,
+.sheet-a4-paper h2 {
+  font-size: 1.2rem !important;
+}
+
+.sheet-a4-paper .fs-4 {
+  font-size: 1.15rem !important;
 }
 
 /* Textos secundarios y aclaraciones legibles (inmunes al modo oscuro de Bootstrap) */

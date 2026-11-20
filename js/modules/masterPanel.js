@@ -769,7 +769,7 @@ export class MasterPanelModule {
       });
     });
 
-    // Desplazarse suavemente a la tarjeta de personaje en este mismo panel
+    // Desplazarse suavemente y con precisión al comienzo exacto de la tarjeta de personaje en este panel
     this.container.querySelectorAll('.btn-scroll-to-card').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -777,7 +777,14 @@ export class MasterPanelModule {
         if (charId) {
           const cardEl = document.getElementById(`master-card-${charId}`);
           if (cardEl) {
-            cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const navbar = document.querySelector('.rpg-navbar.sticky-top');
+            const navHeight = navbar ? navbar.offsetHeight : 70;
+            const rect = cardEl.getBoundingClientRect();
+            const targetY = window.pageYOffset + rect.top - navHeight - 14;
+            window.scrollTo({
+              top: Math.max(0, targetY),
+              behavior: 'smooth'
+            });
             const innerCard = cardEl.querySelector('.rpg-card') || cardEl;
             innerCard.classList.remove('card-highlight-pulse');
             void innerCard.offsetWidth; // forzar reflow

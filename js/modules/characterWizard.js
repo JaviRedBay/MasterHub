@@ -71,8 +71,12 @@ export class CharacterWizardModule {
     this.rolledStats = [];
 
     // Escuchar evento para editar un personaje existente desde la Hoja Interactiva
-    store.on('wizard:edit-character', (char) => {
-      this.loadCharacterForEdit(char);
+    store.on('wizard:edit-character', (payload) => {
+      if (payload && payload.character) {
+        this.loadCharacterForEdit(payload.character, payload.step || 1);
+      } else {
+        this.loadCharacterForEdit(payload, 1);
+      }
     });
 
     // Escuchar evento para iniciar un nuevo personaje
@@ -123,12 +127,12 @@ export class CharacterWizardModule {
     }
   }
 
-  loadCharacterForEdit(char) {
+  loadCharacterForEdit(char, targetStep = 1) {
     if (!char) return;
     this.isEditing = true;
     this.editingCharacterId = char.id;
     this.statGenMethod = 'manual';
-    this.currentStep = 1;
+    this.currentStep = Math.max(1, Math.min(7, Number(targetStep) || 1));
 
     // Clon profundo para preservar id, inventario, conjuros, tiradas de vida y rasgos
     this.wizardState = JSON.parse(JSON.stringify(char));

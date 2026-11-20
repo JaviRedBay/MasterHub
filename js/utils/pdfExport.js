@@ -184,10 +184,34 @@ function applyTextFieldValue(field, value, lib = null, fontSize = null) {
       field.disableScrolling();
     } catch (_) {}
   }
-  if (fontSize !== null && typeof field.setFontSize === 'function') {
+  // Tamaño máximo de letra: si no se especifica fontSize, aplicar 8.5pt como tope de seguridad
+  // para evitar que cuando haya poco texto éste se auto-escale a tamaños desproporcionados en el PDF.
+  const effectiveFontSize = (fontSize !== null && fontSize !== undefined) ? fontSize : 8.5;
+  if (typeof field.setFontSize === 'function') {
     try {
-      field.setFontSize(fontSize);
+      field.setFontSize(effectiveFontSize);
     } catch (_) {}
+  }
+  // Forzar el /DA (Default Appearance) del AcroField para anular el auto-size (Tf 0 Tf)
+  // que usa la plantilla PDF. Esto garantiza que el tamaño se respete aunque el campo
+  // tenga el flag de auto-escalado activado.
+  // Importante: los widgets pueden tener su propio /DA que tiene prioridad sobre el del campo.
+  if (lib && lib.PDFName && lib.PDFString && field.acroField) {
+    const daKey = lib.PDFName.of('DA');
+    const patchDa = (dict) => {
+      try {
+        const cur = dict.get(daKey);
+        if (!cur) return;
+        const daStr = typeof cur.asString === 'function' ? cur.asString() : String(cur.value ?? '');
+        const fixedDa = /[\d.]+\s+Tf/.test(daStr)
+          ? daStr.replace(/[\d.]+\s+Tf/, `${effectiveFontSize} Tf`)
+          : daStr;
+        if (fixedDa !== daStr) dict.set(daKey, lib.PDFString.of(fixedDa));
+      } catch (_) {}
+    };
+    patchDa(field.acroField.dict);
+    const ws = field.acroField.getWidgets ? field.acroField.getWidgets() : [];
+    ws.forEach(w => patchDa(w.dict));
   }
 
   // En algunos campos de la plantilla (como Temp HP), el widget hijo tiene un /V propio ("123456")
@@ -326,19 +350,19 @@ export async function generateFilledDndPdfBytes(char) {
   const fullClass = getCharacterFullClassTitle(char);
   const classDef = DND55_CLASSES.find(c => c.id === char.classId);
 
-  // 2. Encabezado e Identidad
-  safeSetTextField(form, 'Name', char.name || '');
-  safeSetTextField(form, 'Class', fullClass);
-  safeSetTextField(form, 'Subclass', subclassName || '');
-  safeSetTextField(form, 'Level', String(char.level || 1));
-  safeSetTextField(form, 'Species', fullSpecies);
-  safeSetTextField(form, 'Background', backgroundName);
-  safeSetTextField(form, 'Alignment', char.alignment || 'Neutral');
+  // 2. Encabezado e Identidad (topes de tamaño para que texto breve no destaque desproporcionadamente)
+  safeSetTextField(form, 'Name', char.name || '', lib, 11);
+  safeSetTextField(form, 'Class', fullClass, lib, 9);
+  safeSetTextField(form, 'Subclass', subclassName || '', lib, 9);
+  safeSetTextField(form, 'Level', String(char.level || 1), lib, 9.5);
+  safeSetTextField(form, 'Species', fullSpecies, lib, 9);
+  safeSetTextField(form, 'Background', backgroundName, lib, 9);
+  safeSetTextField(form, 'Alignment', char.alignment || 'Neutral', lib, 9);
   const speciesDef = DND55_SPECIES.find(s => s.id === char.speciesId);
   const charSize = speciesDef?.size || 'Mediano';
-  safeSetTextField(form, 'SIZE', charSize);
-  safeSetTextField(form, 'XP Points', '');
-  safeSetTextField(form, 'PROF BONUS', `+${pb}`);
+  safeSetTextField(form, 'SIZE', charSize, lib, 9);
+  safeSetTextField(form, 'XP Points', '', lib, 8.5);
+  safeSetTextField(form, 'PROF BONUS', `+${pb}`, lib, 10);
   safeCheck(form, 'Check Heroic Insp', Boolean(char.heroicInspiration));
 
   // 3. Características y Modificadores
@@ -357,24 +381,25 @@ export async function generateFilledDndPdfBytes(char) {
     const sv = saves[key] || { bonus: md, isProficient: false };
     const svVal = sv.bonus !== undefined ? sv.bonus : (sv.value !== undefined ? sv.value : md);
 
-    safeSetTextField(form, fields.score, String(sc));
-    safeSetTextField(form, fields.mod, formatModifier(md));
-    safeSetTextField(form, fields.save, formatModifier(svVal));
+    safeSetTextField(form, fields.score, String(sc), lib, 10);
+    safeSetTextField(form, fields.mod, formatModifier(md), lib, 10);
+    const svTxt = formatModifier(svVal);
+    safeSetTextField(form, fields.save, svTxt, lib, svTxt.length >= 3 ? 7 : 9.5);
     safeCheck(form, fields.chk, Boolean(sv.isProficient));
   });
 
   // 4. Combate Principal
-  safeSetTextField(form, 'Armor Class', String(acInfo.acDisplay || acInfo.ac));
+  safeSetTextField(form, 'Armor Class', String(acInfo.acDisplay || acInfo.ac), lib, 11);
   safeCheck(form, 'shield chk', Boolean(acInfo.hasShield));
-  safeSetTextField(form, 'init', formatModifier(initInfo.bonus));
-  safeSetTextField(form, 'SPEED', `${speedInfo.speed} m`);
-  safeSetTextField(form, 'Max HP', String(hpInfo.maxHp));
-  safeSetTextField(form, 'Current HP', String(char.currentHp !== null && char.currentHp !== undefined ? char.currentHp : hpInfo.maxHp));
-  safeSetTextField(form, 'Temp HP', (char.temporaryHp && Number(char.temporaryHp) > 0) ? String(char.temporaryHp) : '', lib);
+  safeSetTextField(form, 'init', formatModifier(initInfo.bonus), lib, 10);
+  safeSetTextField(form, 'SPEED', `${speedInfo.speed} m`, lib, 9.5);
+  safeSetTextField(form, 'Max HP', String(hpInfo.maxHp), lib, 10);
+  safeSetTextField(form, 'Current HP', String(char.currentHp !== null && char.currentHp !== undefined ? char.currentHp : hpInfo.maxHp), lib, 10);
+  safeSetTextField(form, 'Temp HP', (char.temporaryHp && Number(char.temporaryHp) > 0) ? String(char.temporaryHp) : '', lib, 10);
   const hdPool = getCharacterHitDicePool(char);
-  safeSetTextField(form, 'Max HD', hdPool.summaryText);
-  safeSetTextField(form, 'Spent HD', String(hdPool.spentHd || 0));
-  safeSetTextField(form, 'PASSIVE PERCEPTION', String(passPerc));
+  safeSetTextField(form, 'Max HD', hdPool.summaryText, lib, 8.5);
+  safeSetTextField(form, 'Spent HD', String(hdPool.spentHd || 0), lib, 9);
+  safeSetTextField(form, 'PASSIVE PERCEPTION', String(passPerc), lib, 10);
 
   // 5. Competencias de Armadura
   safeCheck(form, 'Check Light Armor', Boolean(profs.hasLightArmor));
@@ -409,7 +434,9 @@ export async function generateFilledDndPdfBytes(char) {
     const bonus = sData.bonus !== undefined ? sData.bonus : (sData.value !== undefined ? sData.value : 0);
     const isTrained = sData.proficiency && sData.proficiency !== 'none';
 
-    safeSetTextField(form, f.text, formatModifier(bonus));
+    const bonusTxt = formatModifier(bonus);
+    // Campo estrecho: reducir la letra cuando el bonificador tiene dos dígitos (+10, -10...)
+    safeSetTextField(form, f.text, bonusTxt, lib, bonusTxt.length >= 3 ? 6.5 : 8.5);
     safeCheck(form, f.chk, Boolean(isTrained));
   });
 
@@ -477,15 +504,15 @@ export async function generateFilledDndPdfBytes(char) {
         hasGwmFeat && isHeavy ? `GWM (+${pb})` : null
       ].filter(Boolean).join(' | ');
 
-      safeSetTextField(form, `NAME - WEAPON ${num}`, w.name || baseW.name || '');
-      safeSetTextField(form, `BONUS/DC - WEAPON ${num}`, formatModifier(atkBonus));
-      safeSetTextField(form, `DAMAGE/TYPE - WEAPON ${num}`, dmgStr);
-      safeSetTextField(form, `NOTES - WEAPON ${num}`, notes);
+      safeSetTextField(form, `NAME - WEAPON ${num}`, w.name || baseW.name || '', lib, 8.5);
+      safeSetTextField(form, `BONUS/DC - WEAPON ${num}`, formatModifier(atkBonus), lib, 8.5);
+      safeSetTextField(form, `DAMAGE/TYPE - WEAPON ${num}`, dmgStr, lib, 8);
+      safeSetTextField(form, `NOTES - WEAPON ${num}`, notes, lib, 7);
     } else {
-      safeSetTextField(form, `NAME - WEAPON ${num}`, '');
-      safeSetTextField(form, `BONUS/DC - WEAPON ${num}`, '');
-      safeSetTextField(form, `DAMAGE/TYPE - WEAPON ${num}`, '');
-      safeSetTextField(form, `NOTES - WEAPON ${num}`, '');
+      safeSetTextField(form, `NAME - WEAPON ${num}`, '', lib, 8.5);
+      safeSetTextField(form, `BONUS/DC - WEAPON ${num}`, '', lib, 8.5);
+      safeSetTextField(form, `DAMAGE/TYPE - WEAPON ${num}`, '', lib, 8);
+      safeSetTextField(form, `NOTES - WEAPON ${num}`, '', lib, 7);
     }
   }
 
@@ -553,16 +580,33 @@ export async function generateFilledDndPdfBytes(char) {
   const equipLines = [];
   const attuned = [];
   if (Array.isArray(char.inventory)) {
-    char.inventory.forEach(item => {
-      const eqTag = item.isEquipped ? ' [Equipado]' : '';
-      const qtyTag = item.quantity && item.quantity > 1 ? ` (x${item.quantity})` : '';
-      equipLines.push(`• ${item.name}${qtyTag}${eqTag}${item.weight ? ` - ${item.weight} kg` : ''}`);
+    // Ordenar: equipados primero
+    const sortedInv = [...char.inventory].sort((a, b) => (b.isEquipped ? 1 : 0) - (a.isEquipped ? 1 : 0));
+    sortedInv.forEach(item => {
+      const eqTag = item.isEquipped ? ' [E]' : '';          // abreviado para ahorrar espacio
+      const qtyTag = item.quantity && item.quantity > 1 ? ` x${item.quantity}` : '';
+      equipLines.push(`• ${item.name}${qtyTag}${eqTag}`);  // sin peso para compactar
       if (item.requiresAttunement && item.isAttuned) {
         attuned.push(item.name);
       }
     });
   }
-  safeSetTextField(form, 'EQUIPMENT', equipLines.join('\n'), lib, 8);
+  // Ajustar al tamaño real del campo EQUIPMENT (alto/ancho del widget) con margen de seguridad
+  const EQUIP_FONT = 6.5;
+  let maxEquipLines = 14;
+  let maxEquipChars = 40;
+  try {
+    const rect = form.getTextField('EQUIPMENT').acroField.getWidgets()[0].getRectangle();
+    maxEquipLines = Math.max(3, Math.floor((rect.height - 8) / (EQUIP_FONT * 1.3)));
+    maxEquipChars = Math.max(15, Math.floor((rect.width - 8) / (EQUIP_FONT * 0.55)));
+  } catch (_) {}
+  const clip = (s) => (s.length > maxEquipChars ? s.slice(0, maxEquipChars - 1) + '…' : s);
+  let equipTruncated = equipLines.map(clip);
+  if (equipTruncated.length > maxEquipLines) {
+    const hidden = equipTruncated.length - (maxEquipLines - 1);
+    equipTruncated = [...equipTruncated.slice(0, maxEquipLines - 1), `(+${hidden} más)`];
+  }
+  safeSetTextField(form, 'EQUIPMENT', equipTruncated.join('\n'), lib, EQUIP_FONT);
   safeSetTextField(form, 'GP', String(char.currency?.gp ?? '0'));
   safeSetTextField(form, 'SP', String(char.currency?.sp ?? '0'));
   safeSetTextField(form, 'CP', String(char.currency?.cp ?? '0'));
@@ -576,9 +620,10 @@ export async function generateFilledDndPdfBytes(char) {
   const toolProfList = Array.isArray(char.tools)
     ? char.tools
     : (profs.toolProficiencies || []);
-  safeSetTextField(form, 'LANGUAGES', (char.languages || []).join(', '), lib, 8);
-  safeSetTextField(form, 'WEAPON PROF', profs.weaponProficiencies.join(', '), lib, 8);
-  safeSetTextField(form, 'TOOL PROF', toolProfList.join(', '), lib, 8);
+  // Tamaños pequeños para campos con texto potencialmente largo
+  safeSetTextField(form, 'LANGUAGES', (char.languages || []).join(', '), lib, 6.5);
+  safeSetTextField(form, 'WEAPON PROF', profs.weaponProficiencies.join(', '), lib, 5.5);
+  safeSetTextField(form, 'TOOL PROF', toolProfList.join(', '), lib, 6);
 
   // 13. Aspecto Físico
   const app = char.appearance || {};

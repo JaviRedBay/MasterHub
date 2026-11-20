@@ -169,3 +169,17 @@ html[data-theme="medieval"] {
 }
 
 
+
+/* Botón del menú desplegable en la barra oscura: texto claro para contraste sobre el marrón */
+[data-theme="medieval"] .rpg-navbar .btn-outline-warning {
+  color: var(--rpg-navbar-brand) !important;
+  border-color: var(--rpg-navbar-brand) !important;
+}
+[data-theme="medieval"] .rpg-navbar .btn-outline-warning:hover,
+[data-theme="medieval"] .rpg-navbar .btn-outline-warning:active,
+[data-theme="medieval"] .rpg-navbar .btn-outline-warning:focus,
+[data-theme="medieval"] .rpg-navbar .btn-outline-warning[aria-expanded="true"] {
+  color: #2b1a0c !important;
+  background-color: var(--rpg-navbar-brand) !important;
+  border-color: var(--rpg-navbar-brand) !important;
+}

@@ -147,6 +147,13 @@ export class BtrsCalculatorModule {
     this.container = document.getElementById(containerId);
     this.calcMode = 'standard'; // 'standard' (3-roll) | 'fixed' (2-roll)
     this.lastCalculation = null;
+    this.currentDice = null;
+    this.selectedPopulation = 'ciudad_peq';
+    this.selectedShop = 'vecindario';
+    this.selectedRarity = 'uncomun';
+    this.selectedCondition = 'auto';
+    this.selectedChaMod = 2;
+    this.selectedBasePrice = 500;
     this.shopCategory = 'armeria';
     this.shopPopulation = 'ciudad_peq';
     this.shopEstablishment = 'vecindario';
@@ -179,10 +186,10 @@ export class BtrsCalculatorModule {
               <!-- Paso 1: Configuración de Mercado -->
               <div class="col-md-6">
                 <label class="form-label text-warning small fw-bold">1. Asentamiento / Población</label>
-                <select id="btrs-population" class="form-select bg-dark border-secondary text-light">
+                <select id="btrs-population" class="form-select form-select-sm bg-dark border-secondary text-light">
                   ${POPULATION_MODIFIERS.map(p => `
-                    <option value="${p.id}" ${p.id === 'ciudad_peq' ? 'selected' : ''}>
-                      ${p.name} (Mod Precio: ${p.priceMod >= 0 ? '+' : ''}${p.priceMod})
+                    <option value="${p.id}" ${p.id === this.selectedPopulation ? 'selected' : ''}>
+                      ${p.name} (Mod: ${p.rollMod >= 0 ? '+' : ''}${p.rollMod} tirada / ${p.pricePercentFixed >= 0 ? '+' : ''}${Math.round(p.pricePercentFixed * 100)}% precio)
                     </option>
                   `).join('')}
                 </select>
@@ -190,10 +197,10 @@ export class BtrsCalculatorModule {
 
               <div class="col-md-6">
                 <label class="form-label text-warning small fw-bold">2. Tipo de Establecimiento</label>
-                <select id="btrs-shop" class="form-select bg-dark border-secondary text-light">
+                <select id="btrs-shop" class="form-select form-select-sm bg-dark border-secondary text-light">
                   ${SHOP_MODIFIERS.map(s => `
-                    <option value="${s.id}" ${s.id === 'vecindario' ? 'selected' : ''}>
-                      ${s.name} (Mod Tirada: ${s.rollMod >= 0 ? '+' : ''}${s.rollMod})
+                    <option value="${s.id}" ${s.id === this.selectedShop ? 'selected' : ''}>
+                      ${s.name} (Mod: ${s.rollMod >= 0 ? '+' : ''}${s.rollMod} tirada / ${s.pricePercentFixed >= 0 ? '+' : ''}${Math.round(s.pricePercentFixed * 100)}% precio)
                     </option>
                   `).join('')}
                 </select>
@@ -201,43 +208,63 @@ export class BtrsCalculatorModule {
 
               <div class="col-md-6">
                 <label class="form-label text-warning small fw-bold">3. Rareza del Objeto</label>
-                <select id="btrs-rarity" class="form-select bg-dark border-secondary text-light">
+                <select id="btrs-rarity" class="form-select form-select-sm bg-dark border-secondary text-light">
                   ${RARITY_MODIFIERS.map(r => `
-                    <option value="${r.id}" ${r.id === 'uncomun' ? 'selected' : ''}>
-                      ${r.name} (Mod: ${r.priceMod >= 0 ? '+' : ''}${r.priceMod})
+                    <option value="${r.id}" ${r.id === this.selectedRarity ? 'selected' : ''}>
+                      ${r.name} (Mod Tirada: ${r.rollMod >= 0 ? '+' : ''}${r.rollMod})
                     </option>
                   `).join('')}
                 </select>
               </div>
 
-              <!-- Precio Base Fijo (Modo B) -->
+              <!-- Modos A y B -->
               ${this.calcMode === 'fixed' ? `
                 <div class="col-md-6">
-                  <label class="form-label text-warning small fw-bold">Precio Base Oficial (p.o.)</label>
-                  <input type="number" id="btrs-base-price" class="form-control bg-dark border-secondary text-light" value="500" min="1">
+                  <label class="form-label text-warning small fw-bold">4. Precio Base Oficial (p.o.)</label>
+                  <input type="number" id="btrs-base-price" class="form-control form-control-sm bg-dark border-secondary text-light" value="${this.selectedBasePrice}" min="1">
                 </div>
-              ` : `
                 <div class="col-md-6">
-                  <label class="form-label text-warning small fw-bold">Condición del Objeto</label>
-                  <select id="btrs-condition" class="form-select bg-dark border-secondary text-light">
-                    <option value="auto">🎲 Tirada Automática (1d6)</option>
+                  <label class="form-label text-warning small fw-bold">5. Condición del Objeto</label>
+                  <select id="btrs-condition" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="auto" ${this.selectedCondition === 'auto' ? 'selected' : ''}>🎲 Tirada Automática (1d6)</option>
                     ${CONDITION_FACTORS.map(c => `
-                      <option value="${c.dieRoll}">d6 [${c.dieRoll}] ${c.name} (${c.rollMod >= 0 ? '+' : ''}${c.rollMod})</option>
+                      <option value="${c.dieRoll}" ${String(this.selectedCondition) === String(c.dieRoll) ? 'selected' : ''}>
+                        d6 [${c.dieRoll}] ${c.name} (${c.pricePercentFixed >= 0 ? '+' : ''}${Math.round(c.pricePercentFixed * 100)}% precio)
+                      </option>
                     `).join('')}
                   </select>
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label text-warning small fw-bold">6. Modificador CAR del Comprador (Regateo)</label>
+                  <input type="number" id="btrs-cha-mod" class="form-control form-control-sm bg-dark border-secondary text-light" value="${this.selectedChaMod}" min="-5" max="10">
+                </div>
+              ` : `
+                <div class="col-md-6">
+                  <label class="form-label text-warning small fw-bold">4. Condición del Objeto</label>
+                  <select id="btrs-condition" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="auto" ${this.selectedCondition === 'auto' ? 'selected' : ''}>🎲 Tirada Automática (1d6)</option>
+                    ${CONDITION_FACTORS.map(c => `
+                      <option value="${c.dieRoll}" ${String(this.selectedCondition) === String(c.dieRoll) ? 'selected' : ''}>
+                        d6 [${c.dieRoll}] ${c.name} (Mod: ${c.rollMod >= 0 ? '+' : ''}${c.rollMod} tirada / ${c.pricePercentFixed >= 0 ? '+' : ''}${Math.round(c.pricePercentFixed * 100)}% precio)
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label text-warning small fw-bold">5. Modificador CAR del Comprador (Regateo)</label>
+                  <input type="number" id="btrs-cha-mod" class="form-control form-control-sm bg-dark border-secondary text-light" value="${this.selectedChaMod}" min="-5" max="10">
+                </div>
               `}
 
-              <!-- Modificador de Carisma para Regateo -->
-              <div class="col-md-6">
-                <label class="form-label text-warning small fw-bold">Modificador CAR del Comprador</label>
-                <input type="number" id="btrs-cha-mod" class="form-control bg-dark border-secondary text-light" value="2" min="-5" max="10">
-              </div>
-
-              <div class="col-md-6 d-flex align-items-end">
-                <button type="button" id="btn-calc-btrs" class="btn btn-warning text-dark w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-                  <span>⚡</span> Calcular Disponibilidad y Precio
+              <div class="col-md-6 d-flex align-items-end gap-2">
+                <button type="button" id="btn-calc-btrs" class="btn btn-sm btn-warning text-dark flex-grow-1 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+                  <i data-lucide="sparkles"></i> <span>Tirar Dados y Calcular</span>
                 </button>
+                ${this.lastCalculation ? `
+                  <button type="button" id="btn-reroll-btrs" class="btn btn-sm btn-outline-warning py-2 px-3 fw-bold d-flex align-items-center justify-content-center gap-1" title="Repetir tiradas de dados">
+                    <i data-lucide="refresh-cw"></i> <span>Tirar</span>
+                  </button>
+                ` : ''}
               </div>
             </form>
 
@@ -317,64 +344,162 @@ export class BtrsCalculatorModule {
     if (!this.lastCalculation) return '';
     const res = this.lastCalculation;
 
+    if (!res.isAvailable) {
+      return `
+        <div class="p-3 rounded bg-dark border border-danger">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="small text-secondary">Paso 1: Disponibilidad en Asentamiento</span>
+              <div class="fw-bold text-danger fs-6">✗ Objeto NO Disponible en la Región</div>
+              <div class="text-secondary small mt-1">
+                Tirada: 1d20 [${res.availD20}] + Tienda (${res.shopMod >= 0 ? '+' : ''}${res.shopMod}) = <strong class="text-light">${res.availRoll}</strong> vs CD requerida <strong class="text-light">${res.availThreshold}</strong> (${escapeHtml(res.pop.name)} - ${escapeHtml(res.rarity.name)}).
+              </div>
+            </div>
+            <span class="badge bg-danger fs-6">${res.availRoll} / CD ${res.availThreshold}</span>
+          </div>
+          <div class="alert alert-danger mb-0 mt-3 small">
+            El mercader no posee este objeto en existencias ni conoce a nadie en este asentamiento que lo comercie. Se debe buscar en una población mayor o recurrir al Mercado Negro.
+          </div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="p-3 rounded bg-dark border ${res.isAvailable ? 'border-warning' : 'border-danger'}">
-        <!-- Disponibilidad -->
+      <div class="p-3 rounded bg-dark border border-warning">
+        <!-- Paso 1: Disponibilidad Exitosa -->
         <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
           <div>
-            <span class="small text-secondary">Paso 1: Disponibilidad en Asentamiento</span>
-            <div class="fw-bold ${res.isAvailable ? 'text-success' : 'text-danger'} fs-5">
-              ${res.isAvailable ? '✓ Objeto Encontrado y Disponible' : '✗ Objeto NO Disponible en la Región'}
+            <span class="small text-secondary">Paso 1: Disponibilidad</span>
+            <div class="fw-bold text-success fs-6">✓ Objeto Encontrado y Disponible</div>
+            <div class="text-muted" style="font-size: 0.75rem;">
+              Tirada: 1d20 [${res.availD20}] + Tienda (${res.shopMod >= 0 ? '+' : ''}${res.shopMod}) = <strong class="text-light">${res.availRoll}</strong> vs CD <strong class="text-light">${res.availThreshold}</strong>
             </div>
           </div>
-          <span class="badge ${res.isAvailable ? 'bg-success' : 'bg-danger'} fs-6">
-            Tirada ${res.availRoll} vs CD ${res.availThreshold}
+          <span class="badge bg-success">${res.availRoll} vs CD ${res.availThreshold}</span>
+        </div>
+
+        <!-- Paso 2: Condición del Objeto -->
+        <div class="mb-3 small p-2 rounded bg-black border border-secondary d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-secondary d-block">Paso 2: Condición del Objeto (d6: [${res.conditionRoll}])</span>
+            <strong class="text-warning">${escapeHtml(res.condition.name)}</strong>
+            <span class="text-muted ms-1">&bull; ${escapeHtml(res.condition.description)}</span>
+          </div>
+          <span class="badge ${res.condPercent < 0 ? 'bg-danger' : res.condPercent > 0 ? 'bg-warning text-dark' : 'bg-secondary'}">
+            ${res.condPercent >= 0 ? '+' : ''}${Math.round(res.condPercent * 100)}%
           </span>
         </div>
 
-        ${res.isAvailable ? `
-          <!-- Condición -->
-          <div class="mb-3 small">
-            <span class="text-secondary">Paso 2: Condición del Objeto (d6: ${res.conditionRoll}):</span>
-            <div class="fw-bold text-light">${res.condition.name} &bull; <span class="text-warning">${res.condition.description}</span></div>
+        <!-- Paso 3: Desglose de Modificadores al Precio de los Diferentes Apartados -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-warning small fw-bold">Paso 3: Modificadores al Precio por Apartado</span>
+            ${res.calcMode === 'standard' ? `
+              <span class="text-secondary" style="font-size: 0.75rem;">
+                Tirada BTRS: 1d20 [${res.baseD20}] + Mod [${res.totalRollMod >= 0 ? '+' : ''}${res.totalRollMod}] = <strong class="text-light">${res.finalRollTotal}</strong>
+              </span>
+            ` : ''}
           </div>
 
-          <!-- Precio Base BTRS -->
-          <div class="row g-2 mb-3 text-center">
-            <div class="col-6">
-              <div class="p-2 rounded bg-black border border-secondary">
-                <span class="text-secondary small d-block">Tirada BTRS Modificada</span>
-                <span class="fs-4 fw-bold text-light">${res.finalRollTotal}</span>
-                <div class="text-muted" style="font-size: 0.7rem;">(1d20: ${res.baseD20} + Mod: ${res.totalMod >= 0 ? '+' : ''}${res.totalMod})</div>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="p-2 rounded bg-black border border-secondary">
-                <span class="text-secondary small d-block">Precio Base de Lista</span>
-                <span class="fs-4 fw-bold text-warning">${formatGold(res.basePrice)}</span>
-              </div>
-            </div>
+          <div class="table-responsive">
+            <table class="table table-dark table-sm table-bordered align-middle mb-0" style="font-size: 0.78rem;">
+              <thead class="text-secondary">
+                <tr>
+                  <th>Apartado / Concepto</th>
+                  <th class="text-center" style="width: 85px;">Mod. Tirada</th>
+                  <th class="text-center" style="width: 85px;">Mod. Precio</th>
+                  <th class="text-end" style="width: 105px;">Impacto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong class="text-light">${res.calcMode === 'standard' ? `Precio Base (Tabla ${escapeHtml(res.rarity.name)})` : 'Precio Base Oficial'}</strong>
+                  </td>
+                  <td class="text-center text-secondary">${res.calcMode === 'standard' ? `Tabla [${res.rarity.name}]` : '-'}</td>
+                  <td class="text-center text-secondary">Base</td>
+                  <td class="text-end text-warning fw-bold">${formatGold(res.initialPrice)}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="text-secondary">1. Asentamiento / Población:</span> <strong class="text-light">${escapeHtml(res.pop.name)}</strong>
+                  </td>
+                  <td class="text-center text-info">${res.calcMode === 'standard' ? `${res.pop.rollMod >= 0 ? '+' : ''}${res.pop.rollMod}` : '-'}</td>
+                  <td class="text-center ${res.popPercent < 0 ? 'text-success' : res.popPercent > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.popPercent >= 0 ? '+' : ''}${Math.round(res.popPercent * 100)}%
+                  </td>
+                  <td class="text-end ${res.popImpactGold < 0 ? 'text-success' : res.popImpactGold > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.popImpactGold >= 0 ? '+' : ''}${formatGold(res.popImpactGold)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="text-secondary">2. Tipo de Establecimiento:</span> <strong class="text-light">${escapeHtml(res.shop.name)}</strong>
+                  </td>
+                  <td class="text-center text-info">${res.calcMode === 'standard' ? `${res.shop.rollMod >= 0 ? '+' : ''}${res.shop.rollMod}` : '-'}</td>
+                  <td class="text-center ${res.shopPercent < 0 ? 'text-success' : res.shopPercent > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.shopPercent >= 0 ? '+' : ''}${Math.round(res.shopPercent * 100)}%
+                  </td>
+                  <td class="text-end ${res.shopImpactGold < 0 ? 'text-success' : res.shopImpactGold > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.shopImpactGold >= 0 ? '+' : ''}${formatGold(res.shopImpactGold)}
+                  </td>
+                </tr>
+                ${res.calcMode === 'standard' ? `
+                  <tr>
+                    <td>
+                      <span class="text-secondary">3. Rareza del Objeto:</span> <strong class="text-light">${escapeHtml(res.rarity.name)}</strong>
+                    </td>
+                    <td class="text-center text-info">${res.rarity.rollMod >= 0 ? '+' : ''}${res.rarity.rollMod}</td>
+                    <td class="text-center text-secondary">Escala</td>
+                    <td class="text-end text-muted">-</td>
+                  </tr>
+                ` : ''}
+                <tr>
+                  <td>
+                    <span class="text-secondary">${res.calcMode === 'standard' ? '4.' : '3.'} Condición del Objeto:</span> <strong class="text-light">${escapeHtml(res.condition.name)}</strong>
+                  </td>
+                  <td class="text-center text-info">${res.calcMode === 'standard' ? `${res.condition.rollMod >= 0 ? '+' : ''}${res.condition.rollMod}` : '-'}</td>
+                  <td class="text-center ${res.condPercent < 0 ? 'text-success' : res.condPercent > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.condPercent >= 0 ? '+' : ''}${Math.round(res.condPercent * 100)}%
+                  </td>
+                  <td class="text-end ${res.condImpactGold < 0 ? 'text-success' : res.condImpactGold > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.condImpactGold >= 0 ? '+' : ''}${formatGold(res.condImpactGold)}
+                  </td>
+                </tr>
+                <tr class="table-active">
+                  <td><strong class="text-light">Subtotal Ajustado de Mercado</strong></td>
+                  <td class="text-center text-info fw-bold">${res.calcMode === 'standard' ? `Total: ${res.totalRollMod >= 0 ? '+' : ''}${res.totalRollMod}` : '-'}</td>
+                  <td class="text-center fw-bold ${res.totalPercentMod < 0 ? 'text-success' : res.totalPercentMod > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.totalPercentMod >= 0 ? '+' : ''}${Math.round(res.totalPercentMod * 100)}%
+                  </td>
+                  <td class="text-end text-warning fw-bold">${formatGold(res.adjustedPrice)}</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="text-secondary">${res.calcMode === 'standard' ? '5.' : '4.'} Regateo (Prueba CAR):</span> <strong class="text-light">1d20 [${res.bargainD20}] + CAR [${res.chaMod >= 0 ? '+' : ''}${res.chaMod}] = ${res.bargainRoll}</strong>
+                    <div class="text-muted" style="font-size: 0.7rem;">${escapeHtml(res.bargainRule.label)}</div>
+                  </td>
+                  <td class="text-center text-secondary">-</td>
+                  <td class="text-center ${res.bargainRule.priceMultiplier < 1 ? 'text-success' : res.bargainRule.priceMultiplier > 1 ? 'text-danger' : 'text-secondary'}">
+                    ${res.bargainRule.priceMultiplier < 1 ? '-' : res.bargainRule.priceMultiplier > 1 ? '+' : ''}${Math.abs(Math.round((res.bargainRule.priceMultiplier - 1) * 100))}%
+                  </td>
+                  <td class="text-end ${res.bargainImpactGold < 0 ? 'text-success' : res.bargainImpactGold > 0 ? 'text-danger' : 'text-secondary'}">
+                    ${res.bargainImpactGold >= 0 ? '+' : ''}${formatGold(res.bargainImpactGold)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <!-- Regateo -->
-          <div class="p-2 rounded bg-black border border-secondary mb-3">
-            <div class="d-flex justify-content-between align-items-center small">
-              <span class="text-secondary">Paso 4: Prueba de Regateo (CAR):</span>
-              <span class="badge bg-primary">Tirada ${res.bargainRoll} (d20: ${res.bargainD20} + CAR: ${res.chaMod >= 0 ? '+' : ''}${res.chaMod})</span>
-            </div>
-            <div class="small text-light mt-1">${res.bargainRule.label}</div>
+        <!-- PRECIO FINAL -->
+        <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, var(--rpg-crimson-glow, rgba(160, 20, 20, 0.3)), var(--rpg-tint-soft, rgba(30, 30, 30, 0.8))); border: 2px solid var(--rpg-gold, #c89b3c);">
+          <div class="small text-warning fw-bold text-uppercase tracking-wide">Precio Final Acordado</div>
+          <div class="display-6 fw-bold text-warning">${formatGold(res.finalPrice)}</div>
+          <div class="text-secondary small mt-1">
+            Base ${formatGold(res.initialPrice)} &bull; Modificadores Apartados ${res.totalPercentMod >= 0 ? '+' : ''}${Math.round(res.totalPercentMod * 100)}% &bull; Regateo ${res.bargainRule.priceMultiplier < 1 ? '-' : res.bargainRule.priceMultiplier > 1 ? '+' : ''}${Math.abs(Math.round((res.bargainRule.priceMultiplier - 1) * 100))}%
           </div>
-
-          <!-- PRECIO FINAL -->
-          <div class="text-center p-3 rounded" style="background: linear-gradient(135deg, var(--rpg-crimson-glow), var(--rpg-tint-soft)); border: 2px solid var(--rpg-gold);">
-            <div class="small text-warning fw-bold">PRECIO FINAL ACORDADO</div>
-            <div class="display-5 fw-bold text-warning">${formatGold(res.finalPrice)}</div>
-          </div>
-        ` : `
-          <div class="alert alert-danger m-0 small">
-            El mercader no posee este objeto en existencias ni conoce a nadie en este asentamiento que lo comercie. Se debe buscar en una población mayor o pagar sobornos en el Mercado Negro.
-          </div>
-        `}
+        </div>
       </div>
     `;
   }
@@ -461,6 +586,39 @@ export class BtrsCalculatorModule {
   attachEventListeners() {
     if (!this.container) return;
 
+    // Actualización reactiva de modificadores en tiempo real si ya hay cálculo
+    const liveRecalc = () => {
+      if (this.lastCalculation) {
+        this.calculateBtrs(false);
+      }
+    };
+
+    // Sincronizar selectores de la Calculadora BTRS
+    this.container.querySelector('#btrs-population')?.addEventListener('change', (e) => {
+      this.selectedPopulation = e.target.value;
+      liveRecalc();
+    });
+    this.container.querySelector('#btrs-shop')?.addEventListener('change', (e) => {
+      this.selectedShop = e.target.value;
+      liveRecalc();
+    });
+    this.container.querySelector('#btrs-rarity')?.addEventListener('change', (e) => {
+      this.selectedRarity = e.target.value;
+      liveRecalc();
+    });
+    this.container.querySelector('#btrs-condition')?.addEventListener('change', (e) => {
+      this.selectedCondition = e.target.value;
+      liveRecalc();
+    });
+    this.container.querySelector('#btrs-cha-mod')?.addEventListener('input', (e) => {
+      this.selectedChaMod = parseInt(e.target.value, 10) || 0;
+      liveRecalc();
+    });
+    this.container.querySelector('#btrs-base-price')?.addEventListener('input', (e) => {
+      this.selectedBasePrice = parseInt(e.target.value, 10) || 1;
+      liveRecalc();
+    });
+
     // Sincronizar selectores del generador de tiendas
     this.container.querySelector('#shop-gen-category')?.addEventListener('change', (e) => {
       this.shopCategory = e.target.value;
@@ -480,9 +638,14 @@ export class BtrsCalculatorModule {
       });
     });
 
-    // Calcular BTRS
+    // Calcular BTRS (tirada completa nueva)
     this.container.querySelector('#btn-calc-btrs')?.addEventListener('click', () => {
-      this.calculateBtrs();
+      this.calculateBtrs(true);
+    });
+
+    // Repetir tirada de dados
+    this.container.querySelector('#btn-reroll-btrs')?.addEventListener('click', () => {
+      this.calculateBtrs(true);
     });
 
     // Generar Tienda Procedural
@@ -543,107 +706,175 @@ export class BtrsCalculatorModule {
         if (!item) return;
 
         // Cargar en el motor de precios BTRS
+        this.selectedPopulation = this.shopPopulation;
+        this.selectedShop = this.shopEstablishment;
+        this.selectedRarity = item.rarity;
+        if (item.conditionRoll) this.selectedCondition = String(item.conditionRoll);
+        this.selectedBasePrice = item.price;
+
         const popSelect = this.container.querySelector('#btrs-population');
         const shopSelect = this.container.querySelector('#btrs-shop');
         const raritySelect = this.container.querySelector('#btrs-rarity');
         const condSelect = this.container.querySelector('#btrs-condition');
+        const basePriceInput = this.container.querySelector('#btrs-base-price');
 
-        if (popSelect) popSelect.value = this.shopPopulation;
-        if (shopSelect) shopSelect.value = this.shopEstablishment;
-        if (raritySelect) raritySelect.value = item.rarity;
-        if (condSelect && item.conditionRoll) condSelect.value = String(item.conditionRoll);
+        if (popSelect) popSelect.value = this.selectedPopulation;
+        if (shopSelect) shopSelect.value = this.selectedShop;
+        if (raritySelect) raritySelect.value = this.selectedRarity;
+        if (condSelect) condSelect.value = this.selectedCondition;
+        if (basePriceInput) basePriceInput.value = this.selectedBasePrice;
 
-        this.calculateBtrs();
-        store.showToast(`Objeto "${item.name}" cargado en el Motor BTRS para regateo.`, 'info');
+        this.calculateBtrs(true);
+        store.showToast(`Objeto "${item.name}" cargado en la Calculadora BTRS para regateo.`, 'info');
       });
     });
   }
 
-  calculateBtrs() {
-    const popId = this.container.querySelector('#btrs-population').value;
-    const shopId = this.container.querySelector('#btrs-shop').value;
-    const rarityId = this.container.querySelector('#btrs-rarity').value;
-    const chaMod = parseInt(this.container.querySelector('#btrs-cha-mod').value, 10) || 0;
+  updateResultView() {
+    const resultBox = this.container.querySelector('#btrs-result-box');
+    if (resultBox) {
+      resultBox.innerHTML = this.renderCalculationResult();
+      resultBox.classList.remove('d-none');
+    } else {
+      this.render();
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
 
-    const pop = POPULATION_MODIFIERS.find(p => p.id === popId);
-    const shop = SHOP_MODIFIERS.find(s => s.id === shopId);
-    const rarity = RARITY_MODIFIERS.find(r => r.id === rarityId);
+  calculateBtrs(rerollDice = true) {
+    const popSelect = this.container.querySelector('#btrs-population');
+    const shopSelect = this.container.querySelector('#btrs-shop');
+    const raritySelect = this.container.querySelector('#btrs-rarity');
+    const chaModInput = this.container.querySelector('#btrs-cha-mod');
+    const basePriceInput = this.container.querySelector('#btrs-base-price');
+    const condSelect = this.container.querySelector('#btrs-condition');
 
-    // 1. Disponibilidad
+    if (popSelect) this.selectedPopulation = popSelect.value;
+    if (shopSelect) this.selectedShop = shopSelect.value;
+    if (raritySelect) this.selectedRarity = raritySelect.value;
+    if (chaModInput) this.selectedChaMod = parseInt(chaModInput.value, 10) || 0;
+    if (basePriceInput) this.selectedBasePrice = parseInt(basePriceInput.value, 10) || 500;
+    if (condSelect) this.selectedCondition = condSelect.value;
+
+    const popId = this.selectedPopulation;
+    const shopId = this.selectedShop;
+    const rarityId = this.selectedRarity;
+    const chaMod = this.selectedChaMod;
+
+    const pop = POPULATION_MODIFIERS.find(p => p.id === popId) || POPULATION_MODIFIERS[2];
+    const shop = SHOP_MODIFIERS.find(s => s.id === shopId) || SHOP_MODIFIERS[0];
+    const rarity = RARITY_MODIFIERS.find(r => r.id === rarityId) || RARITY_MODIFIERS[1];
+
+    if (rerollDice || !this.currentDice) {
+      this.currentDice = {
+        avail: rollDie(20),
+        cond: (this.selectedCondition !== 'auto') ? parseInt(this.selectedCondition, 10) : rollDie(6),
+        price: rollDie(20),
+        bargain: rollDie(20)
+      };
+    } else if (this.selectedCondition !== 'auto') {
+      this.currentDice.cond = parseInt(this.selectedCondition, 10);
+    }
+
+    // 1. Disponibilidad en Asentamiento (1d20 + Modificador de Tienda vs CD)
     const key = `${popId}_${rarityId}`;
     const availThreshold = AVAILABILITY_THRESHOLDS[key] || 10;
-    const d20Avail = rollDie(20);
-    const availRoll = d20Avail + (shop.rollMod || 0);
+    const availRoll = this.currentDice.avail + (shop.rollMod || 0);
     const isAvailable = availRoll >= availThreshold;
 
     if (!isAvailable) {
       this.lastCalculation = {
+        calcMode: this.calcMode,
         isAvailable: false,
+        availD20: this.currentDice.avail,
+        shopMod: shop.rollMod || 0,
         availRoll,
-        availThreshold
+        availThreshold,
+        pop,
+        shop,
+        rarity
       };
-      this.render();
+      this.updateResultView();
       return;
     }
 
-    // 2. Condición
-    let conditionRoll = 1;
-    const condSelect = this.container.querySelector('#btrs-condition');
-    if (condSelect && condSelect.value !== 'auto') {
-      conditionRoll = parseInt(condSelect.value, 10);
-    } else {
-      conditionRoll = rollDie(6);
-    }
+    // 2. Condición del Objeto (d6)
+    const conditionRoll = (this.selectedCondition !== 'auto')
+      ? parseInt(this.selectedCondition, 10)
+      : this.currentDice.cond;
     const condition = CONDITION_FACTORS.find(c => c.dieRoll === conditionRoll) || CONDITION_FACTORS[0];
 
-    // 3. Precio Base
-    let basePrice = 100;
+    // 3. Modificadores al Precio de los Diferentes Apartados
+    const popPercent = pop.pricePercentFixed || 0;
+    const shopPercent = shop.pricePercentFixed || 0;
+    const condPercent = condition.pricePercentFixed || 0;
+    const totalPercentMod = popPercent + shopPercent + condPercent;
+
+    let initialPrice = 100;
+    let baseD20 = this.currentDice.price;
+    let totalRollMod = 0;
     let finalRollTotal = 10;
-    let baseD20 = 10;
-    let totalMod = 0;
+    let bracket = null;
 
     if (this.calcMode === 'fixed') {
-      const fixedBase = parseInt(this.container.querySelector('#btrs-base-price').value, 10) || 500;
-      const multiplier = 1 + (shop.pricePercentFixed || 0) + (condition.pricePercentFixed || 0);
-      basePrice = Math.max(1, Math.round(fixedBase * multiplier));
+      initialPrice = this.selectedBasePrice;
     } else {
-      totalMod = (shop.rollMod || 0) + (pop.priceMod || 0) + (rarity.priceMod || 0) + (condition.rollMod || 0);
-      baseD20 = rollDie(20);
-      finalRollTotal = baseD20 + totalMod;
-
+      totalRollMod = (shop.rollMod || 0) + (pop.rollMod || 0) + (rarity.rollMod || 0) + (condition.rollMod || 0);
+      finalRollTotal = baseD20 + totalRollMod;
       const table = PRICE_TABLES[rarityId] || PRICE_TABLES['comun'];
-      const bracket = table.find(b => finalRollTotal <= b.maxRoll) || table[table.length - 1];
-      const unadjustedPrice = bracket.price;
-
-      const conditionMultiplier = 1 + (condition.pricePercentFixed || 0);
-      const shopMultiplier = 1 + (shop.pricePercentFixed || 0);
-      basePrice = Math.max(1, Math.round(unadjustedPrice * conditionMultiplier * shopMultiplier));
+      bracket = table.find(b => finalRollTotal <= b.maxRoll) || table[table.length - 1];
+      initialPrice = bracket.price;
     }
 
-    // 4. Regateo
-    const bargainD20 = rollDie(20);
+    // Impacto económico exacto en oro por cada apartado
+    const popImpactGold = Math.round(initialPrice * popPercent);
+    const shopImpactGold = Math.round(initialPrice * shopPercent);
+    const condImpactGold = Math.round(initialPrice * condPercent);
+
+    // Subtotal antes de regateo con todos los modificadores de apartados aplicados
+    const adjustedPrice = Math.max(1, Math.round(initialPrice * (1 + totalPercentMod)));
+
+    // 4. Regateo (Prueba de Carisma)
+    const bargainD20 = this.currentDice.bargain;
     const bargainRoll = bargainD20 + chaMod;
     const bargainRule = BARGAIN_RULES.find(r => bargainRoll <= r.maxRoll) || BARGAIN_RULES[BARGAIN_RULES.length - 1];
-    const finalPrice = Math.max(1, Math.round(basePrice * bargainRule.priceMultiplier));
+    const finalPrice = Math.max(1, Math.round(adjustedPrice * bargainRule.priceMultiplier));
+    const bargainImpactGold = finalPrice - adjustedPrice;
 
     this.lastCalculation = {
+      calcMode: this.calcMode,
       isAvailable: true,
+      availD20: this.currentDice.avail,
+      shopMod: shop.rollMod || 0,
       availRoll,
       availThreshold,
+      pop,
+      shop,
+      rarity,
       conditionRoll,
       condition,
       baseD20,
-      totalMod,
+      totalRollMod,
       finalRollTotal,
-      basePrice,
+      bracket,
+      initialPrice,
+      popPercent,
+      shopPercent,
+      condPercent,
+      totalPercentMod,
+      popImpactGold,
+      shopImpactGold,
+      condImpactGold,
+      adjustedPrice,
       bargainD20,
       chaMod,
       bargainRoll,
       bargainRule,
+      bargainImpactGold,
       finalPrice
     };
 
-    this.render();
+    this.updateResultView();
   }
 
   generateShopInventory() {
@@ -706,15 +937,19 @@ export class BtrsCalculatorModule {
       const conditionRoll = (shopEst.id === 'lujo') ? Math.min(6, 3 + rollDie(3)) : rollDie(6);
       const cond = CONDITION_FACTORS.find(c => c.dieRoll === conditionRoll) || CONDITION_FACTORS[0];
 
-      // Cálculo Canónico BTRS
+      // Rareza del objeto
+      const rarityDef = RARITY_MODIFIERS.find(r => r.id === rarity) || RARITY_MODIFIERS[0];
+
+      // Cálculo Canónico BTRS (Tirada modificada por todos los apartados)
       const d20 = rollDie(20);
-      const rollTotal = d20 + (shopEst.rollMod || 0) + (pop.priceMod || 0) + (cond.rollMod || 0);
+      const rollTotal = d20 + (shopEst.rollMod || 0) + (pop.rollMod || 0) + (cond.rollMod || 0) + (rarityDef.rollMod || 0);
       const table = PRICE_TABLES[rarity] || PRICE_TABLES['comun'];
       const bracket = table.find(b => rollTotal <= b.maxRoll) || table[table.length - 1];
       const unadjustedPrice = bracket.price;
 
-      const finalPrice = Math.max(1, Math.round(unadjustedPrice * (1 + (cond.pricePercentFixed || 0) + (shopEst.pricePercentFixed || 0))));
-      const rarityDef = RARITY_MODIFIERS.find(r => r.id === rarity);
+      // Modificadores de precio de los apartados (Población + Tienda + Condición)
+      const totalPercentMod = (pop.pricePercentFixed || 0) + (shopEst.pricePercentFixed || 0) + (cond.pricePercentFixed || 0);
+      const finalPrice = Math.max(1, Math.round(unadjustedPrice * (1 + totalPercentMod)));
 
       return {
         name: preset.name,
@@ -727,7 +962,7 @@ export class BtrsCalculatorModule {
         condition: cond.name,
         conditionDesc: cond.description,
         price: finalPrice,
-        btrsFormula: `Tirada ${d20} + Tienda (${shopEst.rollMod >= 0 ? '+' : ''}${shopEst.rollMod}) + Población (${pop.priceMod >= 0 ? '+' : ''}${pop.priceMod}) = ${rollTotal} -> Base: ${unadjustedPrice} po`
+        btrsFormula: `Tirada: 1d20 [${d20}] + Tienda (${shopEst.rollMod >= 0 ? '+' : ''}${shopEst.rollMod}) + Población (${pop.rollMod >= 0 ? '+' : ''}${pop.rollMod}) + Condición (${cond.rollMod >= 0 ? '+' : ''}${cond.rollMod}) + Rareza (${rarityDef.rollMod >= 0 ? '+' : ''}${rarityDef.rollMod}) = ${rollTotal} -> Base: ${unadjustedPrice} po | Mod. precio: ${totalPercentMod >= 0 ? '+' : ''}${Math.round(totalPercentMod * 100)}%`
       };
     });
 

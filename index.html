@@ -64,11 +64,9 @@
         <span class="fs-3 text-warning">⚔️</span>
         <div>
           <div class="rpg-brand-title">Roleplay Master Hub</div>
-          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine</div>
-          <div id="app-version-badge" class="rpg-brand-version">v1.1.0</div>
+          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine &bull; <span id="app-version-badge">v1.2.0</span></div>
         </div>
       </div>
-
       <!-- Botón de Menú Responsivo (visible en tablets y móviles: d-lg-none) -->
       <button id="btn-responsive-menu-toggle" class="btn btn-sm btn-outline-warning d-lg-none d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#rpg-responsive-menu" aria-expanded="false" aria-controls="rpg-responsive-menu" aria-label="Abrir Menú de Navegación">
         <i data-lucide="menu"></i>
@@ -143,6 +141,12 @@
       <nav class="container-fluid px-3 pt-1">
         <ul class="nav rpg-nav-tabs flex-row flex-nowrap overflow-x-auto" id="app-tabs" role="tablist">
           <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-campaigns-btn" data-tab="campaigns" type="button" role="tab">
+              <i data-lucide="users"></i>
+              <span>Campañas &amp; Roster</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
             <button class="nav-link active" id="tab-master-panel-btn" data-tab="master-panel" type="button" role="tab">
               <i data-lucide="shield-alert"></i>
               <span>Master Panel</span>
@@ -164,12 +168,6 @@
             <button class="nav-link" id="tab-btrs-btn" data-tab="btrs" type="button" role="tab">
               <i data-lucide="coins"></i>
               <span>Calculadora BTRS</span>
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-campaigns-btn" data-tab="campaigns" type="button" role="tab">
-              <i data-lucide="users"></i>
-              <span>Campañas &amp; Roster</span>
             </button>
           </li>
           <li class="nav-item" role="presentation">
@@ -342,13 +340,15 @@
             </div>
           </div>
 
-          <!-- Loader de bloqueo durante conexión y descarga/sincronización del repositorio -->
-          <div id="repo-busy-loader" class="d-none mb-3 p-3 rounded border border-warning bg-black bg-opacity-75 text-center" role="status" aria-live="polite">
-            <div class="d-flex flex-column align-items-center justify-content-center gap-2">
-              <div class="spinner-border text-warning spinner-border-sm" style="width: 1.6rem; height: 1.6rem;" aria-hidden="true"></div>
-              <div id="repo-busy-text" class="fw-bold text-warning small">Conectando y descargando el repositorio...</div>
-              <div class="text-secondary" style="font-size: 0.75rem;">
-                Por favor, espera. Las opciones de carga y guardado están bloqueadas mientras finaliza la operación.
+          <!-- Loader de bloqueo centralizado durante conexión y descarga/sincronización del repositorio -->
+          <div id="repo-busy-loader" class="d-none" role="status" aria-live="polite">
+            <div class="repo-busy-card">
+              <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                <div class="spinner-border text-warning" style="width: 2.2rem; height: 2.2rem;" aria-hidden="true"></div>
+                <div id="repo-busy-text" class="fw-bold text-warning fs-6 mt-1">Conectando y descargando el repositorio...</div>
+                <div class="text-secondary" style="font-size: 0.8rem; line-height: 1.4;">
+                  Por favor, espera. Las opciones de carga y guardado están bloqueadas mientras finaliza la sincronización.
+                </div>
               </div>
             </div>
           </div>

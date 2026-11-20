@@ -33,6 +33,7 @@ import {
   findCanonicalWeapon,
   getProficiencyBonus,
   getMaxAllowedExpertiseCount,
+  getMaxAllowedSkillsCount,
   formatModifier,
   getSpeciesName,
   getSublineageName,
@@ -517,6 +518,9 @@ export class CharacterSheetModule {
         </div>
 
         <div class="d-flex flex-wrap gap-2">
+          <button id="btn-sheet-level-up" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1" title="Subir de nivel en el Asistente de Creación (Paso 5: Clases y Niveles)">
+            <i data-lucide="arrow-up-circle"></i> Subir Nivel
+          </button>
           <button id="btn-toggle-print-mode" class="btn btn-sm btn-outline-light d-flex align-items-center gap-1">
             <i data-lucide="printer"></i> Vista Imprimible A4
           </button>
@@ -564,7 +568,10 @@ export class CharacterSheetModule {
               </div>
               <div class="col-6 col-md-1" title="Nivel Total del Personaje: ${char.level}">
                 <span class="rpg-label d-block">Nivel</span>
-                <span class="badge bg-warning text-dark fw-bold fs-6">Nv. ${char.level}</span>
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-1">
+                  <span class="badge bg-warning text-dark fw-bold fs-6">Nv. ${char.level}</span>
+                  <button id="btn-sheet-badge-level-up" class="btn btn-xs btn-outline-warning p-0 px-1" title="Subir de nivel en el Asistente (Paso 5: Clases y Niveles)" style="line-height: 1.2; font-size: 0.72rem;">▲</button>
+                </div>
               </div>
               <div class="col-6 col-md-2" title="Experiencia actual: ${(Number(char.xp) || 0).toLocaleString('es-ES')} PX (Mínimo Nv. ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX${getNextLevelXp(char.level) ? ` | Sig. nivel: ${getNextLevelXp(char.level).toLocaleString('es-ES')} PX` : ' | Nivel Máximo'})">
                 <span class="rpg-label d-block">Experiencia (PX)</span>
@@ -2412,10 +2419,15 @@ export class CharacterSheetModule {
         <form id="form-sheet-edit-skills">
           <div class="p-2 mb-3 rounded bg-dark border border-secondary text-secondary small d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-              ⭐ <strong>Pericia (D&amp;D 5.5):</strong> Duplica tu Bonificador de Competencia (+${pb * 2} en vez de +${pb}) en las habilidades que elijas.
+              ⭐ <strong>Habilidades y Pericias (D&amp;D 5.5):</strong> Las competencias suman tu BC (+${pb}) y las pericias lo duplican (+${pb * 2}).
             </div>
-            <div id="skills-modal-expertise-badge" class="badge bg-warning text-dark fs-6">
-              Pericias máximas: <strong id="skills-modal-max-exp">${getMaxAllowedExpertiseCount(char)}</strong>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <div id="skills-modal-proficiency-badge" class="badge bg-primary text-light fs-6">
+                Competencias máximas: <strong id="skills-modal-max-prof">${getMaxAllowedSkillsCount(char)}</strong>
+              </div>
+              <div id="skills-modal-expertise-badge" class="badge bg-warning text-dark fs-6">
+                Pericias máximas: <strong id="skills-modal-max-exp">${getMaxAllowedExpertiseCount(char)}</strong>
+              </div>
             </div>
           </div>
 
@@ -3570,6 +3582,18 @@ export class CharacterSheetModule {
       this.render();
     });
 
+    // Subir de nivel: abre directamente el Asistente en el Paso 5 (Clases y Niveles)
+    const handleLevelUp = () => {
+      const activeChar = store.getSelectedCharacter() || char;
+      if (activeChar) {
+        store.emit('wizard:edit-character', { character: activeChar, step: 5 });
+        const wizardTabBtn = document.getElementById('tab-wizard-btn');
+        if (wizardTabBtn) wizardTabBtn.click();
+      }
+    };
+    this.container.querySelector('#btn-sheet-level-up')?.addEventListener('click', handleLevelUp);
+    this.container.querySelector('#btn-sheet-badge-level-up')?.addEventListener('click', handleLevelUp);
+
     // Requisito 2: Editar en Asistente cargando correctamente los datos existentes
     this.container.querySelector('#btn-edit-in-wizard')?.addEventListener('click', () => {
       const activeChar = store.getSelectedCharacter();
@@ -4113,12 +4137,15 @@ export class CharacterSheetModule {
 
       const skillsMap = calculateSkills(activeChar);
       const maxExp = getMaxAllowedExpertiseCount(activeChar);
+      const maxProf = getMaxAllowedSkillsCount(activeChar);
       const curExp = Array.isArray(activeChar.expertiseSkills)
         ? [...activeChar.expertiseSkills]
         : Object.entries(skillsMap).filter(([_, data]) => data.proficiency === 'expertise').map(([name]) => name);
 
       const maxExpEl = skillsDialog?.querySelector('#skills-modal-max-exp');
       if (maxExpEl) maxExpEl.textContent = String(maxExp);
+      const maxProfEl = skillsDialog?.querySelector('#skills-modal-max-prof');
+      if (maxProfEl) maxProfEl.textContent = String(maxProf);
 
       const tbody = skillsDialog?.querySelector('#skills-modal-tbody');
       if (tbody) {
@@ -4154,11 +4181,12 @@ export class CharacterSheetModule {
 
         // Listeners interactivos dentro del modal
         const updateSummary = () => {
+          const checkedProf = tbody.querySelectorAll('.chk-modal-skill-prof:checked').length;
           const checkedExp = tbody.querySelectorAll('.chk-modal-skill-exp:checked').length;
           const summaryEl = skillsDialog?.querySelector('#skills-modal-summary');
           if (summaryEl) {
-            summaryEl.innerHTML = `Pericias seleccionadas: <strong>${checkedExp}</strong> de <strong>${maxExp}</strong>`;
-            if (checkedExp > maxExp) {
+            summaryEl.innerHTML = `Competencias: <strong>${checkedProf}</strong> de <strong>${maxProf}</strong> &bull; Pericias: <strong>${checkedExp}</strong> de <strong>${maxExp}</strong>`;
+            if (checkedProf > maxProf || checkedExp > maxExp) {
               summaryEl.classList.add('text-danger');
               summaryEl.classList.remove('text-secondary');
             } else {

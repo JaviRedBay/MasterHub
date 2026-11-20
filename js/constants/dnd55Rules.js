@@ -2679,6 +2679,46 @@ function getMaxAllowedExpertiseCount(char) {
   return count;
 }
 
+function getMaxAllowedSkillsCount(char) {
+  if (!char) return 0;
+  // 1. Trasfondo (normalmente 2 habilidades)
+  const bgDef = char.customBackground || DND55_BACKGROUNDS.find(b => b.id === char.backgroundId);
+  const bgSkillsCount = Array.isArray(bgDef?.skills) ? bgDef.skills.length : 2;
+
+  // 2. Especie
+  let speciesSkillsCount = 0;
+  if (char.speciesId === 'elfo') speciesSkillsCount += 1;
+  if (char.speciesId === 'humano') speciesSkillsCount += 1;
+
+  // 3. Clase Principal
+  const classes = getCharacterClasses(char);
+  const primaryClassEntry = classes[0];
+  const primaryClassDef = primaryClassEntry ? DND55_CLASSES.find(c => c.id === primaryClassEntry.classId) : null;
+  const primaryClassCount = primaryClassDef?.skillChoicesCount || 2;
+
+  // 4. Multiclases secundarias
+  let multiclassSkillsCount = 0;
+  if (classes.length > 1) {
+    for (let i = 1; i < classes.length; i++) {
+      const secClass = classes[i];
+      if (DND55_MULTICLASS_RULES?.proficienciesGained?.[secClass.classId]?.skillsCount) {
+        multiclassSkillsCount += DND55_MULTICLASS_RULES.proficienciesGained[secClass.classId].skillsCount;
+      }
+    }
+  }
+
+  // 5. Dotes que otorgan habilidades
+  let featSkillsCount = 0;
+  if (characterHasFeat(char, 'skilled') || characterHasFeat(char, 'habil')) {
+    featSkillsCount += 3;
+  }
+  if (characterHasFeat(char, 'skill_expert') || characterHasFeat(char, 'experto_habilidades')) {
+    featSkillsCount += 1;
+  }
+
+  return bgSkillsCount + speciesSkillsCount + primaryClassCount + multiclassSkillsCount + featSkillsCount;
+}
+
 function calculateSkills(char) {
   const scores = calculateFinalAbilityScores(char);
   const classes = getCharacterClasses(char);
@@ -5997,6 +6037,7 @@ export {
   getClassStartingEquipment,
   getCharacterVisionSense,
   getMaxAllowedExpertiseCount,
+  getMaxAllowedSkillsCount,
   DND55_XP_THRESHOLDS,
   getMinXpForLevel,
   getNextLevelXp

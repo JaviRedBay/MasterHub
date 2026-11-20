@@ -539,7 +539,7 @@ const DND55_BACKGROUNDS = [
     id: "personalizado",
     name: "Trasfondo Personalizado",
     allowedAbilities: ["str", "dex", "con", "int", "wis", "cha"],
-    originFeat: "Alerta",
+    originFeat: "",
     skills: ["Atletismo", "Perspicacia"],
     toolProficiencies: ["Herramientas a elecci\xF3n"],
     description: "Permite seleccionar 3 caracter\xEDsticas a medida y una dote de origen autorizada por el DM."
@@ -1794,7 +1794,7 @@ function characterHasFeat(char, query) {
     });
   }
   const bgDef = DND55_BACKGROUNDS.find((b) => b.id === char.backgroundId);
-  if (bgDef?.originFeat) featKeys.push(bgDef.originFeat);
+  if (bgDef?.originFeat && char.backgroundId !== 'personalizado') featKeys.push(bgDef.originFeat);
   const charClasses = getCharacterClasses(char);
   charClasses.forEach((c, cIdx) => {
     getCharacterAsiLevels(c.classId).forEach(({ lvl, key }) => {
@@ -3023,7 +3023,7 @@ function getInnateSpellsForCharacter(character) {
 
   // --- 2. CONJUROS POR TRASFONDO Y DOTES DE ORIGEN (D&D 5.5 PHB 2024) ---
   const bgDef = DND55_BACKGROUNDS.find(b => b.id === character.backgroundId);
-  const bgFeat = character.originFeat || character.customBackground?.originFeat || bgDef?.originFeat || '';
+  const bgFeat = character.originFeat || character.customBackground?.originFeat || (character.backgroundId !== 'personalizado' ? (bgDef?.originFeat || '') : '');
   const humFeat = character.speciesId === 'humano' ? (character.speciesOriginFeat || '') : '';
   const allFeatQueries = [bgFeat, humFeat].filter(Boolean).map(f => f.toLowerCase());
 
@@ -5725,7 +5725,7 @@ function getConsumableTraitsForCharacter(character) {
   if (character.customBackground?.originFeat)
     featKeys.push(character.customBackground.originFeat);
   const bgDef = DND55_BACKGROUNDS.find((b) => b.id === character.backgroundId);
-  if (bgDef?.originFeat)
+  if (bgDef?.originFeat && character.backgroundId !== 'personalizado')
     featKeys.push(bgDef.originFeat);
   getCharacterAsiLevels(character.classId).forEach(({ lvl, key }) => {
     if ((character.level || 1) >= lvl) {

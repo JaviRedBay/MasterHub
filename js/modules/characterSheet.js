@@ -4864,9 +4864,11 @@ export class CharacterSheetModule {
       activeChar.xp = xpVal;
       if (activeChar.backgroundId !== backgroundId) {
         activeChar.backgroundId = backgroundId;
-        const bgDef = DND55_BACKGROUNDS.find(b => b.id === backgroundId);
-        if (bgDef) {
-          activeChar.originFeat = bgDef.originFeat;
+        if (backgroundId !== 'personalizado') {
+          const bgDef = DND55_BACKGROUNDS.find(b => b.id === backgroundId);
+          if (bgDef) {
+            activeChar.originFeat = bgDef.originFeat;
+          }
         }
       }
       if (backgroundId === 'personalizado') {

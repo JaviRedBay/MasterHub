@@ -64,18 +64,18 @@
         <span class="fs-3 text-warning">⚔️</span>
         <div>
           <div class="rpg-brand-title">Roleplay Master Hub</div>
-          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine &bull; <span id="app-version-badge">v1.2.3</span></div>
+          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine &bull; <span id="app-version-badge">v1.3.0</span></div>
         </div>
       </div>
-      <!-- Botón de Menú Responsivo (visible en tablets y móviles: d-lg-none) -->
-      <button id="btn-responsive-menu-toggle" class="btn btn-sm btn-outline-warning d-lg-none d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#rpg-responsive-menu" aria-expanded="false" aria-controls="rpg-responsive-menu" aria-label="Abrir Menú de Navegación">
+      <!-- Botón de Menú Responsivo (visible en tablets y móviles <= 1280px) -->
+      <button id="btn-responsive-menu-toggle" class="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#rpg-responsive-menu" aria-expanded="false" aria-controls="rpg-responsive-menu" aria-label="Abrir Menú de Navegación">
         <i data-lucide="menu"></i>
         <span class="fw-bold small" id="responsive-active-tab-title">Master Panel</span>
         <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
       </button>
 
-      <!-- Selector de Campaña Rápido y Herramientas Globales (Escritorio) -->
-      <div class="d-none d-lg-flex align-items-center gap-2 flex-wrap">
+      <!-- Selector de Campaña Rápido y Herramientas Globales (Escritorio > 1280px) -->
+      <div id="desktop-navbar-tools" class="align-items-center gap-2 flex-wrap">
         <div class="input-group input-group-sm" style="max-width: 280px;">
           <span class="input-group-text bg-dark border-secondary text-warning">
             <i data-lucide="map"></i>
@@ -99,24 +99,19 @@
           <ul class="dropdown-menu dropdown-menu-end rpg-theme-menu" id="theme-menu" aria-labelledby="theme-toggle"></ul>
         </div>
 
-        <!-- Estado de Repositorio de Ficheros (Disco / Google Drive) -->
-        <button id="btn-repo-status" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Estado del Repositorio de Ficheros (Disco / Google Drive)">
-          <i data-lucide="hard-drive" id="repo-status-icon"></i>
-          <span id="repo-status-label" class="d-none d-xl-inline">Modo Navegador</span>
-        </button>
-
-        <button id="btn-backup-modal" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1" title="Copia de Seguridad y Repositorio de Ficheros">
-          <i data-lucide="database"></i>
-          <span>Datos</span>
+        <!-- Datos y Estado de Repositorio (Navegador / Disco / Google Drive) -->
+        <button id="btn-repo-status" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Datos, Copia de Seguridad y Sincronización (Navegador / Disco / Google Drive)">
+          <i data-lucide="database" id="repo-status-icon"></i>
+          <span id="repo-status-label">Modo Navegador</span>
         </button>
       </div>
     </div>
 
-    <!-- Menú Colapsable para Pantallas Pequeñas / Pestañas de Navegación -->
-    <div id="rpg-responsive-menu" class="collapse d-lg-block border-top border-secondary border-opacity-25">
-      <!-- Herramientas globales en modo móvil/tablet -->
-      <div class="d-lg-none px-3 pt-2 pb-2 border-bottom border-secondary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div class="input-group input-group-sm flex-grow-1" style="min-width: 180px;">
+    <!-- Menú Colapsable para Pantallas Pequeñas y Tablets (<= 1280px) / Pestañas de Navegación -->
+    <div id="rpg-responsive-menu" class="collapse border-top border-secondary border-opacity-25">
+      <!-- Herramientas globales en modo móvil/tablet (<= 1280px) -->
+      <div id="mobile-navbar-tools" class="px-3 pt-2 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap align-items-center justify-content-between gap-2">
+        <div class="input-group input-group-sm flex-grow-1" style="min-width: 170px;">
           <span class="input-group-text bg-dark border-secondary text-warning">
             <i data-lucide="map"></i>
           </span>
@@ -124,22 +119,27 @@
             <!-- Se sincroniza con global-campaign-select -->
           </select>
         </div>
-        <div class="d-flex align-items-center gap-1">
+        <div class="d-flex align-items-center flex-wrap gap-1">
           <button id="btn-mobile-quick-dice" class="btn btn-sm btn-warning text-dark fw-bold d-flex align-items-center gap-1" title="Tirar Dados">
             <i data-lucide="dices"></i> Dados
           </button>
-          <button id="btn-mobile-repo" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Carpeta / Drive">
-            <i data-lucide="hard-drive"></i>
-          </button>
-          <button id="btn-mobile-backup" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1" title="Datos">
-            <i data-lucide="database"></i> Datos
+          <div class="dropdown" id="mobile-theme-switcher">
+            <button id="mobile-theme-toggle" class="btn btn-sm btn-rpg-secondary d-flex align-items-center gap-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" title="Cambiar estilo visual">
+              <i data-lucide="palette"></i>
+              <span id="mobile-theme-current-name">Estilo</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end rpg-theme-menu" id="mobile-theme-menu" aria-labelledby="mobile-theme-toggle"></ul>
+          </div>
+          <button id="btn-mobile-repo" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Datos, Copia de Seguridad y Sincronización (Navegador / Disco / Google Drive)">
+            <i data-lucide="database"></i>
+            <span id="mobile-repo-status-label">Modo Navegador</span>
           </button>
         </div>
       </div>
 
       <!-- Pestañas de Navegación -->
       <nav class="container-fluid px-3 pt-1">
-        <ul class="nav rpg-nav-tabs flex-row flex-nowrap overflow-x-auto" id="app-tabs" role="tablist">
+        <ul class="nav rpg-nav-tabs" id="app-tabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab-campaigns-btn" data-tab="campaigns" type="button" role="tab">
               <i data-lucide="users"></i>

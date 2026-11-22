@@ -58,7 +58,7 @@ class ThemeManager {
     this.activeTheme = getThemeById(DEFAULT_THEME_ID);
     this._listeners = new Set();
     this._lightQuery = null;
-    this._menu = null;
+    this._menus = [];
   }
 
   /**
@@ -194,11 +194,11 @@ class ThemeManager {
     if (background) meta.content = background;
   }
 
-  /** Genera el contenido del menú desplegable de estilos (#theme-menu). */
+  /** Genera el contenido de los menús desplegables de estilos (#theme-menu y #mobile-theme-menu). */
   mountSelector() {
-    const menu = document.getElementById('theme-menu');
-    if (!menu) return;
-    this._menu = menu;
+    const menus = Array.from(document.querySelectorAll('#theme-menu, #mobile-theme-menu'));
+    if (menus.length === 0) return;
+    this._menus = menus;
 
     const autoLight = AUTO_THEME_MAP.light;
     const autoDark = AUTO_THEME_MAP.dark;
@@ -229,32 +229,40 @@ class ThemeManager {
         </button>
       </li>`).join('');
 
-    menu.innerHTML = `<li><h6 class="rpg-theme-menu-title">Estilo visual</h6></li>${autoItem}${themeItems}`;
+    const menuHtml = `<li><h6 class="rpg-theme-menu-title">Estilo visual</h6></li>${autoItem}${themeItems}`;
 
-    menu.addEventListener('click', event => {
-      const item = event.target.closest('[data-theme-choice]');
-      if (!item) return;
-      this.setTheme(item.dataset.themeChoice);
+    this._menus.forEach(menu => {
+      menu.innerHTML = menuHtml;
+      menu.addEventListener('click', event => {
+        const item = event.target.closest('[data-theme-choice]');
+        if (!item) return;
+        this.setTheme(item.dataset.themeChoice);
+      });
     });
 
     this._refreshSelector();
   }
 
-  /** Marca la opción activa y actualiza la etiqueta del botón. */
+  /** Marca la opción activa y actualiza la etiqueta del botón en escritorio y móvil/tablet. */
   _refreshSelector() {
-    if (!this._menu) return;
+    if (!this._menus || this._menus.length === 0) return;
 
-    this._menu.querySelectorAll('[data-theme-choice]').forEach(item => {
-      const isCurrent = item.dataset.themeChoice === this.preference;
-      item.setAttribute('aria-current', isCurrent ? 'true' : 'false');
+    this._menus.forEach(menu => {
+      menu.querySelectorAll('[data-theme-choice]').forEach(item => {
+        const isCurrent = item.dataset.themeChoice === this.preference;
+        item.setAttribute('aria-current', isCurrent ? 'true' : 'false');
+      });
     });
 
+    const labelText = this.preference === AUTO_THEME_ID
+      ? `Automático · ${this.activeTheme.name}`
+      : this.activeTheme.name;
+
     const label = document.getElementById('theme-current-name');
-    if (label) {
-      label.textContent = this.preference === AUTO_THEME_ID
-        ? `Automático · ${this.activeTheme.name}`
-        : this.activeTheme.name;
-    }
+    if (label) label.textContent = labelText;
+
+    const mobileLabel = document.getElementById('mobile-theme-current-name');
+    if (mobileLabel) mobileLabel.textContent = this.activeTheme.name;
   }
 }
 

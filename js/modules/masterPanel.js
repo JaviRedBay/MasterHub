@@ -63,6 +63,7 @@ export class MasterPanelModule {
     const campaignId = store.getSelectedCampaignId();
     const campaign = store.getCampaign(campaignId) || { name: 'Campaña General', description: '' };
     const characters = store.getCharactersByCampaign(campaignId);
+    const activeCharacters = characters.filter(char => char.isActiveInMasterPanel !== false);
 
     this.container.innerHTML = `
       <!-- Encabezado del Panel del DM -->
@@ -72,7 +73,7 @@ export class MasterPanelModule {
             <span>🛡️</span> Master Panel: ${escapeHtml(campaign.name)}
           </h2>
           <div class="text-secondary small">
-            ${characters.length} héroe${characters.length === 1 ? '' : 's'} en la mesa &bull; ${escapeHtml(campaign.description || 'Gestión en tiempo real')}
+            ${activeCharacters.length === characters.length ? `${characters.length} héroe${characters.length === 1 ? '' : 's'} en la mesa` : `${activeCharacters.length} de ${characters.length} héroes activos en la mesa`} &bull; ${escapeHtml(campaign.description || 'Gestión en tiempo real')}
           </div>
         </div>
 
@@ -88,76 +89,77 @@ export class MasterPanelModule {
       </div>
 
       <!-- 1. Matriz de Estadísticas Pasivas de la Mesa -->
-      <div class="card rpg-card mb-4">
-        <div class="rpg-card-header d-flex justify-content-between align-items-center">
-          <h5 class="m-0 text-warning d-flex align-items-center gap-2">
-            <span>👁️</span> Matriz de Habilidades Pasivas y Salvaciones
-          </h5>
-          <button id="btn-secret-check" class="btn btn-sm btn-outline-warning">
+      <div class="card rpg-card mb-3">
+        <div class="rpg-card-header py-2 px-3 d-flex justify-content-between align-items-center">
+          <h6 class="m-0 text-warning d-flex align-items-center gap-2">
+            <span>👁️</span> Resumen Rápido de la Mesa
+          </h6>
+          <button id="btn-secret-check" class="btn btn-xs btn-outline-warning py-0 px-2">
             🎲 Tirada Secreta de Percepción
           </button>
         </div>
         <div class="table-responsive">
-          <table class="table table-dark table-hover align-middle mb-0 text-center">
+          <table class="table table-sm table-dark table-hover align-middle mb-0 text-center small">
             <thead>
               <tr class="text-secondary small">
-                <th class="text-start ps-3">Personaje</th>
-                <th>Clase</th>
-                <th>Nivel</th>
-                <th>PX</th>
-                <th>CA</th>
-                <th>Percepción Pasiva</th>
-                <th>Investigación Pasiva</th>
-                <th>Perspicacia Pasiva</th>
-                <th>Iniciativa</th>
-                <th>CD Conjuros</th>
-                <th>Hoja Interactiva</th>
+                <th class="text-start ps-3 py-1">Personaje</th>
+                <th class="py-1">Vida (PG)</th>
+                <th class="py-1">CA</th>
+                <th class="py-1">Percepción Pasiva</th>
+                <th class="py-1">Iniciativa</th>
+                <th class="py-1">CD Conjuros</th>
+                <th class="py-1">Activo</th>
+                <th class="py-1 pe-2">Hoja</th>
               </tr>
             </thead>
             <tbody>
               ${characters.length === 0 ? `
                 <tr>
-                  <td colspan="11" class="text-muted py-4">No hay personajes asignados a esta campaña. Ve al Asistente de Creación o Campañas para añadir aventureros.</td>
+                  <td colspan="8" class="text-muted py-3">No hay personajes asignados a esta campaña. Ve al Asistente de Creación o Campañas para añadir aventureros.</td>
                 </tr>
               ` : characters.map(char => {
+                const isActive = char.isActiveInMasterPanel !== false;
+                const hpInfo = calculateHitPoints(char);
+                const maxHp = hpInfo.maxHp;
+                const currentHp = char.currentHp !== undefined && char.currentHp !== null ? char.currentHp : maxHp;
+                const tempHp = Number(char.temporaryHp) || 0;
+                const hpTextColor = currentHp === 0
+                  ? 'text-danger fw-bolder'
+                  : (currentHp <= maxHp * 0.25 ? 'text-danger' : (currentHp <= maxHp * 0.5 ? 'text-warning' : 'text-success'));
                 const acInfo = calculateArmorClass(char);
                 const passPerc = calculatePassivePerceptionDetails(char);
-                const passInv = calculatePassiveInvestigationDetails(char);
-                const passIns = calculatePassiveInsightDetails(char);
                 const initInfo = calculateInitiative(char);
                 const spellInfo = calculateSpellcasting(char);
-                const className = getClassName(char.classId);
-                const subclassName = getSubclassName(char.subclassId);
-                const fullClass = getCharacterFullClassTitle(char);
-                const charXp = Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0);
-                const nextXp = getNextLevelXp(char.level);
                 const hasSafeAvatar = isSafeAvatarDataUrl(char.avatarThumb);
 
                 return `
-                  <tr>
-                    <td class="text-start ps-3 fw-bold text-light">
+                  <tr class="${isActive ? '' : 'opacity-50'}">
+                    <td class="text-start ps-3 py-1 fw-bold text-light">
                       <div class="d-flex align-items-center gap-2">
                         <button class="table-inspiration-badge ${char.heroicInspiration ? 'active' : 'inactive'} btn-toggle-inspiration" data-char-id="${char.id}" title="${char.heroicInspiration ? 'Tiene Inspiración Heroica (haz clic para gastar)' : 'Sin inspiración (haz clic para otorgar)'}">
                           ${char.heroicInspiration ? '★' : '☆'}
                         </button>
-                        ${hasSafeAvatar ? `<img src="${escapeHtml(char.avatarThumb)}" alt="" class="rounded-circle border border-warning flex-shrink-0" style="width: 24px; height: 24px; object-fit: cover;">` : ''}
-                        <button class="btn btn-link text-warning p-0 text-decoration-none fw-bold text-start btn-scroll-to-card" data-char-id="${char.id}" title="Ver tarjeta de ${escapeHtml(char.name)} en este panel">
+                        ${hasSafeAvatar ? `<img src="${escapeHtml(char.avatarThumb)}" alt="" class="rounded-circle border border-warning flex-shrink-0" style="width: 22px; height: 22px; object-fit: cover;">` : ''}
+                        <button class="btn btn-link text-warning p-0 text-decoration-none fw-bold text-start btn-scroll-to-card small" data-char-id="${char.id}" ${isActive ? '' : 'disabled'} title="${isActive ? `Ver tarjeta de ${escapeHtml(char.name)} en este panel` : `${escapeHtml(char.name)} está desactivado en el Master Panel`}">
                           ${escapeHtml(char.name)}
                         </button>
                       </div>
                     </td>
-                    <td><span class="badge bg-dark border border-secondary text-warning">${escapeHtml(fullClass)}</span></td>
-                    <td><span class="badge bg-warning text-dark fw-bold">Nv ${char.level}</span></td>
-                    <td class="text-warning small fw-semibold" title="${nextXp ? `Siguiente nivel (${char.level + 1}): ${nextXp.toLocaleString('es-ES')} PX` : 'Nivel máximo alcanzado'}" style="cursor: help;">${charXp.toLocaleString('es-ES')} PX</td>
-                    <td class="fw-bold text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</td>
-                    <td class="fw-bold text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">${passPerc.value}</td>
-                    <td title="${escapeHtml(passInv.formula)}" style="cursor: help;">${passInv.value}</td>
-                    <td title="${escapeHtml(passIns.formula)}" style="cursor: help;">${passIns.value}</td>
-                    <td class="text-secondary" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">${formatModifier(initInfo.bonus)}</td>
-                    <td title="${escapeHtml(spellInfo?.dcFormula || '')}" style="cursor: help;">${spellInfo?.spellSaveDc ? `<span class="badge bg-primary">CD ${spellInfo.spellSaveDc}</span>` : '<span class="text-muted">-</span>'}</td>
-                    <td>
-                      <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center gap-1" data-char-id="${char.id}" title="Abrir Hoja Interactiva de ${escapeHtml(char.name)}">
-                        <i data-lucide="scroll" style="width: 12px; height: 12px;"></i> Hoja Interactiva
+                    <td class="py-1 fw-bold" title="${escapeHtml(hpInfo.formula)}" style="cursor: help; white-space: nowrap;">
+                      <span class="${hpTextColor}">${currentHp}</span><span class="text-secondary">/${maxHp}</span>${tempHp > 0 ? `<span class="badge bg-info text-dark ms-1 py-0 px-1" style="font-size: 0.65rem;">+${tempHp}</span>` : ''}
+                    </td>
+                    <td class="py-1 fw-bold text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</td>
+                    <td class="py-1 fw-bold text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">${passPerc.value}</td>
+                    <td class="py-1 text-secondary" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">${formatModifier(initInfo.bonus)}</td>
+                    <td class="py-1" title="${escapeHtml(spellInfo?.dcFormula || '')}" style="cursor: help;">${spellInfo?.spellSaveDc ? `<span class="badge bg-primary">CD ${spellInfo.spellSaveDc}</span>` : '<span class="text-muted">-</span>'}</td>
+                    <td class="py-1">
+                      <div class="form-check form-switch d-inline-flex align-items-center justify-content-center m-0 p-0">
+                        <input class="form-check-input m-0 chk-toggle-mp-active" type="checkbox" role="switch" data-char-id="${char.id}" ${isActive ? 'checked' : ''} style="cursor: pointer;" title="${isActive ? `Ocultar ficha de ${escapeHtml(char.name)} en el Master Panel` : `Mostrar ficha de ${escapeHtml(char.name)} en el Master Panel`}" aria-label="Activar o desactivar a ${escapeHtml(char.name)} en el Master Panel">
+                      </div>
+                    </td>
+                    <td class="py-1 pe-2">
+                      <button class="btn btn-xs btn-outline-warning btn-open-sheet d-inline-flex align-items-center justify-content-center p-1" data-char-id="${char.id}" title="Abrir y editar Hoja Interactiva de ${escapeHtml(char.name)}" aria-label="Abrir Hoja Interactiva de ${escapeHtml(char.name)}">
+                        <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
                       </button>
                     </td>
                   </tr>
@@ -168,9 +170,15 @@ export class MasterPanelModule {
         </div>
       </div>
 
-      <!-- 2. Tarjetas de Seguimiento Individual de los Personajes -->
+      <!-- 2. Tarjetas de Seguimiento Individual de los Personajes Activos -->
       <div class="row g-3">
-        ${characters.map(char => this.renderCharacterCard(char)).join('')}
+        ${characters.length > 0 && activeCharacters.length === 0 ? `
+          <div class="col-12">
+            <div class="p-3 rounded rpg-card text-center text-secondary small">
+              Todos los personajes de la campaña están desactivados en el Master Panel. Activa el interruptor en la columna <strong>Activo</strong> de la tabla resumen para mostrar sus fichas.
+            </div>
+          </div>
+        ` : activeCharacters.map(char => this.renderCharacterCard(char)).join('')}
       </div>
     `;
 
@@ -264,7 +272,6 @@ export class MasterPanelModule {
                   <span class="badge bg-dark border border-secondary text-info" title="${escapeHtml(acInfo.formula)}" style="cursor: help;">CA ${escapeHtml(acInfo.acDisplay || String(acInfo.ac))}</span>
                   <span class="badge bg-dark border border-secondary text-light" title="${escapeHtml(initInfo.formula)}" style="cursor: help;">Inic ${formatModifier(initInfo.bonus)}</span>
                   <span class="badge bg-dark border border-secondary text-warning" title="${escapeHtml(passPerc.formula)}" style="cursor: help;">Per. Pasiva ${passPerc.value}</span>
-                  <span class="badge bg-dark border border-warning text-warning" title="${nextXp ? `Mínimo Nv ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX | Sig. Nivel (${char.level + 1}): ${nextXp.toLocaleString('es-ES')} PX` : 'Nivel Máximo (20)'}" style="cursor: help;">✨ ${charXp.toLocaleString('es-ES')}${nextXp ? ` / ${nextXp.toLocaleString('es-ES')}` : ''} PX</span>
                 </div>
               </div>
             </div>
@@ -272,22 +279,6 @@ export class MasterPanelModule {
             <button class="heroic-inspiration-badge ${char.heroicInspiration ? 'active' : ''} btn-toggle-inspiration" data-char-id="${char.id}" title="${char.heroicInspiration ? 'Tiene Inspiración Heroica (haz clic para gastar)' : 'Sin inspiración (haz clic para otorgar)'}">
               <span>★</span> Inspiración Heroica
             </button>
-          </div>
-
-          <!-- Control de Experiencia (PX) -->
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 p-1 px-2 rounded bg-dark border border-secondary mb-2">
-            <div class="d-flex flex-wrap align-items-center gap-1">
-              <span class="small text-warning fw-bold me-1" style="font-size: 0.7rem;">PX:</span>
-              <button type="button" class="btn btn-xs btn-outline-secondary btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="-100" title="Restar 100 PX">-100</button>
-              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="50" title="Otorgar 50 PX">+50</button>
-              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="100" title="Otorgar 100 PX">+100</button>
-              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="500" title="Otorgar 500 PX">+500</button>
-              <button type="button" class="btn btn-xs btn-outline-warning btn-xp-adjust py-0 px-1" style="font-size: 0.68rem; line-height: 1.3;" data-char-id="${char.id}" data-delta="1000" title="Otorgar 1000 PX">+1000</button>
-            </div>
-            <div class="input-group input-group-sm ms-auto" style="width: 118px;">
-              <span class="input-group-text bg-secondary border-secondary text-light py-0 px-1" style="font-size: 0.68rem;">Total</span>
-              <input type="number" class="form-control bg-dark border-secondary text-warning fw-bold text-center py-0 px-1 input-mp-xp" style="font-size: 0.75rem; height: 22px;" data-char-id="${char.id}" value="${charXp}" min="0" step="1">
-            </div>
           </div>
 
           <!-- Barra y Controles de Puntos de Golpe -->
@@ -304,66 +295,59 @@ export class MasterPanelModule {
               <div class="hp-bar-text">${hpPercent}%</div>
             </div>
 
-            <!-- Fila 1: Daño / Curación (El daño consume Temp primero) -->
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 mb-2">
-              <div class="d-flex align-items-center gap-1">
-                <span class="small text-secondary me-1" style="font-size: 0.75rem;">Vida:</span>
-                <button type="button" class="btn btn-sm btn-outline-danger btn-hp-adjust" data-char-id="${char.id}" data-delta="-10" title="Recibir 10 de daño">-10</button>
-                <button type="button" class="btn btn-sm btn-outline-danger btn-hp-adjust" data-char-id="${char.id}" data-delta="-5" title="Recibir 5 de daño">-5</button>
-                <button type="button" class="btn btn-sm btn-outline-danger btn-hp-adjust" data-char-id="${char.id}" data-delta="-1" title="Recibir 1 de daño">-1</button>
-                <button type="button" class="btn btn-sm btn-outline-success btn-hp-adjust" data-char-id="${char.id}" data-delta="1" title="Curar 1 PG">+1</button>
-                <button type="button" class="btn btn-sm btn-outline-success btn-hp-adjust" data-char-id="${char.id}" data-delta="5" title="Curar 5 PG">+5</button>
-                <button type="button" class="btn btn-sm btn-outline-success btn-hp-adjust" data-char-id="${char.id}" data-delta="10" title="Curar 10 PG">+10</button>
+            <!-- Controles Unificados: Perder Vida, Ganar Vida y Ganar Vida Temporal -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-1 px-2 rounded bg-dark border border-secondary mb-2">
+              <div class="d-flex align-items-center gap-1" title="Perder vida (el daño consume PG temporales primero)">
+                <span class="text-danger fw-bold" style="font-size: 0.7rem;">-PG:</span>
+                <button type="button" class="btn btn-xs btn-outline-danger btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="-10" title="Perder 10 PG">-10</button>
+                <button type="button" class="btn btn-xs btn-outline-danger btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="-5" title="Perder 5 PG">-5</button>
+                <button type="button" class="btn btn-xs btn-outline-danger btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="-1" title="Perder 1 PG">-1</button>
               </div>
-              <span class="text-secondary small" style="font-size: 0.7rem;">(Daño absorbe Temp 1º)</span>
-            </div>
-
-            <!-- Fila 2: PG Temporales (Añadir o Quitar como los normales) -->
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 p-1 rounded bg-dark border border-secondary mb-2">
-              <div class="d-flex align-items-center gap-1">
-                <span class="small text-info me-1" style="font-size: 0.75rem;">Temp:</span>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="-10" title="Quitar 10 PG Temp">-10</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="-5" title="Quitar 5 PG Temp">-5</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="-1" title="Quitar 1 PG Temp">-1</button>
-                <button type="button" class="btn btn-sm btn-outline-info btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="1" title="Añadir 1 PG Temp">+1</button>
-                <button type="button" class="btn btn-sm btn-outline-info btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="5" title="Añadir 5 PG Temp">+5</button>
-                <button type="button" class="btn btn-sm btn-outline-info btn-temp-hp-adjust" data-char-id="${char.id}" data-delta="10" title="Añadir 10 PG Temp">+10</button>
+              <div class="d-flex align-items-center gap-1" title="Ganar puntos de vida">
+                <span class="text-success fw-bold" style="font-size: 0.7rem;">+PG:</span>
+                <button type="button" class="btn btn-xs btn-outline-success btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="1" title="Curar 1 PG">+1</button>
+                <button type="button" class="btn btn-xs btn-outline-success btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="5" title="Curar 5 PG">+5</button>
+                <button type="button" class="btn btn-xs btn-outline-success btn-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="10" title="Curar 10 PG">+10</button>
               </div>
-              <div class="input-group input-group-sm ms-auto" style="width: 105px;">
-                <span class="input-group-text bg-secondary border-secondary text-light py-0 px-1" style="font-size: 0.7rem;">Total</span>
-                <input type="number" class="form-control bg-dark border-secondary text-info text-center py-0 px-1 input-temp-hp" data-char-id="${char.id}" value="${tempHp}" min="0">
+              <div class="d-flex align-items-center gap-1" title="Ganar puntos de vida temporales">
+                <span class="text-info fw-bold" style="font-size: 0.7rem;">+Temp:</span>
+                <button type="button" class="btn btn-xs btn-outline-info btn-temp-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="1" title="Ganar 1 PG Temporal">+1</button>
+                <button type="button" class="btn btn-xs btn-outline-info btn-temp-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="5" title="Ganar 5 PG Temporales">+5</button>
+                <button type="button" class="btn btn-xs btn-outline-info btn-temp-hp-adjust py-0 px-1" style="font-size: 0.72rem;" data-char-id="${char.id}" data-delta="10" title="Ganar 10 PG Temporales">+10</button>
               </div>
             </div>
 
-            <!-- Fila 3: Dados de Golpe y Tiradas de Muerte -->
+            <!-- Dados de Golpe y Tiradas de Muerte -->
             <div class="row g-2 p-1 rounded bg-dark border border-secondary m-0 align-items-center">
               <div class="col-6 border-end border-secondary pe-2">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="small text-light fw-bold" style="font-size: 0.75rem;">Dados (${hdPool.summaryText}):</span>
-                  <span class="badge bg-danger">${availableHd} / ${totalHd}</span>
+                  <span class="small text-light fw-bold" style="font-size: 0.72rem;">Dados (${hdPool.summaryText}):</span>
+                  <span class="badge bg-danger py-0 px-1" style="font-size: 0.68rem;">${availableHd}/${totalHd}</span>
                 </div>
-                <div class="d-flex gap-1">
-                  <button type="button" class="btn btn-xs btn-outline-danger flex-fill btn-mp-hd" data-char-id="${char.id}" data-delta="1" title="Gastar 1 Dado de Golpe" ${availableHd <= 0 ? 'disabled' : ''}>-1 Dado</button>
-                  <button type="button" class="btn btn-xs btn-outline-success flex-fill btn-mp-hd" data-char-id="${char.id}" data-delta="-1" title="Recuperar 1 Dado de Golpe" ${spentHd <= 0 ? 'disabled' : ''}>+1 Dado</button>
+                <div class="d-flex align-items-center gap-1">
+                  <button type="button" class="btn btn-xs btn-outline-danger btn-mp-hd py-0 px-1" style="font-size: 0.68rem; line-height: 1.2;" data-char-id="${char.id}" data-delta="1" title="Gastar 1 Dado de Golpe" ${availableHd <= 0 ? 'disabled' : ''}>-1 Dado</button>
+                  <button type="button" class="btn btn-xs btn-outline-success btn-mp-hd py-0 px-1" style="font-size: 0.68rem; line-height: 1.2;" data-char-id="${char.id}" data-delta="-1" title="Recuperar 1 Dado de Golpe" ${spentHd <= 0 ? 'disabled' : ''}>+1 Dado</button>
                 </div>
               </div>
               <div class="col-6 ps-2">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="small text-light fw-bold" style="font-size: 0.75rem;">Tiradas Muerte:</span>
-                  <button type="button" class="btn btn-xs btn-outline-secondary btn-mp-reset-death" data-char-id="${char.id}" title="Restablecer a 0">Reiniciar</button>
+                  <span class="small text-light fw-bold" style="font-size: 0.72rem;">Tiradas Muerte:</span>
+                  <button type="button" class="btn btn-xs btn-outline-secondary btn-mp-reset-death py-0 px-1 d-inline-flex align-items-center gap-1" style="font-size: 0.65rem; line-height: 1.15;" data-char-id="${char.id}" title="Restablecer tiradas de muerte a 0">
+                    <i data-lucide="rotate-ccw" style="width: 10px; height: 10px;"></i>
+                  </button>
                 </div>
                 <div class="d-flex justify-content-between align-items-center small">
                   <div class="d-flex align-items-center gap-1">
                     <span class="text-success fw-bold" style="font-size: 0.75rem;">Éx:</span>
-                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 1 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save" data-char-id="${char.id}" data-type="success" data-idx="1" title="1er éxito" style="min-width: 22px; padding: 0 4px;">${deathSaves.successes >= 1 ? '●' : '○'}</button>
-                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 2 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save" data-char-id="${char.id}" data-type="success" data-idx="2" title="2º éxito" style="min-width: 22px; padding: 0 4px;">${deathSaves.successes >= 2 ? '●' : '○'}</button>
-                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 3 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save" data-char-id="${char.id}" data-type="success" data-idx="3" title="3er éxito (Estabilizado)" style="min-width: 22px; padding: 0 4px;">${deathSaves.successes >= 3 ? '●' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 1 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="success" data-idx="1" title="1er éxito" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.successes >= 1 ? '●' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 2 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="success" data-idx="2" title="2º éxito" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.successes >= 2 ? '●' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.successes >= 3 ? 'btn-success text-dark fw-bold' : 'btn-outline-success'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="success" data-idx="3" title="3er éxito (Estabilizado)" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.successes >= 3 ? '●' : '○'}</button>
                   </div>
                   <div class="d-flex align-items-center gap-1">
                     <span class="text-danger fw-bold" style="font-size: 0.75rem;">Fr:</span>
-                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 1 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save" data-char-id="${char.id}" data-type="failure" data-idx="1" title="1er fallo" style="min-width: 22px; padding: 0 4px;">${deathSaves.failures >= 1 ? '✖' : '○'}</button>
-                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 2 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save" data-char-id="${char.id}" data-type="failure" data-idx="2" title="2º fallo" style="min-width: 22px; padding: 0 4px;">${deathSaves.failures >= 2 ? '✖' : '○'}</button>
-                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 3 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save" data-char-id="${char.id}" data-type="failure" data-idx="3" title="3er fallo (Muerte)" style="min-width: 22px; padding: 0 4px;">${deathSaves.failures >= 3 ? '✖' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 1 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="failure" data-idx="1" title="1er fallo" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.failures >= 1 ? '✕' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 2 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="failure" data-idx="2" title="2º fallo" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.failures >= 2 ? '✕' : '○'}</button>
+                    <button type="button" class="btn btn-xs ${deathSaves.failures >= 3 ? 'btn-danger text-light fw-bold' : 'btn-outline-danger'} btn-mp-death-save d-inline-flex align-items-center justify-content-center" data-char-id="${char.id}" data-type="failure" data-idx="3" title="3er fallo (Muerte)" style="width: 22px; height: 22px; padding: 0; line-height: 1; font-size: 0.75rem;">${deathSaves.failures >= 3 ? '✕' : '○'}</button>
                   </div>
                 </div>
               </div>
@@ -423,14 +407,13 @@ export class MasterPanelModule {
                 <!-- Otros rasgos consumibles -->
                 ${activeTraits.map(trait => {
                   const used = char.restTraitsState ? (char.restTraitsState[trait.name] || 0) : 0;
-                  const available = Math.max(0, trait.maxUses - used);
                   return `
-                    <div class="d-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary">
-                      <div>
+                    <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded bg-dark border border-secondary">
+                      <div class="me-2 text-truncate">
                         <span class="text-light fw-bold small">${escapeHtml(trait.name)}</span>
-                        <div class="text-secondary small">${trait.description || ''} (${trait.recovery === 'corto' ? 'Recupera en D. Corto' : 'D. Largo'})</div>
+                        <span class="text-secondary ms-1" style="font-size: 0.68rem;">(${trait.recovery === 'corto' ? 'D. Corto' : 'D. Largo'})</span>
                       </div>
-                      <div class="d-flex align-items-center gap-1">
+                      <div class="d-flex align-items-center gap-1 flex-shrink-0">
                         ${Array.from({ length: trait.maxUses }).map((_, i) => {
                           const isUsed = i < used;
                           return `
@@ -463,12 +446,10 @@ export class MasterPanelModule {
                   ${chargedItems.map(it => {
                     const maxC = Number(it.maxCharges) || 0;
                     const curC = it.currentCharges !== undefined ? Number(it.currentCharges) : maxC;
-                    const recText = it.chargeRecovery || 'Todas en Descanso Largo';
                     return `
                       <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded bg-dark border border-secondary">
                         <div class="me-2 text-truncate">
-                          <div class="small fw-semibold text-warning text-truncate" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
-                          <div class="text-muted" style="font-size: 0.68rem;">🔄 Recarga: ${escapeHtml(recText)}</div>
+                          <div class="small fw-semibold text-warning text-truncate">${escapeHtml(it.name)}</div>
                         </div>
                         <div class="d-flex align-items-center gap-1 flex-shrink-0">
                           <button class="btn btn-sm btn-outline-danger btn-counter btn-mp-item-charge" data-char-id="${char.id}" data-item-id="${escapeHtml(it.id)}" data-delta="-1" title="Gastar 1 carga" ${curC <= 0 ? 'disabled' : ''}>-1</button>
@@ -499,8 +480,7 @@ export class MasterPanelModule {
                     return `
                       <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded bg-dark border border-warning">
                         <div class="me-2 text-truncate">
-                          <div class="small fw-semibold text-warning text-truncate" title="${escapeHtml(it.description || it.name)}">✨ ${escapeHtml(it.name)}</div>
-                          <div class="text-muted" style="font-size: 0.68rem;">${escapeHtml(it.chargeRecovery || 'Consumible sobrenatural')}</div>
+                          <div class="small fw-semibold text-warning text-truncate">✨ ${escapeHtml(it.name)}</div>
                         </div>
                         ${hasCharges ? `
                           <div class="d-flex align-items-center gap-1 flex-shrink-0">
@@ -543,7 +523,7 @@ export class MasterPanelModule {
                     return `
                       <div class="col-6">
                         <div class="d-flex justify-content-between align-items-center p-1 px-2 rounded bg-dark border ${isScroll ? 'border-info' : 'border-secondary'}">
-                          <span class="small text-truncate me-1 ${qty === 0 ? 'text-muted text-decoration-line-through' : (isScroll ? 'text-info fw-semibold' : 'text-light')}" title="${escapeHtml(it.description || it.name)}">
+                          <span class="small text-truncate me-1 ${qty === 0 ? 'text-muted text-decoration-line-through' : (isScroll ? 'text-info fw-semibold' : 'text-light')}">
                             ${isScroll ? '📜' : '🧪'} ${escapeHtml(it.name)}
                           </span>
                           <div class="d-flex align-items-center gap-1 flex-shrink-0">
@@ -757,6 +737,18 @@ export class MasterPanelModule {
       });
     });
 
+    // Activar / desactivar visibilidad de la ficha del PJ en el Master Panel
+    this.container.querySelectorAll('.chk-toggle-mp-active').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        const char = store.getCharacter(charId);
+        if (char) {
+          char.isActiveInMasterPanel = Boolean(e.currentTarget.checked);
+          store.saveCharacter(char);
+        }
+      });
+    });
+
     // Abrir Hoja de Personaje
     this.container.querySelectorAll('.btn-open-sheet').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -800,9 +792,9 @@ export class MasterPanelModule {
 
   handleSecretPerceptionCheck() {
     const campaignId = store.getSelectedCampaignId();
-    const characters = store.getCharactersByCampaign(campaignId);
+    const characters = store.getCharactersByCampaign(campaignId).filter(c => c.isActiveInMasterPanel !== false);
     if (characters.length === 0) {
-      showToast.warning('No hay personajes registrados en la campaña actual.', 'Mesa Vacía');
+      showToast.warning('No hay personajes activos en la campaña actual.', 'Mesa Vacía');
       return;
     }
 

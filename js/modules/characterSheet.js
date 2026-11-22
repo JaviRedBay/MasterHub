@@ -536,71 +536,68 @@ export class CharacterSheetModule {
       <!-- Ficha Interactiva Principal (Estilo Pergamino TTRPG) -->
       <div class="rpg-card-parchment p-3 p-md-4 mb-3">
         <!-- Encabezado de Identidad -->
-        <div class="row g-2 mb-3 border-bottom pb-3 align-items-center" style="border-color: var(--rpg-line) !important;">
-          <div class="col-md-4 col-lg-3">
-            <div class="d-flex align-items-center gap-3">
-              ${(isSafeExternalImageUrl(char.imageUrl) || isSafeAvatarDataUrl(char.avatarThumb)) ? `
-                <img
-                  id="sheet-char-avatar-img"
-                  src="${escapeHtml(isSafeExternalImageUrl(char.imageUrl) ? char.imageUrl : char.avatarThumb)}"
-                  ${isSafeAvatarDataUrl(char.avatarThumb) ? `data-fallback-avatar="${escapeHtml(char.avatarThumb)}" onerror="if(this.dataset.fallbackAvatar && this.src !== this.dataset.fallbackAvatar){this.src = this.dataset.fallbackAvatar;}"` : ''}
-                  referrerpolicy="no-referrer"
-                  alt="${escapeHtml(char.name)}"
-                  title="Haz clic para ver la imagen en grande"
-                  class="rounded-circle border border-2 border-warning flex-shrink-0 shadow-sm sheet-avatar-thumb"
-                  style="width: 80px; height: 80px; object-fit: cover; cursor: zoom-in;"
-                >
-              ` : ''}
-              <div class="d-flex flex-column justify-content-center align-items-start min-w-0">
-                <h1 class="h3 m-0 fw-bold text-break" style="color: var(--rpg-gold-light); font-family: var(--font-title); text-shadow: var(--rpg-heading-shadow); line-height: 1.15;">${escapeHtml(char.name)}</h1>
-                <div class="rpg-subdesc mt-1">Jugador: <strong>${escapeHtml(char.playerName || 'Anónimo')}</strong></div>
-                <button id="btn-sheet-edit-identity" class="btn btn-xs btn-outline-warning d-inline-flex align-items-center gap-1 mt-1" style="white-space: nowrap;" title="Editar Nombre, Jugador, Imagen, Especie, Trasfondo y Alineamiento">
-                  <i data-lucide="user-cog" style="width: 12px; height: 12px;"></i> Editar Identidad
-                </button>
-              </div>
+        <div class="sheet-identity-header mb-3 border-bottom pb-3" id="sheet-identity-header" style="border-color: var(--rpg-line) !important;">
+          <div class="sheet-identity-main d-flex align-items-center gap-3">
+            ${(isSafeExternalImageUrl(char.imageUrl) || isSafeAvatarDataUrl(char.avatarThumb)) ? `
+              <img
+                id="sheet-char-avatar-img"
+                src="${escapeHtml(isSafeExternalImageUrl(char.imageUrl) ? char.imageUrl : char.avatarThumb)}"
+                ${isSafeAvatarDataUrl(char.avatarThumb) ? `data-fallback-avatar="${escapeHtml(char.avatarThumb)}" onerror="if(this.dataset.fallbackAvatar && this.src !== this.dataset.fallbackAvatar){this.src = this.dataset.fallbackAvatar;}"` : ''}
+                referrerpolicy="no-referrer"
+                alt="${escapeHtml(char.name)}"
+                title="Haz clic para ver la imagen en grande"
+                class="rounded-circle border border-2 border-warning flex-shrink-0 shadow-sm sheet-avatar-thumb"
+                style="width: 72px; height: 72px; object-fit: cover; cursor: zoom-in;"
+              >
+            ` : ''}
+            <div class="d-flex flex-column justify-content-center align-items-start min-w-0">
+              <h1 class="h3 m-0 fw-bold text-break" style="color: var(--rpg-gold-light); font-family: var(--font-title); text-shadow: var(--rpg-heading-shadow); line-height: 1.15;">${escapeHtml(char.name)}</h1>
+              <div class="rpg-subdesc mt-1">Jugador: <strong>${escapeHtml(char.playerName || 'Anónimo')}</strong></div>
+              <button id="btn-sheet-edit-identity" class="btn btn-xs btn-outline-warning d-inline-flex align-items-center gap-1 mt-1" style="white-space: nowrap;" title="Editar Nombre, Jugador, Imagen, Especie, Trasfondo y Alineamiento">
+                <i data-lucide="user-cog" style="width: 12px; height: 12px;"></i> Editar Identidad
+              </button>
             </div>
           </div>
-          <div class="col-md-8 col-lg-9">
-            <div class="row g-2 text-center text-md-start">
-              <div class="col-6 col-md-2">
-                <span class="rpg-label d-block">Clase</span>
-                <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(classDisplayTitle)}">${escapeHtml(classDisplayTitle)}</strong>
+
+          <div class="sheet-identity-grid">
+            <div class="sheet-identity-cell">
+              <span class="rpg-label d-block">Clase</span>
+              <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(classDisplayTitle)}">${escapeHtml(classDisplayTitle)}</strong>
+            </div>
+            <div class="sheet-identity-cell" title="Nivel Total del Personaje: ${char.level}">
+              <span class="rpg-label d-block">Nivel</span>
+              <div class="sheet-identity-inline d-flex align-items-center gap-1">
+                <span class="badge bg-warning text-dark fw-bold fs-6">Nv. ${char.level}</span>
+                <button id="btn-sheet-badge-level-up" class="btn btn-xs btn-outline-warning p-0 px-1" title="Subir de nivel en el Asistente (Paso 5: Clases y Niveles)" style="line-height: 1.2; font-size: 0.72rem;">▲</button>
               </div>
-              <div class="col-6 col-md-1" title="Nivel Total del Personaje: ${char.level}">
-                <span class="rpg-label d-block">Nivel</span>
-                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-1">
-                  <span class="badge bg-warning text-dark fw-bold fs-6">Nv. ${char.level}</span>
-                  <button id="btn-sheet-badge-level-up" class="btn btn-xs btn-outline-warning p-0 px-1" title="Subir de nivel en el Asistente (Paso 5: Clases y Niveles)" style="line-height: 1.2; font-size: 0.72rem;">▲</button>
-                </div>
-              </div>
-              <div class="col-6 col-md-2" title="Experiencia actual: ${(Number(char.xp) || 0).toLocaleString('es-ES')} PX (Mínimo Nv. ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX${getNextLevelXp(char.level) ? ` | Sig. nivel: ${getNextLevelXp(char.level).toLocaleString('es-ES')} PX` : ' | Nivel Máximo'})">
-                <span class="rpg-label d-block">Experiencia (PX)</span>
-                <input type="number" id="input-sheet-xp" class="form-control form-control-sm bg-dark border-secondary text-warning fw-bold text-center text-md-start py-0 px-2" value="${Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0)}" min="0" step="1" style="max-width: 115px; height: 26px; font-size: 0.85rem; margin: 0 auto 0 0;">
-              </div>
-              <div class="col-6 col-md-2">
-                <span class="rpg-label d-block">Especie</span>
-                <strong class="fs-6 text-light">${escapeHtml(fullSpecies)}</strong>
-              </div>
-              <div class="col-6 col-md-2">
-                <span class="rpg-label d-block">Trasfondo</span>
-                <strong class="fs-6 text-light">${escapeHtml(backgroundName)}</strong>
-              </div>
-              <div class="col-4 col-md-1">
-                <span class="rpg-label d-block">Tamaño</span>
-                <strong class="fs-6 text-light">${escapeHtml(charSize)}</strong>
-              </div>
-              <div class="col-4 col-md-1">
-                <span class="rpg-label d-block">Alineamiento</span>
-                <strong class="fs-6 text-light">${escapeHtml(char.alignment || 'Neutral')}</strong>
-              </div>
-              <div class="col-4 col-md-1" title="Bono de Competencia: +${pb} para nivel ${char.level} (nv 1-4 = +2, nv 5-8 = +3, nv 9-12 = +4, nv 13-16 = +5, nv 17-20 = +6)" style="cursor: help;">
-                <span class="rpg-label d-block">BC / Insp.</span>
-                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-1">
-                  <strong class="text-danger fs-6">+${pb}</strong>
-                  <button id="btn-sheet-toggle-inspiration" class="badge border-0 ${char.heroicInspiration ? 'bg-warning text-dark fw-bold' : 'bg-secondary text-light'}" title="Hacer clic para activar o consumir la Inspiración Heroica" style="cursor: pointer;">
-                    ${char.heroicInspiration ? '★' : '☆'}
-                  </button>
-                </div>
+            </div>
+            <div class="sheet-identity-cell" title="Experiencia actual: ${(Number(char.xp) || 0).toLocaleString('es-ES')} PX (Mínimo Nv. ${char.level}: ${getMinXpForLevel(char.level).toLocaleString('es-ES')} PX${getNextLevelXp(char.level) ? ` | Sig. nivel: ${getNextLevelXp(char.level).toLocaleString('es-ES')} PX` : ' | Nivel Máximo'})">
+              <span class="rpg-label d-block">Experiencia (PX)</span>
+              <input type="number" id="input-sheet-xp" class="form-control form-control-sm bg-dark border-secondary text-warning fw-bold py-0 px-2" value="${Math.max(getMinXpForLevel(char.level), Number(char.xp) || 0)}" min="0" step="1" style="max-width: 115px; height: 26px; font-size: 0.85rem;">
+            </div>
+            <div class="sheet-identity-cell">
+              <span class="rpg-label d-block">Especie</span>
+              <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(fullSpecies)}">${escapeHtml(fullSpecies)}</strong>
+            </div>
+            <div class="sheet-identity-cell">
+              <span class="rpg-label d-block">Trasfondo</span>
+              <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(backgroundName)}">${escapeHtml(backgroundName)}</strong>
+            </div>
+            <div class="sheet-identity-cell">
+              <span class="rpg-label d-block">Tamaño</span>
+              <strong class="fs-6 text-light d-block">${escapeHtml(charSize)}</strong>
+            </div>
+            <div class="sheet-identity-cell">
+              <span class="rpg-label d-block">Alineamiento</span>
+              <strong class="fs-6 text-light text-truncate d-block" title="${escapeHtml(char.alignment || 'Neutral')}">${escapeHtml(char.alignment || 'Neutral')}</strong>
+            </div>
+            <div class="sheet-identity-cell" title="Bono de Competencia: +${pb} para nivel ${char.level} (nv 1-4 = +2, nv 5-8 = +3, nv 9-12 = +4, nv 13-16 = +5, nv 17-20 = +6)" style="cursor: help;">
+              <span class="rpg-label d-block">BC / Insp.</span>
+              <div class="sheet-identity-inline d-flex align-items-center gap-1">
+                <strong class="text-danger fs-6">+${pb}</strong>
+                <button id="btn-sheet-toggle-inspiration" class="badge border-0 ${char.heroicInspiration ? 'bg-warning text-dark fw-bold' : 'bg-secondary text-light'}" title="Hacer clic para activar o consumir la Inspiración Heroica" style="cursor: pointer;">
+                  ${char.heroicInspiration ? '★' : '☆'}
+                </button>
               </div>
             </div>
           </div>

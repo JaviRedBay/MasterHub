@@ -199,6 +199,7 @@ export function sanitizeCharacter(char) {
     backstory: char.backstory || '',
     notes: char.notes || '',
     heroicInspiration: Boolean(char.heroicInspiration),
+    isActiveInMasterPanel: char.isActiveInMasterPanel !== false,
     customConsumables: Array.isArray(char.customConsumables) ? char.customConsumables : [],
     restTraitsState: typeof char.restTraitsState === 'object' && char.restTraitsState !== null ? char.restTraitsState : {},
     createdAt: char.createdAt || new Date().toISOString(),

@@ -39,6 +39,11 @@ class App {
 
     // 0. Estilo visual (tema): lee la preferencia, la aplica y monta el selector de la barra superior
     themeManager.init();
+    document.getElementById('mobile-theme-menu')?.addEventListener('click', (e) => {
+      if (e.target.closest('[data-theme-choice]')) {
+        this.closeResponsiveMenu();
+      }
+    });
 
     // 1. Instanciar módulos
     this.modules.masterPanel = new MasterPanelModule('master-panel-container');
@@ -465,6 +470,8 @@ class App {
   updateRepoUI(status) {
     const pill = document.getElementById('btn-repo-status');
     const pillLabel = document.getElementById('repo-status-label');
+    const mobilePill = document.getElementById('btn-mobile-repo');
+    const mobilePillLabel = document.getElementById('mobile-repo-status-label');
     const badge = document.getElementById('repo-badge-status');
     const details = document.getElementById('repo-connected-details');
     const folderNameEl = document.getElementById('repo-folder-name');
@@ -526,17 +533,24 @@ class App {
 
     if (status.isConnected) {
       const isDrive = status.repoType === 'gdrive';
+      const btnClass = isBusy
+        ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
+        : 'btn btn-sm btn-outline-success d-flex align-items-center gap-1';
+      const btnTitle = isDrive ? 'Sincronizado con Google Drive (Carpeta DnD Master Hub)' : `Carpeta: ${status.folderName} (Guardado automático activo)`;
+      const labelText = isBusy
+        ? 'Sincronizando...'
+        : (isDrive ? 'Google Drive' : (status.folderName.length > 14 ? `${status.folderName.slice(0, 14)}…` : status.folderName));
+
       if (pill) {
-        pill.className = isBusy
-          ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
-          : 'btn btn-sm btn-outline-success d-flex align-items-center gap-1';
-        pill.title = isDrive ? 'Sincronizado con Google Drive (Carpeta DnD Master Hub)' : `Carpeta: ${status.folderName} (Guardado automático activo)`;
+        pill.className = btnClass;
+        pill.title = btnTitle;
       }
-      if (pillLabel) {
-        pillLabel.textContent = isBusy
-          ? 'Sincronizando...'
-          : (isDrive ? 'Google Drive' : (status.folderName.length > 14 ? `${status.folderName.slice(0, 14)}…` : status.folderName));
+      if (pillLabel) pillLabel.textContent = labelText;
+      if (mobilePill) {
+        mobilePill.className = btnClass;
+        mobilePill.title = btnTitle;
       }
+      if (mobilePillLabel) mobilePillLabel.textContent = labelText;
       if (badge) {
         if (status.syncing || isBusy) {
           badge.className = 'badge bg-info text-dark';
@@ -557,13 +571,22 @@ class App {
       btnDisconnect?.classList.remove('d-none');
       btnDisconnect?.classList.add('d-flex');
     } else {
+      const btnClass = isBusy
+        ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
+        : 'btn btn-sm btn-outline-secondary d-flex align-items-center gap-1';
+      const btnTitle = 'Datos y Copia de Seguridad (Almacenamiento en navegador)';
+      const labelText = isBusy ? 'Conectando...' : 'Modo Navegador';
+
       if (pill) {
-        pill.className = isBusy
-          ? 'btn btn-sm btn-outline-warning d-flex align-items-center gap-1'
-          : 'btn btn-sm btn-outline-secondary d-flex align-items-center gap-1';
-        pill.title = 'Almacenamiento en memoria del navegador (Sin carpeta vinculada)';
+        pill.className = btnClass;
+        pill.title = btnTitle;
       }
-      if (pillLabel) pillLabel.textContent = isBusy ? 'Conectando...' : 'Modo Navegador';
+      if (pillLabel) pillLabel.textContent = labelText;
+      if (mobilePill) {
+        mobilePill.className = btnClass;
+        mobilePill.title = btnTitle;
+      }
+      if (mobilePillLabel) mobilePillLabel.textContent = labelText;
       if (badge) {
         if (isBusy) {
           badge.className = 'badge bg-warning text-dark';

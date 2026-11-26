@@ -15,31 +15,32 @@ Este documento es la **fuente de verdad y mapa de acceso rápido** para cualquie
 
 Varios archivos de este proyecto superan las 2700-6200 líneas. **NUNCA utilices `read_file` sin especificar `StartLine` y `EndLine`** en estos archivos. Utiliza este índice actualizado (y las skills en `.agents/skills/`) para saltar directamente a la línea exacta:
 
-### 1. `js/constants/dnd55Rules.js` (~6044 líneas)
+### 1. `js/constants/dnd55Rules.js` (~6242 líneas)
 Motor matemático y reglas oficiales canónicas D&D 5.5 (PHB 2024).
 
 | Sección / Función | Línea aprox. | Descripción |
 | :--- | :--- | :--- |
-| **Listas Canónicas** | L1 - L1160 | `DND55_SKILLS` (L50), `DND55_SPECIES` (L70), `DND55_BACKGROUNDS` (L222), `DND55_CLASSES` (L548), `DND55_MULTICLASS_RULES` (L1047) |
-| **Clases & Multiclase** | L1164 - L1325 | `getCharacterClasses` (L1164), `getClassLevel` (L1195), `getCharacterTotalLevel` (L1203), `getCharacterHitDicePool` (L1242), `checkMulticlassPrerequisites` (L1294) |
-| **Equipo Inicial de Clase** | L1327 - L1512 | `DND55_CLASS_STARTING_EQUIPMENT` (L1327), `getClassStartingEquipment` (L1508) |
-| **Armas & Armaduras** | L1513 - L1660 | `DND55_ARMORS` (L1513), `DND55_WEAPONS` (L1533), `findCanonicalWeapon` (L1634) |
-| **Modificadores, XP & Dotes** | L1663 - L1825 | `getAbilityModifier` (L1663), `getProficiencyBonus` (L1701), `getCharacterAsiLevels` (L1712), `characterQualifiesForFightingStyle` (L1734), `characterHasFeat` (L1774) |
-| **Cálculo de Puntuaciones** | L1826 - L2099 | `calculateFinalAbilityScores` (L1826), `calculateAbilityScoresBreakdown` (L1920), `getActiveStatModifiers` (L2055) |
-| **Clase de Armadura (CA)** | L2100 - L2394 | `calculateArmorClass` (L2100: armaduras, escudos, defensa sin armadura Bárbaro/Monje/Bardo Danza) |
-| **Puntos de Golpe (PG)** | L2395 - L2491 | `calculateHitPoints` (L2395: fórmula fija o dados, bonos de dote y constitución) |
-| **Iniciativa & Velocidad** | L2492 - L2585 | `calculateInitiative` (L2492), `calculateSpeed` (L2533) |
-| **Salvaciones & Habilidades** | L2586 - L2860 | `calculateSavingThrows` (L2586), `getMaxAllowedExpertiseCount` (L2661), `getMaxAllowedSkillsCount` (L2682), `calculateSkills` (L2722) |
-| **Sentidos Pasivos & Visión** | L2861 - L2934 | `calculatePassivePerception/Details` (L2861), `calculatePassiveInvestigation/Details` (L2881), `calculatePassiveInsight/Details` (L2901), `getCharacterVisionSense` (L2918) |
-| **Conjuros Innatos** | L2935 - L3131 | `getInnateSpellsForCharacter` (L2935: especie, trasfondo y linajes) |
-| **Lanzamiento de Conjuros** | L3132 - L3363 | `calculateSpellcasting` (L3132), `getCharacterSpellSlots` (L3232) |
-| **CD Monje & Carga** | L3364 - L3440 | `calculateMonkSaveDc` (L3364), `calculateCarryingCapacity` (L3399, capacidad en kg) |
-| **Dotes & Resoluciones** | L3441 - L3929 | `getFeatById` (L3441), `getResolvedFeatsForCharacter` (L3568), `getBackgroundToolGroups` (L3903) |
-| **Rasgos Escalados & DC** | L4045 - L4469 | `getScaledFeatureInfo` (L4045), `getResolvedCharacterFeatures` (L4280) |
-| **Competencias Consolidadas**| L4470 - L4550 | `getCharacterProficiencies` (L4470: armas, armaduras, escudos y herramientas) |
-| **Ataques de Conjuros** | L4586 - L5335 | `getSpellAttackInfo` (L4586: ataque o salvación, daño, escala de ranura upcast) |
-| **Consumibles & Descansos** | L5336 - L5898 | `getConsumableTraitsForCharacter` (L5336: rasgos con usos activos para Master Panel) |
-| **Resolutores de Nombres** | L5899 - L5960 | `getSpeciesName`, `getSublineageName`, `getBackgroundName`, `getClassName`, `getSubclassName`, `getArmorName`, `getWeaponName` |
+| **Cansancio & Estados 2024** | L50 - L206 | `DND55_EXHAUSTION_LEVELS` (L50), `DND55_CONDITIONS` (L60), `getCharacterExhaustionLevel` (L203) |
+| **Listas Canónicas** | L207 - L1315 | `DND55_SKILLS` (L207), `DND55_SPECIES` (L227), `DND55_BACKGROUNDS` (L379), `DND55_CLASSES` (L705), `DND55_MULTICLASS_RULES` (L1204) |
+| **Clases & Multiclase** | L1321 - L1480 | `getCharacterClasses` (L1321), `getClassLevel` (L1352), `getCharacterTotalLevel` (L1360), `getCharacterHitDicePool` (L1399), `checkMulticlassPrerequisites` (L1451) |
+| **Equipo Inicial de Clase** | L1484 - L1669 | `DND55_CLASS_STARTING_EQUIPMENT` (L1484), `getClassStartingEquipment` (L1665) |
+| **Armas & Armaduras** | L1670 - L1815 | `DND55_ARMORS` (L1670), `DND55_WEAPONS` (L1690), `findCanonicalWeapon` (L1791) |
+| **Modificadores, XP & Dotes** | L1820 - L1982 | `getAbilityModifier` (L1820), `getProficiencyBonus` (L1858), `getCharacterAsiLevels` (L1869), `characterQualifiesForFightingStyle` (L1891), `characterHasFeat` (L1931) |
+| **Cálculo de Puntuaciones** | L1983 - L2255 | `calculateFinalAbilityScores` (L1983), `calculateAbilityScoresBreakdown` (L2077), `getActiveStatModifiers` (L2212) |
+| **Clase de Armadura (CA)** | L2257 - L2551 | `calculateArmorClass` (L2257: armaduras, escudos, defensa sin armadura Bárbaro/Monje/Bardo Danza) |
+| **Puntos de Golpe (PG)** | L2552 - L2648 | `calculateHitPoints` (L2552: fórmula fija o dados, bonos de dote y constitución) |
+| **Iniciativa & Velocidad** | L2649 - L2762 | `calculateInitiative` (L2649), `calculateSpeed` (L2697) (aplican penalizadores de Cansancio 2024) |
+| **Salvaciones & Habilidades** | L2763 - L3050 | `calculateSavingThrows` (L2763), `getMaxAllowedExpertiseCount` (L2843), `getMaxAllowedSkillsCount` (L2864), `calculateSkills` (L2904) |
+| **Sentidos Pasivos & Visión** | L3051 - L3124 | `calculatePassivePerception/Details` (L3051), `calculatePassiveInvestigation/Details` (L3071), `calculatePassiveInsight/Details` (L3091), `getCharacterVisionSense` (L3108) |
+| **Conjuros Innatos** | L3125 - L3321 | `getInnateSpellsForCharacter` (L3125: especie, trasfondo y linajes) |
+| **Lanzamiento de Conjuros** | L3322 - L3558 | `calculateSpellcasting` (L3322), `getCharacterSpellSlots` (L3427) |
+| **CD Monje & Carga** | L3559 - L3635 | `calculateMonkSaveDc` (L3559), `calculateCarryingCapacity` (L3594, capacidad en kg) |
+| **Dotes & Resoluciones** | L3636 - L4125 | `getFeatById` (L3636), `getResolvedFeatsForCharacter` (L3763), `getBackgroundToolGroups` (L4098) |
+| **Rasgos Escalados & DC** | L4240 - L4664 | `getScaledFeatureInfo` (L4240), `getResolvedCharacterFeatures` (L4475) |
+| **Competencias Consolidadas**| L4665 - L4745 | `getCharacterProficiencies` (L4665: armas, armaduras, escudos y herramientas) |
+| **Ataques de Conjuros** | L4781 - L5530 | `getSpellAttackInfo` (L4781: ataque o salvación, daño, escala de ranura upcast) |
+| **Consumibles & Descansos** | L5531 - L6093 | `getConsumableTraitsForCharacter` (L5531: rasgos con usos activos para Master Panel) |
+| **Resolutores de Nombres** | L6094 - L6155 | `getSpeciesName`, `getSublineageName`, `getBackgroundName`, `getClassName`, `getSubclassName`, `getArmorName`, `getWeaponName` |
 
 ---
 
@@ -99,12 +100,15 @@ Asistente guiado de creación y edición (7 Pasos).
 ---
 
 ### 5. Otros Módulos Frecuentes
-- **`js/modules/masterPanel.js` (~834 líneas)**: `render` (L60), `renderCharacterCard` (L186), `attachEventListeners` (L582), `handleSecretPerceptionCheck` (L801).
+- **`js/modules/bastionManager.js` (~1398 líneas)** y **`js/constants/bastionsData.js` (~701 líneas)**: Gestor integral de Baluartes DMG 2024 (`calculateSpaceMetrics` L53, `calculateTurnEconomy` L96, `render` L161, `renderBastionModals` L665, `attachEventListeners` L959).
+- **`js/modules/dnd55Manager.js` (~415 líneas)**: Campañas & Roster (`render` L25, Hitos L133, Notas de siguiente sesión L195, `attachEventListeners` L224).
+- **`js/modules/masterPanel.js` (~950 líneas)**: `render` (L65, iconos compactos de estados/cansancio), `renderCharacterCard` (L222, Cansancio 0–6 y Estados D&D 2024 en L384), `attachEventListeners` (L649), `handleSecretPerceptionCheck` (L895).
 - **`js/modules/btrsCalculator.js` (~981 líneas)**: `render` (L163), `renderCalculationResult` (L343), `renderShopResult` (L507), `attachEventListeners` (L586), `calculateBtrs` (L744), `generateShopInventory` (L880).
 - **`js/utils/pdfExport.js` (~745 líneas)**: `applyTextFieldValue` (L178, parchea `/DA` en campo y widgets), `generateFilledDndPdfBytes` (L288).
-- **`js/utils/storage.js` (~290 líneas)**: `sanitizeCharacter` (L97), `sanitizeCampaign` (L214), `parseAndValidateBackup` (L252).
-- **`js/state.js` (~907 líneas)**: `init` (L76), `saveCharacter` (L198), `importAllData` (L658), `initRepository` (L703).
-- **`js/main.js` (~596 líneas)**: `init` (L32), `closeResponsiveMenu` (L175).
+- **`js/utils/storage.js` (~403 líneas)**: `sanitizeCharacter` (L98), `sanitizeCampaign` (L220), `sanitizeBastion` (L254), `parseAndValidateBackup` (L360).
+- **`js/utils/fileRepository.js` (~844 líneas)**: Sincronización Carpeta Local / Google Drive (`saveBastionsDebounced` L708).
+- **`js/state.js` (~1001 líneas)**: `init` (L76), `saveCharacter` (L204), `saveBastion` (L261), `updateCharacterExhaustion` (L288), `toggleCharacterCondition` (L296), `applyLongRest` (L635), `importState` (L745), `initRepository` (L797).
+- **`js/main.js` (~699 líneas)**: `init` (L33), `setupFloatingTooltips` (L187), `closeResponsiveMenu` (L260).
 
 ---
 

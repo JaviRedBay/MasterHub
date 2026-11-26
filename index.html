@@ -64,7 +64,7 @@
         <span class="fs-3 text-warning">⚔️</span>
         <div>
           <div class="rpg-brand-title">Roleplay Master Hub</div>
-          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine &bull; <span id="app-version-badge">v1.3.0</span></div>
+          <div class="rpg-brand-subtitle">D&amp;D 5.5 (PHB 2024) &bull; BTRS Trading Engine &bull; <span id="app-version-badge">v1.4.0</span></div>
         </div>
       </div>
       <!-- Botón de Menú Responsivo (visible en tablets y móviles <= 1280px) -->
@@ -165,6 +165,12 @@
             </button>
           </li>
           <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-bastions-btn" data-tab="bastions" type="button" role="tab">
+              <i data-lucide="castle"></i>
+              <span>Baluartes</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab-btrs-btn" data-tab="btrs" type="button" role="tab">
               <i data-lucide="coins"></i>
               <span>Calculadora BTRS</span>
@@ -201,6 +207,13 @@
     <section id="view-sheet" class="tab-view d-none">
       <div id="sheet-container">
         <!-- Renderizado dinámico por js/modules/characterSheet.js -->
+      </div>
+    </section>
+
+    <!-- 3.5. Baluartes (Bastions DMG 2024) -->
+    <section id="view-bastions" class="tab-view d-none">
+      <div id="bastions-container">
+        <!-- Renderizado dinámico por js/modules/bastionManager.js -->
       </div>
     </section>
 

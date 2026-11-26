@@ -956,6 +956,70 @@ dialog.rpg-dialog::backdrop {
   text-align: center;
 }
 
+/* Píldoras de Estados y Cansancio D&D 2024 con Tooltip Flotante Global (sin recorte de overflow) */
+.rpg-condition-pill {
+  position: relative;
+  cursor: help;
+}
+
+.rpg-cond-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 19px;
+  padding: 0 3px !important;
+  font-size: 0.68rem !important;
+  line-height: 1;
+}
+
+/* El contenido plantilla dentro de la píldora permanece oculto; se proyecta en #rpg-floating-tooltip */
+.rpg-condition-pill > .rpg-condition-tooltip {
+  display: none !important;
+}
+
+#rpg-floating-tooltip {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2100;
+  width: max-content;
+  max-width: min(330px, calc(100vw - 16px));
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--rpg-radius);
+  background: var(--rpg-dark-surface);
+  color: var(--rpg-text-main, var(--rpg-navbar-fg));
+  border: 1px solid var(--rpg-gold);
+  box-shadow: var(--rpg-shadow-xl, 0 8px 22px rgba(0, 0, 0, 0.65));
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.73rem;
+  line-height: 1.38;
+  white-space: normal;
+  pointer-events: none;
+}
+
+#rpg-floating-tooltip.visible {
+  display: block;
+}
+
+#rpg-floating-tooltip strong {
+  display: block;
+  color: var(--rpg-gold-light, var(--rpg-gold));
+  margin-bottom: 0.25rem;
+  font-size: 0.76rem;
+}
+
+#rpg-floating-tooltip ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+#rpg-floating-tooltip li {
+  margin-bottom: 0.15rem;
+}
+
 /* Scroll margin limpio para tarjetas del Master Panel teniendo en cuenta el navbar sticky */
 [id^="master-card-"] {
   scroll-margin-top: 85px;

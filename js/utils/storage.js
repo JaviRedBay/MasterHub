@@ -11,6 +11,7 @@ import { isSafeExternalImageUrl, isSafeAvatarDataUrl } from './imageValidator.js
 export const STORAGE_KEYS = {
   CHARACTERS: 'dnd55_characters',
   CAMPAIGNS: 'dnd55_campaigns',
+  BASTIONS: 'dnd55_bastions',
   SELECTED_CAMPAIGN: 'dnd55_selected_campaign',
   SELECTED_CHARACTER: 'dnd55_selected_character',
   BTRS_HISTORY: 'btrs_history',
@@ -199,6 +200,10 @@ export function sanitizeCharacter(char) {
     backstory: char.backstory || '',
     notes: char.notes || '',
     heroicInspiration: Boolean(char.heroicInspiration),
+    exhaustion: Math.max(0, Math.min(6, Math.round(Number(char.exhaustion) || 0))),
+    conditions: Array.isArray(char.conditions)
+      ? Array.from(new Set(char.conditions.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())))
+      : [],
     isActiveInMasterPanel: char.isActiveInMasterPanel !== false,
     customConsumables: Array.isArray(char.customConsumables) ? char.customConsumables : [],
     restTraitsState: typeof char.restTraitsState === 'object' && char.restTraitsState !== null ? char.restTraitsState : {},
@@ -217,12 +222,114 @@ export function sanitizeCampaign(camp) {
     camp = {};
   }
   camp = deepRepairMojibake(camp);
+  const sanitizedMilestones = Array.isArray(camp.milestones)
+    ? camp.milestones
+        .filter(m => m && typeof m === 'object')
+        .map(m => ({
+          id: m.id || `ms_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          title: String(m.title || '').trim() || 'Hito de campaña',
+          description: String(m.description || '').trim(),
+          sessionOrDate: String(m.sessionOrDate || '').trim(),
+          createdAt: m.createdAt || new Date().toISOString()
+        }))
+    : [];
+
   return {
     id: camp.id || `camp_${Date.now()}`,
     name: camp.name || 'Nueva Campaña',
     description: camp.description || '',
     gameMaster: camp.gameMaster || 'Dungeon Master',
+    milestones: sanitizedMilestones,
+    nextSessionNotes: typeof camp.nextSessionNotes === 'string' ? camp.nextSessionNotes : '',
     createdAt: camp.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Sanitiza un objeto de Baluarte (Bastion DMG 2024).
+ * @param {Object} bastion
+ * @returns {Object} Baluarte válido
+ */
+export function sanitizeBastion(bastion) {
+  if (!bastion || typeof bastion !== 'object') {
+    bastion = {};
+  }
+  bastion = deepRepairMojibake(bastion);
+
+  const ownerCharacterIds = Array.isArray(bastion.ownerCharacterIds)
+    ? Array.from(new Set(bastion.ownerCharacterIds.filter(id => typeof id === 'string' && id.trim())))
+    : [];
+
+  const facilities = Array.isArray(bastion.facilities)
+    ? bastion.facilities
+        .filter(f => f && typeof f === 'object')
+        .map((f, idx) => ({
+          id: f.id || `fac_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+          type: f.type === 'basic' ? 'basic' : 'special',
+          templateId: String(f.templateId || 'custom'),
+          name: String(f.name || 'Instalación').trim(),
+          space: ['estrecha', 'espaciosa', 'vasta'].includes(f.space) ? f.space : 'espaciosa',
+          assignedOwnerId: typeof f.assignedOwnerId === 'string' ? f.assignedOwnerId : '',
+          allowedOrder: String(f.allowedOrder || ''),
+          currentOrder: String(f.currentOrder || ''),
+          orderSummary: String(f.orderSummary || ''),
+          passiveBenefit: String(f.passiveBenefit || ''),
+          turnCostGp: Math.max(0, Number(f.turnCostGp) || 0),
+          turnIncomeGp: Math.max(0, Number(f.turnIncomeGp) || 0),
+          turnBenefit: String(f.turnBenefit || ''),
+          hirelingsCount: Math.max(0, Math.round(Number(f.hirelingsCount) || 0)),
+          description: String(f.description || ''),
+          notes: String(f.notes || ''),
+          isDamaged: Boolean(f.isDamaged)
+        }))
+    : [];
+
+  const staff = Array.isArray(bastion.staff)
+    ? bastion.staff
+        .filter(s => s && typeof s === 'object')
+        .map((s, idx) => ({
+          id: s.id || `npc_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+          name: String(s.name || 'Asalariado').trim(),
+          role: ['hireling', 'defender', 'lieutenant', 'steward', 'guest', 'specialist'].includes(s.role) ? s.role : 'hireling',
+          facilityId: typeof s.facilityId === 'string' ? s.facilityId : '',
+          wageGpPerTurn: Math.max(0, Number(s.wageGpPerTurn) || 0),
+          notes: String(s.notes || '')
+        }))
+    : [];
+
+  const blueprints = Array.isArray(bastion.blueprints)
+    ? bastion.blueprints
+        .filter(bp => bp && typeof bp === 'object' && (isSafeExternalImageUrl(bp.imageUrl) || isSafeAvatarDataUrl(bp.thumbDataUrl)))
+        .map((bp, idx) => ({
+          id: bp.id || `bp_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+          title: String(bp.title || `Plano ${idx + 1}`).trim(),
+          imageUrl: isSafeExternalImageUrl(bp.imageUrl) ? bp.imageUrl.trim() : '',
+          thumbDataUrl: isSafeAvatarDataUrl(bp.thumbDataUrl) ? bp.thumbDataUrl : ''
+        }))
+    : [];
+
+  const eventsLog = Array.isArray(bastion.eventsLog)
+    ? bastion.eventsLog.slice(0, 40)
+    : [];
+
+  return {
+    id: bastion.id || `bastion_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    campaignId: bastion.campaignId || 'camp_strahd',
+    name: String(bastion.name || 'Nuevo Baluarte').trim(),
+    location: String(bastion.location || '').trim(),
+    description: String(bastion.description || '').trim(),
+    ownerCharacterIds,
+    manualSpecialSlotsAdjust: Math.round(Number(bastion.manualSpecialSlotsAdjust) || 0),
+    generalOrder: bastion.generalOrder === 'maintain' ? 'maintain' : 'individual',
+    treasuryGp: Math.max(0, Number(bastion.treasuryGp) || 0),
+    armoryStocked: Boolean(bastion.armoryStocked),
+    turnNumber: Math.max(1, Math.round(Number(bastion.turnNumber) || 1)),
+    facilities,
+    staff,
+    blueprints,
+    eventsLog,
+    createdAt: bastion.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 }
@@ -260,6 +367,7 @@ export function parseAndValidateBackup(jsonText) {
     const data = JSON.parse(cleanText.trim());
     let campaigns = [];
     let characters = [];
+    let bastions = [];
 
     if (Array.isArray(data)) {
       // Podría ser un array de personajes o campañas directamente
@@ -275,12 +383,16 @@ export function parseAndValidateBackup(jsonText) {
       if (Array.isArray(data.characters)) {
         characters = data.characters.map(sanitizeCharacter);
       }
+      if (Array.isArray(data.bastions)) {
+        bastions = data.bastions.map(sanitizeBastion);
+      }
     }
 
     return {
       success: true,
       campaigns,
-      characters
+      characters,
+      bastions
     };
   } catch (err) {
     return {

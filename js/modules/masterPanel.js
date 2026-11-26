@@ -29,7 +29,10 @@ import {
   formatModifier,
   getAbilityShortName,
   getMinXpForLevel,
-  getNextLevelXp
+  getNextLevelXp,
+  DND55_CONDITIONS,
+  DND55_EXHAUSTION_LEVELS,
+  getCharacterExhaustionLevel
 } from '../constants/dnd55Rules.js';
 import { escapeHtml } from '../utils/formatters.js';
 import { rollDie, rollWithAdvantage, rollWithDisadvantage } from '../utils/dice.js';
@@ -50,6 +53,8 @@ export class MasterPanelModule {
     store.on('character:spellslot-changed', () => this.render());
     store.on('character:trait-changed', () => this.render());
     store.on('character:consumable-changed', () => this.render());
+    store.on('character:exhaustion-changed', () => this.render());
+    store.on('character:conditions-changed', () => this.render());
     store.on('campaign:selected', () => this.render());
     store.on('rest:completed', (data) => {
       this.showRestToast(data);
@@ -131,18 +136,41 @@ export class MasterPanelModule {
                 const initInfo = calculateInitiative(char);
                 const spellInfo = calculateSpellcasting(char);
                 const hasSafeAvatar = isSafeAvatarDataUrl(char.avatarThumb);
+                const exhLvl = getCharacterExhaustionLevel(char);
+                const exhDef = DND55_EXHAUSTION_LEVELS[exhLvl] || DND55_EXHAUSTION_LEVELS[0];
+                const charConds = (Array.isArray(char.conditions) ? char.conditions : [])
+                  .map(cid => DND55_CONDITIONS.find(c => c.id === cid))
+                  .filter(Boolean);
 
                 return `
                   <tr class="${isActive ? '' : 'opacity-50'}">
-                    <td class="text-start ps-3 py-1 fw-bold text-light">
-                      <div class="d-flex align-items-center gap-2">
+                    <td class="text-start ps-3 py-1 fw-bold text-light" style="max-width: 230px;">
+                      <div class="d-flex align-items-center flex-wrap gap-1">
                         <button class="table-inspiration-badge ${char.heroicInspiration ? 'active' : 'inactive'} btn-toggle-inspiration" data-char-id="${char.id}" title="${char.heroicInspiration ? 'Tiene Inspiración Heroica (haz clic para gastar)' : 'Sin inspiración (haz clic para otorgar)'}">
                           ${char.heroicInspiration ? '★' : '☆'}
                         </button>
                         ${hasSafeAvatar ? `<img src="${escapeHtml(char.avatarThumb)}" alt="" class="rounded-circle border border-warning flex-shrink-0" style="width: 22px; height: 22px; object-fit: cover;">` : ''}
-                        <button class="btn btn-link text-warning p-0 text-decoration-none fw-bold text-start btn-scroll-to-card small" data-char-id="${char.id}" ${isActive ? '' : 'disabled'} title="${isActive ? `Ver tarjeta de ${escapeHtml(char.name)} en este panel` : `${escapeHtml(char.name)} está desactivado en el Master Panel`}">
+                        <button class="btn btn-link text-warning p-0 text-decoration-none fw-bold text-start text-truncate btn-scroll-to-card small" style="max-width: 135px;" data-char-id="${char.id}" ${isActive ? '' : 'disabled'} title="${isActive ? `Ver tarjeta de ${escapeHtml(char.name)} en este panel` : `${escapeHtml(char.name)} está desactivado en el Master Panel`}">
                           ${escapeHtml(char.name)}
                         </button>
+                        ${exhLvl > 0 ? `
+                          <span class="rpg-condition-pill rpg-cond-icon-only badge ${exhLvl >= 5 ? 'bg-danger text-light' : 'bg-warning text-dark'}">
+                            😓${exhLvl}
+                            <span class="rpg-condition-tooltip">
+                              <strong>😓 Cansancio Nivel ${exhLvl} (D&amp;D 2024)</strong>
+                              <div>${escapeHtml(exhDef.description)}</div>
+                            </span>
+                          </span>
+                        ` : ''}
+                        ${charConds.map(cd => `
+                          <span class="rpg-condition-pill rpg-cond-icon-only badge bg-danger bg-opacity-75 text-light border border-danger">
+                            ${cd.icon}
+                            <span class="rpg-condition-tooltip">
+                              <strong>${cd.icon} ${escapeHtml(cd.name)} (D&amp;D 2024)</strong>
+                              <ul>${cd.effects.map(ef => `<li>${escapeHtml(ef)}</li>`).join('')}</ul>
+                            </span>
+                          </span>
+                        `).join('')}
                       </div>
                     </td>
                     <td class="py-1 fw-bold" title="${escapeHtml(hpInfo.formula)}" style="cursor: help; white-space: nowrap;">
@@ -352,6 +380,65 @@ export class MasterPanelModule {
                 </div>
               </div>
             </div>
+
+            <!-- Cansancio (0-6) y Estados D&D 2024 -->
+            ${(() => {
+              const exhLvl = getCharacterExhaustionLevel(char);
+              const exhDef = DND55_EXHAUSTION_LEVELS[exhLvl] || DND55_EXHAUSTION_LEVELS[0];
+              const activeCondIds = new Set(Array.isArray(char.conditions) ? char.conditions : []);
+              const activeCondDefs = DND55_CONDITIONS.filter(c => activeCondIds.has(c.id));
+              const availableCondDefs = DND55_CONDITIONS.filter(c => !activeCondIds.has(c.id));
+              return `
+                <div class="p-1 px-2 mt-2 rounded bg-dark border border-secondary">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-1 flex-wrap" title="${escapeHtml(exhDef.description)}">
+                      <span class="small fw-bold ${exhLvl > 0 ? (exhLvl >= 5 ? 'text-danger' : 'text-warning') : 'text-secondary'}" style="font-size: 0.72rem;">😓 Cansancio:</span>
+                      <select class="form-select form-select-sm bg-dark border-secondary ${exhLvl > 0 ? 'text-warning fw-bold' : 'text-light'} py-0 px-2 pe-4 select-mp-exhaustion" data-char-id="${char.id}" style="width: auto; height: 23px; font-size: 0.72rem;">
+                        ${DND55_EXHAUSTION_LEVELS.map(lvl => `
+                          <option value="${lvl.level}" ${exhLvl === lvl.level ? 'selected' : ''}>
+                            ${lvl.level === 0 ? 'Nv 0 (Descansado)' : (lvl.level === 6 ? 'Nv 6 (Muerte 💀)' : `Nv ${lvl.level} (${lvl.d20Penalty} d20, ${String(lvl.speedPenaltyM).replace('.', ',')} m)`)}
+                          </option>
+                        `).join('')}
+                      </select>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-1">
+                      <select class="form-select form-select-sm bg-dark border-secondary text-light py-0 px-2 pe-4 select-mp-add-condition" data-char-id="${char.id}" style="width: auto; max-width: 165px; height: 23px; font-size: 0.72rem;" ${availableCondDefs.length === 0 ? 'disabled' : ''}>
+                        <option value="">+ Añadir Estado...</option>
+                        ${availableCondDefs.map(c => `<option value="${c.id}">${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
+                      </select>
+                      ${activeCondDefs.length > 0 ? `
+                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 btn-mp-clear-conditions" data-char-id="${char.id}" style="font-size: 0.65rem; line-height: 1.2;" title="Limpiar todos los estados activos">Limpiar</button>
+                      ` : ''}
+                    </div>
+                  </div>
+
+                  ${(exhLvl > 0 || activeCondDefs.length > 0) ? `
+                    <div class="d-flex flex-wrap align-items-center gap-1 mt-1 pt-1 border-top border-secondary border-opacity-50">
+                      ${exhLvl > 0 ? `
+                        <span class="rpg-condition-pill badge ${exhLvl >= 5 ? 'bg-danger text-light' : 'bg-warning text-dark'} d-inline-flex align-items-center gap-1 py-0 px-2" style="font-size: 0.68rem;">
+                          😓 Cansancio Nv ${exhLvl}
+                          <span class="rpg-condition-tooltip">
+                            <strong>😓 Cansancio Nivel ${exhLvl} (D&amp;D 2024)</strong>
+                            <div>${escapeHtml(exhDef.description)}</div>
+                          </span>
+                        </span>
+                      ` : ''}
+                      ${activeCondDefs.map(cd => `
+                        <span class="rpg-condition-pill badge bg-danger bg-opacity-75 text-light border border-danger d-inline-flex align-items-center gap-1 py-0 px-2" style="font-size: 0.68rem;">
+                          <span>${cd.icon} ${escapeHtml(cd.name)}</span>
+                          <button type="button" class="btn-close-cond border-0 bg-transparent text-light p-0 ms-1 btn-mp-remove-condition" data-char-id="${char.id}" data-cond-id="${cd.id}" title="Quitar estado ${escapeHtml(cd.name)}" style="line-height: 1; font-size: 0.75rem; cursor: pointer;">&times;</button>
+                          <span class="rpg-condition-tooltip">
+                            <strong>${cd.icon} ${escapeHtml(cd.name)} (D&amp;D 2024)</strong>
+                            <ul>${cd.effects.map(ef => `<li>${escapeHtml(ef)}</li>`).join('')}</ul>
+                          </span>
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            })()}
           </div>
 
           <!-- Ranuras de Conjuro (si es lanzador) -->
@@ -655,6 +742,43 @@ export class MasterPanelModule {
       btn.addEventListener('click', (e) => {
         const charId = e.currentTarget.dataset.charId;
         store.resetDeathSaves(charId);
+      });
+    });
+
+    // Cansancio (0-6) y Estados D&D 2024
+    this.container.querySelectorAll('.select-mp-exhaustion').forEach(sel => {
+      sel.addEventListener('change', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        const lvl = parseInt(e.currentTarget.value, 10) || 0;
+        store.updateCharacterExhaustion(charId, lvl);
+      });
+    });
+
+    this.container.querySelectorAll('.select-mp-add-condition').forEach(sel => {
+      sel.addEventListener('change', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        const condId = e.currentTarget.value;
+        if (condId) {
+          store.toggleCharacterCondition(charId, condId);
+        }
+      });
+    });
+
+    this.container.querySelectorAll('.btn-mp-remove-condition').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const charId = e.currentTarget.dataset.charId;
+        const condId = e.currentTarget.dataset.condId;
+        if (condId) {
+          store.toggleCharacterCondition(charId, condId);
+        }
+      });
+    });
+
+    this.container.querySelectorAll('.btn-mp-clear-conditions').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const charId = e.currentTarget.dataset.charId;
+        store.clearCharacterConditions(charId);
       });
     });
 

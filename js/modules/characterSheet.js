@@ -67,7 +67,10 @@ import {
   getInnateSpellsForCharacter,
   getSpellAttackInfo,
   getMinXpForLevel,
-  getNextLevelXp
+  getNextLevelXp,
+  DND55_CONDITIONS,
+  DND55_EXHAUSTION_LEVELS,
+  getCharacterExhaustionLevel
 } from '../constants/dnd55Rules.js';
 import { escapeHtml, formatWeight, repairMojibake } from '../utils/formatters.js';
 import { downloadFilledDndPdf, createFilledDndPdfBlobUrl } from '../utils/pdfExport.js';
@@ -773,6 +776,63 @@ export class CharacterSheetModule {
                   </span>
                 `).join('')}
               </div>
+
+              <!-- Cansancio (0-6) y Estados Activos sincronizados con Master Panel -->
+              ${(() => {
+                const exhLvl = getCharacterExhaustionLevel(char);
+                const exhDef = DND55_EXHAUSTION_LEVELS[exhLvl] || DND55_EXHAUSTION_LEVELS[0];
+                const activeCondIds = new Set(Array.isArray(char.conditions) ? char.conditions : []);
+                const activeCondDefs = DND55_CONDITIONS.filter(c => activeCondIds.has(c.id));
+                const availableCondDefs = DND55_CONDITIONS.filter(c => !activeCondIds.has(c.id));
+                return `
+                  <div class="mt-2 pt-2 border-top" style="border-color: var(--rpg-line) !important;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <div class="d-flex align-items-center gap-1 flex-wrap" title="${escapeHtml(exhDef.description)}">
+                        <span class="rpg-label m-0 ${exhLvl > 0 ? 'text-warning fw-bold' : ''}" style="font-size: 0.7rem;">😓 CANSANCIO:</span>
+                        <select id="select-sheet-exhaustion" class="form-select form-select-sm bg-dark border-secondary ${exhLvl > 0 ? 'text-warning fw-bold' : 'text-light'} py-0 px-2 pe-4" style="width: auto; height: 23px; font-size: 0.72rem;">
+                          ${DND55_EXHAUSTION_LEVELS.map(lvl => `
+                            <option value="${lvl.level}" ${exhLvl === lvl.level ? 'selected' : ''}>
+                              ${lvl.level === 0 ? 'Nv 0 (Descansado)' : (lvl.level === 6 ? 'Nv 6 (Muerte 💀)' : `Nv ${lvl.level} (${lvl.d20Penalty} d20, ${String(lvl.speedPenaltyM).replace('.', ',')} m)`)}
+                            </option>
+                          `).join('')}
+                        </select>
+                      </div>
+                      <div class="d-flex align-items-center gap-1">
+                        <select id="select-sheet-add-condition" class="form-select form-select-sm bg-dark border-secondary text-light py-0 px-2 pe-4" style="width: auto; max-width: 170px; height: 23px; font-size: 0.72rem;" ${availableCondDefs.length === 0 ? 'disabled' : ''}>
+                          <option value="">+ Añadir Estado...</option>
+                          ${availableCondDefs.map(c => `<option value="${c.id}">${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
+                        </select>
+                        ${activeCondDefs.length > 0 ? `
+                          <button type="button" id="btn-sheet-clear-conditions" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 0.65rem; line-height: 1.2;" title="Quitar todos los estados">Limpiar</button>
+                        ` : ''}
+                      </div>
+                    </div>
+                    ${(exhLvl > 0 || activeCondDefs.length > 0) ? `
+                      <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                        ${exhLvl > 0 ? `
+                          <span class="rpg-condition-pill badge ${exhLvl >= 5 ? 'bg-danger text-light' : 'bg-warning text-dark'} d-inline-flex align-items-center gap-1 py-0 px-2" style="font-size: 0.68rem;">
+                            😓 Cansancio Nv ${exhLvl}
+                            <span class="rpg-condition-tooltip">
+                              <strong>😓 Cansancio Nivel ${exhLvl} (D&amp;D 2024)</strong>
+                              <div>${escapeHtml(exhDef.description)}</div>
+                            </span>
+                          </span>
+                        ` : ''}
+                        ${activeCondDefs.map(cd => `
+                          <span class="rpg-condition-pill badge bg-danger bg-opacity-75 text-light border border-danger d-inline-flex align-items-center gap-1 py-0 px-2" style="font-size: 0.68rem;">
+                            <span>${cd.icon} ${escapeHtml(cd.name)}</span>
+                            <button type="button" class="border-0 bg-transparent text-light p-0 ms-1 btn-sheet-remove-condition" data-cond-id="${cd.id}" title="Quitar estado ${escapeHtml(cd.name)}" style="line-height: 1; font-size: 0.75rem; cursor: pointer;">&times;</button>
+                            <span class="rpg-condition-tooltip">
+                              <strong>${cd.icon} ${escapeHtml(cd.name)} (D&amp;D 2024)</strong>
+                              <ul>${cd.effects.map(ef => `<li>${escapeHtml(ef)}</li>`).join('')}</ul>
+                            </span>
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              })()}
             </div>
 
             <!-- Armas y Ataques Equipados Dinámicos (incluye Conjuros marcados como Ataque) -->
@@ -2990,7 +3050,9 @@ export class CharacterSheetModule {
       activeTraitsBadges.push({ text: 'Tirador Certero (Sin desventaja largo alcance)', cls: 'bg-secondary text-light' });
     }
 
-    const totalAtk = abilityMod + pb + magicBonus + atkBonusMod;
+    const exhLvl = getCharacterExhaustionLevel(char);
+    const exhPenalty = exhLvl * 2;
+    const totalAtk = abilityMod + pb + magicBonus + atkBonusMod - exhPenalty;
     const totalDmgMod = abilityMod + magicBonus + dmgBonusMod;
     const dmgString = `${totalDmgMod !== 0 ? `${damageBase} ${formatModifier(totalDmgMod)}` : damageBase} ${damageType}${extraDamageDiceSuffix}`;
 
@@ -3014,6 +3076,7 @@ export class CharacterSheetModule {
     ];
     if (magicBonus > 0) atkFormulaParts.push(`Arma mágica (+${magicBonus})`);
     if (atkBonusSources.length > 0) atkFormulaParts.push(...atkBonusSources);
+    if (exhLvl > 0) atkFormulaParts.push(`Cansancio Nv ${exhLvl} (-${exhPenalty})`);
     const atkFormula = `${atkFormulaParts.join(' + ')} = ${formatModifier(totalAtk)} al ataque`;
 
     const dmgFormulaParts = [
@@ -3571,6 +3634,39 @@ export class CharacterSheetModule {
       if (!activeChar) return;
       const val = Math.max(0, Math.round(Number(e.target.value) || 0));
       store.updateCharacterXp(activeChar.id, val);
+    });
+
+    // Cansancio (0-6) y Estados D&D 2024 en la Hoja Interactiva
+    this.container.querySelector('#select-sheet-exhaustion')?.addEventListener('change', (e) => {
+      const activeChar = store.getSelectedCharacter() || char;
+      if (!activeChar) return;
+      store.updateCharacterExhaustion(activeChar.id, parseInt(e.target.value, 10) || 0);
+    });
+
+    this.container.querySelector('#select-sheet-add-condition')?.addEventListener('change', (e) => {
+      const activeChar = store.getSelectedCharacter() || char;
+      const condId = e.target.value;
+      if (activeChar && condId) {
+        store.toggleCharacterCondition(activeChar.id, condId);
+      }
+    });
+
+    this.container.querySelectorAll('.btn-sheet-remove-condition').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const activeChar = store.getSelectedCharacter() || char;
+        const condId = e.currentTarget.dataset.condId;
+        if (activeChar && condId) {
+          store.toggleCharacterCondition(activeChar.id, condId);
+        }
+      });
+    });
+
+    this.container.querySelector('#btn-sheet-clear-conditions')?.addEventListener('click', () => {
+      const activeChar = store.getSelectedCharacter() || char;
+      if (activeChar) {
+        store.clearCharacterConditions(activeChar.id);
+      }
     });
 
     // Alternar modo de impresión

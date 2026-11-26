@@ -10,6 +10,7 @@ import { CharacterSheetModule } from './modules/characterSheet.js';
 import { BtrsCalculatorModule } from './modules/btrsCalculator.js';
 import { Dnd55ManagerModule } from './modules/dnd55Manager.js';
 import { NameGeneratorModule } from './modules/nameGenerator.js';
+import { BastionManagerModule } from './modules/bastionManager.js';
 import { 
   rollDie, 
   rollWithAdvantage, 
@@ -49,6 +50,7 @@ class App {
     this.modules.masterPanel = new MasterPanelModule('master-panel-container');
     this.modules.wizard = new CharacterWizardModule('wizard-container');
     this.modules.sheet = new CharacterSheetModule('sheet-container');
+    this.modules.bastions = new BastionManagerModule('bastions-container');
     this.modules.btrs = new BtrsCalculatorModule('btrs-container');
     this.modules.campaigns = new Dnd55ManagerModule('campaigns-container');
     this.modules.names = new NameGeneratorModule('names-container');
@@ -64,6 +66,9 @@ class App {
 
     // 5. Configurar Modal de Respaldo de Datos y Repositorio de Ficheros
     this.setupBackupModal();
+
+    // 5.05 Configurar Tooltip Flotante Global para Estados / Cansancio / Órdenes (evita recortes por overflow)
+    this.setupFloatingTooltips();
 
     // 5.1 Conectar listener de estado de repositorio de ficheros
     fileRepo.onStatusChange((status) => this.updateRepoUI(status));
@@ -109,6 +114,7 @@ class App {
       'master-panel': 'Master Panel',
       'wizard': 'Asistente Creación',
       'sheet': 'Hoja Interactiva',
+      'bastions': 'Baluartes',
       'btrs': 'Calculadora BTRS',
       'campaigns': 'Campañas & Roster',
       'names': 'Generador de Nombres'
@@ -126,6 +132,7 @@ class App {
       'master-panel': document.getElementById('view-master-panel'),
       'wizard': document.getElementById('view-wizard'),
       'sheet': document.getElementById('view-sheet'),
+      'bastions': document.getElementById('view-bastions'),
       'btrs': document.getElementById('view-btrs'),
       'campaigns': document.getElementById('view-campaigns'),
       'names': document.getElementById('view-names')
@@ -158,6 +165,9 @@ class App {
       case 'sheet':
         this.modules.sheet.render();
         break;
+      case 'bastions':
+        this.modules.bastions.render();
+        break;
       case 'btrs':
         this.modules.btrs.render();
         break;
@@ -172,6 +182,76 @@ class App {
     if (window.lucide) {
       window.lucide.createIcons();
     }
+  }
+
+  setupFloatingTooltips() {
+    let floatingEl = document.getElementById('rpg-floating-tooltip');
+    if (!floatingEl) {
+      floatingEl = document.createElement('div');
+      floatingEl.id = 'rpg-floating-tooltip';
+      floatingEl.setAttribute('role', 'tooltip');
+      document.body.appendChild(floatingEl);
+    }
+
+    let activePill = null;
+
+    const positionTooltip = (pill) => {
+      const tpl = pill.querySelector('.rpg-condition-tooltip');
+      if (!tpl) return;
+      floatingEl.innerHTML = tpl.innerHTML;
+      floatingEl.classList.add('visible');
+
+      const pillRect = pill.getBoundingClientRect();
+      const tipRect = floatingEl.getBoundingClientRect();
+      const navEl = document.querySelector('.rpg-navbar.sticky-top');
+      const minTop = (navEl ? navEl.offsetHeight : 48) + 6;
+
+      // Mostrar encima si cabe sin chocar con la cabecera; si no, mostrar debajo
+      let top = pillRect.top - tipRect.height - 6;
+      if (top < minTop) {
+        top = pillRect.bottom + 6;
+      }
+      if (top + tipRect.height > window.innerHeight - 8) {
+        top = Math.max(8, window.innerHeight - tipRect.height - 8);
+      }
+
+      let left = pillRect.left;
+      if (left + tipRect.width > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - tipRect.width - 8);
+      }
+
+      floatingEl.style.top = `${Math.round(top)}px`;
+      floatingEl.style.left = `${Math.round(left)}px`;
+    };
+
+    const hideTooltip = () => {
+      activePill = null;
+      floatingEl.classList.remove('visible');
+    };
+
+    document.addEventListener('mouseover', (e) => {
+      if (e.target.closest('.btn-mp-remove-condition, .btn-sheet-remove-condition')) {
+        hideTooltip();
+        return;
+      }
+      const pill = e.target.closest('.rpg-condition-pill');
+      if (!pill) {
+        if (activePill) hideTooltip();
+        return;
+      }
+      if (pill !== activePill) {
+        activePill = pill;
+        positionTooltip(pill);
+      }
+    });
+
+    document.addEventListener('scroll', () => {
+      if (activePill) hideTooltip();
+    }, true);
+
+    document.addEventListener('click', () => {
+      if (activePill) hideTooltip();
+    });
   }
 
   /**

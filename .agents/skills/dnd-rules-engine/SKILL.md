@@ -1,93 +1,80 @@
 ---
 name: dnd-rules-engine
 description: >-
-  Guía y mapa de consulta rápida del motor matemático y reglas de D&D 5.5 (PHB 2024 / Faerûn) en js/constants/dnd55Rules.js, spellsAndItems.js, btrsData.js y storage.js.
-  Activa esta habilidad cuando necesites consultar, calcular o modificar reglas de combate, CA, PG, salvaciones, habilidades, conjuros, maestrías de armas, dotes, subclases, sanitización o BTRS sin leer archivos masivos.
+  Guía y mapa de consulta rápida del motor matemático y reglas de D&D 5.5 (PHB 2024 / DMG 2024 / Faerûn) en js/constants/dnd55Rules.js, spellsAndItems.js, bastionsData.js, btrsData.js y storage.js.
+  Activa esta habilidad cuando necesites consultar, calcular o modificar reglas de combate, Cansancio, Estados, CA, PG, salvaciones, habilidades, conjuros, maestrías de armas, dotes, subclases, Baluartes (Bastions), sanitización o BTRS sin leer archivos masivos.
 ---
 
-# Motor de Reglas D&D 5.5 (PHB 2024) y Datos Canónicos
+# Motor de Reglas D&D 5.5 (PHB 2024 / DMG 2024) y Datos Canónicos
 
-Esta habilidad proporciona acceso directo por número de línea a todas las secciones, constantes y funciones matemáticas del sistema para evitar lecturas completas de archivos (~6050 líneas).
+Esta habilidad proporciona acceso directo por número de línea a todas las secciones, constantes y funciones matemáticas del sistema para evitar lecturas completas de archivos (~6240 líneas).
 
-## 📍 1. Mapa Completo de `js/constants/dnd55Rules.js` (~6044 líneas)
+## 📍 1. Mapa Completo de `js/constants/dnd55Rules.js` (~6242 líneas)
 
-### A. Listas Canónicas y Constantes Base (L1 - L1160)
+### A. Cansancio, Estados y Listas Canónicas (L1 - L1315)
 - **L10 `getAbilityShortName(key)` / L36 `getAbilityFullName(key)`**: Nombres de características (`FUE`, `Fuerza`, etc.).
-- **L50 `DND55_SKILLS`**: Las 18 habilidades oficiales y su característica asociada.
-- **L70 `DND55_SPECIES`**: Especies oficiales (Humano, Aasimar, Elfo, Enano, Dracónido, Goliat, Gnomo, Mediano, Orco, Tiefling) y sus `sublineages`.
-- **L222 `DND55_BACKGROUNDS`**: Trasfondos oficiales PHB 2024/Faerûn + entrada `"personalizado"` (L539, con `originFeat: ""`).
-- **L548 `DND55_CLASSES`**: Las 12 clases oficiales, dado de golpe, salvaciones, competencias y `featuresByLevel`.
-- **L1042-L1045**: `DND55_SUBCLASSES`, `DND55_ORIGIN_FEATS`, `DND55_GENERAL_FEATS`, `DND55_FIGHTING_STYLES`.
-- **L1047 `DND55_MULTICLASS_RULES`**: Requisitos y competencias obtenidas al multiclasear.
+- **L50 `DND55_EXHAUSTION_LEVELS`**: Niveles 0 a 6 de Cansancio D&D 2024 (`-2 × nivel` a Pruebas d20 y `-1,5 m × nivel` a Velocidad; Nv 6 = Muerte; Descanso Largo reduce 1 nivel) y helper **L203 `getCharacterExhaustionLevel(char)`**.
+- **L60 `DND55_CONDITIONS`**: Los 14 estados canónicos de D&D 2024 (*Agarrado, Apresado, Asustado, Aturdido, Cegado, Derribado, Hechizado, Ensordecido, Envenenado, Incapacitado, Inconsciente, Invisible, Paralizado, Petrificado*) con icono y efectos detallados.
+- **L207 `DND55_SKILLS`**: Las 18 habilidades oficiales y su característica asociada.
+- **L227 `DND55_SPECIES`**: Especies oficiales y sus `sublineages`.
+- **L379 `DND55_BACKGROUNDS`**: Trasfondos oficiales PHB 2024/Faerûn + entrada `"personalizado"` (con `originFeat: ""`).
+- **L705 `DND55_CLASSES`**: Las 12 clases oficiales, dado de golpe, salvaciones, competencias y `featuresByLevel`.
+- **L1199-L1202**: `DND55_SUBCLASSES`, `DND55_ORIGIN_FEATS`, `DND55_GENERAL_FEATS`, `DND55_FIGHTING_STYLES`.
+- **L1204 `DND55_MULTICLASS_RULES`**: Requisitos y competencias obtenidas al multiclasear.
 
-### B. Clases, Niveles, Multiclase y Equipo Inicial (L1164 - L1650)
-- **L1164 `getCharacterClasses(char)`**: Lista normalizada de clases `[{ classId, level, subclassId }]`.
-- **L1195 `getClassLevel(char, classId)`** y **L1203 `getCharacterTotalLevel(char)`**.
-- **L1209 `getCharacterFullClassTitle(char)`** y **L1220 `getCharacterLevelProgression(char)`**.
-- **L1242 `getCharacterHitDicePool(char)`**: Pool de dados de golpe por tipo de dado (d6, d8, d10, d12).
-- **L1294 `checkMulticlassPrerequisites(char, targetClassId)`**: Valida requisitos de característica ($\ge 13$).
-- **L1327 `DND55_CLASS_STARTING_EQUIPMENT`** y **L1508 `getClassStartingEquipment(classId)`**.
-- **L1513 `DND55_ARMORS`**, **L1533 `DND55_WEAPONS`**, **L1634 `findCanonicalWeapon(itemOrIdOrName)`**.
+### B. Clases, Niveles, Multiclase y Equipo Inicial (L1321 - L1815)
+- **L1321 `getCharacterClasses(char)`**, **L1352 `getClassLevel`**, **L1360 `getCharacterTotalLevel`**, **L1366 `getCharacterFullClassTitle`**.
+- **L1399 `getCharacterHitDicePool(char)`** y **L1451 `checkMulticlassPrerequisites(char, targetClassId)`**.
+- **L1484 `DND55_CLASS_STARTING_EQUIPMENT`** y **L1665 `getClassStartingEquipment(classId)`**.
+- **L1670 `DND55_ARMORS`**, **L1690 `DND55_WEAPONS`**, **L1791 `findCanonicalWeapon(itemOrIdOrName)`**.
 
-### C. Características, Modificadores, XP y Comprobación de Dotes (L1663 - L2099)
-- **L1663 `getAbilityModifier(score)`** y **L1666 `formatModifier(mod)`**.
-- **L1670 `DND55_XP_THRESHOLDS`**, **L1692 `getMinXpForLevel(level)`**, **L1696 `getNextLevelXp(level)`**.
-- **L1701 `getProficiencyBonus(level)`**: Bono de competencia ($+2$ a $+6$).
-- **L1712 `getCharacterAsiLevels(classId)`**: Niveles de ASI/Dote (estándar 4, 8, 12, 16, 19 + extras de Guerrero 6/14 y Pícaro 10).
-- **L1734 `characterQualifiesForFightingStyle(char)`**: Verifica si clase o dote otorgan estilo de combate (exige `speciesId === 'humano'` para `speciesOriginFeat`).
-- **L1774 `characterHasFeat(char, query)`**: Comprueba si el PJ posee una dote (excluye `bgDef.originFeat` cuando `backgroundId === 'personalizado'` y exige `speciesId === 'humano'` para `speciesOriginFeat`).
-- **L1826 `calculateFinalAbilityScores(char)`**: Suma base + trasfondo + dotes + ASI + modificadores de objetos equipados.
-- **L1920 `calculateAbilityScoresBreakdown(char)`**: Desglose detallado para tooltips.
-- **L2055 `getActiveStatModifiers(char)`**: Extrae modificadores activos de objetos equipados/sintonizados y bendiciones.
+### C. Características, Modificadores, XP y Comprobación de Dotes (L1820 - L2250)
+- **L1820 `getAbilityModifier(score)`** y **L1823 `formatModifier(mod)`**.
+- **L1827 `DND55_XP_THRESHOLDS`**, **L1849 `getMinXpForLevel(level)`**, **L1853 `getNextLevelXp(level)`**.
+- **L1858 `getProficiencyBonus(level)`** y **L1869 `getCharacterAsiLevels(classId)`**.
+- **L1891 `characterQualifiesForFightingStyle(char)`** y **L1931 `characterHasFeat(char, query)`**.
+- **L1983 `calculateFinalAbilityScores(char)`**, **L2077 `calculateAbilityScoresBreakdown(char)`**, **L2212 `getActiveStatModifiers(char)`**.
 
-### D. Combate: CA, Puntos de Golpe, Iniciativa y Velocidad (L2100 - L2585)
-- **L2100 `calculateArmorClass(char)`**: CA con armadura, escudos, Defensa sin Armadura (Bárbaro, Monje, Bardo Colegio de la Danza L2257), Armadura de Mago y estilos de combate.
-- **L2395 `calculateHitPoints(char)`**: PG máximos (fijo o tiradas por nivel + CON + Dureza + Enano).
-- **L2492 `calculateInitiative(char)`**: Mod. DES + Alerta (`+BC`) / Vigilante de Helm + objetos (en D&D 2024 *Aprendiz de Mucho* no aplica a iniciativa al no ser prueba con habilidad).
-- **L2533 `calculateSpeed(char)`**: Velocidad en metros (especie + Movimiento sin armadura Monje + Bárbaro + dotes).
+### D. Combate: CA, Puntos de Golpe, Iniciativa y Velocidad (L2257 - L2760)
+- **L2257 `calculateArmorClass(char)`**: CA con armadura, escudos, Defensa sin Armadura (Bárbaro, Monje, Bardo Danza), Armadura de Mago y estilos.
+- **L2552 `calculateHitPoints(char)`**: PG máximos (fijo o tiradas por nivel + CON + Dureza + Enano).
+- **L2649 `calculateInitiative(char)`**: Mod. DES + Alerta (`+BC`) / Vigilante de Helm + objetos - Cansancio (`-2 × nivel`; en D&D 2024 *Aprendiz de Mucho* no aplica).
+- **L2697 `calculateSpeed(char)`**: Velocidad en metros (especie + Monje/Bárbaro/Explorador + dotes - `1,5 m × Cansancio`; `0 m` en Nv 6).
 
-### E. Salvaciones, Habilidades y Sentidos Pasivos (L2586 - L2934)
-- **L2586 `calculateSavingThrows(char)`**: Salvaciones de clase inicial + dote Resistente + objetos.
-- **L2661 `getMaxAllowedExpertiseCount(char)`**: Número máximo de pericias permitidas (Bardo, Pícaro, Explorador, dotes).
-- **L2682 `getMaxAllowedSkillsCount(char)`**: Número máximo de competencias en habilidades (trasfondo + especie + clase + dotes).
-- **L2722 `calculateSkills(char)`**: Cálculo de las 18 habilidades (solo aplica `speciesSkillChoice` si `speciesId === 'humano'`).
-- **L2861-L2917**: Percepción Pasiva (`calculatePassivePerception` / `Details`), Investigación Pasiva (`calculatePassiveInvestigation` / `Details`), Perspicacia Pasiva (`calculatePassiveInsight` / `Details`).
-- **L2918 `getCharacterVisionSense(char)`**: Visión en la oscuridad en metros según especie/sublinaje.
+### E. Salvaciones, Habilidades y Sentidos Pasivos (L2763 - L3120)
+- **L2763 `calculateSavingThrows(char)`**: Salvaciones de clase inicial + Resiliente + objetos - Cansancio (`-2 × nivel`).
+- **L2843 `getMaxAllowedExpertiseCount(char)`** y **L2864 `getMaxAllowedSkillsCount(char)`**.
+- **L2904 `calculateSkills(char)`**: Cálculo de las 18 habilidades (incluye penalizador automático de Cansancio `-2 × nivel`).
+- **L3051-L3107**: Percepción Pasiva (`calculatePassivePerception` / `Details`), Investigación Pasiva y Perspicacia Pasiva.
+- **L3108 `getCharacterVisionSense(char)`**.
 
-### F. Magia, Conjuros, Carga, Dotes y Rasgos (L2935 - L5960)
-- **L2935 `getInnateSpellsForCharacter(character)`**: Conjuros innatos por especie/linaje y dotes de origen (Iniciado en Magia).
-- **L3132 `calculateSpellcasting(char)`**: CD de salvación y ataque de conjuro.
-- **L3232 `getCharacterSpellSlots(character, spellSlotsState)`**: Ranuras de conjuro (multiclase, medio lanzador, magia de pacto).
-- **L3364 `calculateMonkSaveDc(char)`** y **L3399 `calculateCarryingCapacity(char)`** (en kg).
-- **L3441 `getFeatById(featId)`**, **L3502 `getFeatName(featId)`**, **L3568 `getResolvedFeatsForCharacter(character)`**.
-- **L3845 `DND55_STANDARD_LANGUAGES`**, **L3864 `DND55_TOOL_PROFICIENCIES`**, **L3903 `getBackgroundToolGroups(bgDef)`**.
-- **L3930 `DND55_CLASS_FEATURE_CHOICES`** y **L4005-L4044**: Resoluciones de opciones de rasgos de clase y subclase.
-- **L4045 `getScaledFeatureInfo(...)`**: Escalado de rasgos por nivel (Ataque Furtivo, Concentración Monje, Inspiración Bárdica, etc.).
-- **L4280 `getResolvedCharacterFeatures(character)`**: Consolida rasgos de clase, subclase, especie, estilos de combate y dotes.
-- **L4470 `getCharacterProficiencies(character)`**: Competencias consolidadas en armaduras, armas y herramientas.
-- **L4551 `sanitizeCharacter(character)`**, **L4569 `sanitizeSpellName`**, **L4574 `formatMetricDistance`**, **L4581 `formatMetricDescription`**.
-- **L4586 `getSpellAttackInfo(spell, spellStats, characterLevel, castAtLevel)`**: Ataque/CD de conjuro y escalado de daño (upcast/trucos).
-- **L5336 `getConsumableTraitsForCharacter(character)`**: Rasgos con usos por descanso corto/largo para Hoja y Master Panel.
-- **L5899-L5960**: Resolutores de nombres (`getSpeciesName`, `getSublineageName`, `getBackgroundName`, `getClassName`, `getSubclassName`, `getArmorName`, `getWeaponName`).
+### F. Magia, Conjuros, Carga, Dotes y Rasgos (L3125 - L6242)
+- **L3125 `getInnateSpellsForCharacter(character)`**.
+- **L3322 `calculateSpellcasting(char)`**: CD de salvación (no alterada por cansancio) y ataque de conjuro (`-2 × Cansancio`).
+- **L3427 `getCharacterSpellSlots(character, spellSlotsState)`**.
+- **L3559 `calculateMonkSaveDc(char)`** y **L3594 `calculateCarryingCapacity(char)`** (en kg).
+- **L3636 `getFeatById`**, **L3697 `getFeatName`**, **L3763 `getResolvedFeatsForCharacter`**.
+- **L4098 `getBackgroundToolGroups`**, **L4200 `getClassFeatureChoices`**, **L4240 `getScaledFeatureInfo`**, **L4475 `getResolvedCharacterFeatures`**.
+- **L4665 `getCharacterProficiencies`**, **L4746 `sanitizeCharacter`**, **L4781 `getSpellAttackInfo`**.
+- **L5531 `getConsumableTraitsForCharacter(character)`**.
+- **L6094-L6150**: Resolutores de nombres (`getSpeciesName`, `getSublineageName`, `getBackgroundName`, `getClassName`, `getSubclassName`, `getArmorName`, `getWeaponName`).
 
 ---
 
-## 📍 2. Mapa de `js/constants/spellsAndItems.js` (~6055 líneas)
-- **L1 `DND55_ALL_48_SUBCLASSES`**: Las 48 subclases oficiales con rasgos por nivel.
-- **L1266 `DND55_ALL_ORIGIN_FEATS`**: Dotes de origen (PHB 2024 y Faerûn).
-- **L1281 `DND55_ALL_GENERAL_FEATS`**: Dotes generales (nivel 4+) y estilos de combate.
-- **L1369 `DND55_CANONICAL_SPELLS`**: Catálogo de >205 conjuros oficiales.
-- **L4307 `DND55_TCE_XGE_ITEMS`**: Objetos mágicos de Tasha y Xanathar.
-- **L4444 `DND55_PRESET_ITEMS`**: Catálogo de equipo, armas, armaduras, herramientas y consumibles.
-- **L5859 `DND55_SCROLL_LEVEL_STATS`**, **L5872 `DND55_ARTIFACT_PROPERTIES`**, **L5914 `DND55_SAMPLE_SPECIAL_ABILITIES`**.
+## 📍 2. Mapa de `js/constants/bastionsData.js` (~701 líneas) - Baluartes DMG 2024
+- **L7 `BASTION_SPACE_SIZES`**: *Estrecha* (4 cuadros), *Espaciosa* (16 cuadros) y *Vasta* (36 cuadros).
+- **L46 `getSpecialFacilitySlotsForLevel(level)`**: Cupo oficial de instalaciones especiales por nivel (Nv 5–8: 2, 9–12: 4, 13–16: 5, 17–20: 6).
+- **L55 `BASTION_ORDERS`**: Orden general *Mantener* + 6 órdenes de instalación (*Fabricar, Potenciar, Cosechar, Reclutar, Investigar, Comerciar*).
+- **L107 `BASTION_BASIC_FACILITIES`** (9 básicas) y **L119 `BASTION_SPECIAL_FACILITIES`** (29 especiales oficiales de Nv 5, 9, 13 y 17).
+- **L535 `BASTION_STAFF_ROLES`**: Roles de asalariados, defensores, lugartenientes, senescales y PNJs.
+- **L544 `BASTION_EVENTS_TABLE`** y **L646 `resolveBastionEvent(manualRoll, options)`**: Tabla `1d100` oficial de sucesos con subtablas y tiradas de defensa (`6d6` / `6d8` con Armería, `-1d` por Lugarteniente).
 
 ---
 
-## 📍 3. Mapa de `js/constants/btrsData.js` (~128 líneas) y `js/utils/storage.js` (~290 líneas)
-- **`btrsData.js` L1-L120**: Tablas de poblaciones, tiendas, rarezas y condiciones del sistema BTRS.
-- **`btrsData.js` L121 `BARGAIN_RULES`**: Reglas de regateo con `discountPercent` y `priceMultiplier`.
-- **`storage.js` L97 `sanitizeCharacter(char)`**: Sanitiza fichas al cargar/guardar/importar (limpia `speciesSkillChoice`, `speciesOriginFeat` y `speciesOriginFeatChoices` si `speciesId !== 'humano'`, `speciesCantripChoice` si `!== 'elfo'`, `dragonAncestry` si `!== 'draconido'`).
-- **`storage.js` L214 `sanitizeCampaign(camp)`**, **L234 `exportStateToJsonFile`**, **L252 `parseAndValidateBackup`**.
+## 📍 3. Mapa de `js/constants/spellsAndItems.js` (~6055 líneas), `btrsData.js` (~128 líneas) y `storage.js` (~403 líneas)
+- **`spellsAndItems.js`**: `DND55_ALL_48_SUBCLASSES` (L1), `DND55_ALL_ORIGIN_FEATS` (L1266), `DND55_ALL_GENERAL_FEATS` (L1281), `DND55_CANONICAL_SPELLS` (L1369), `DND55_TCE_XGE_ITEMS` (L4307), `DND55_PRESET_ITEMS` (L4444).
+- **`btrsData.js`**: Tablas BTRS y `BARGAIN_RULES` (L121).
+- **`storage.js`**: `sanitizeCharacter` (L98: incluye `exhaustion`, `conditions`, `isActiveInMasterPanel`), `sanitizeCampaign` (L220: incluye `milestones` y `nextSessionNotes`), `sanitizeBastion` (L254), `parseAndValidateBackup` (L360).
 
 ---
 

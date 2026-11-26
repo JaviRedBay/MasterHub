@@ -47,6 +47,163 @@ function getAbilityFullName(key) {
   return map[lower] || (ABILITY_LABELS[lower]?.name || key);
 }
 const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+const DND55_EXHAUSTION_LEVELS = [
+  { level: 0, label: 'Sin cansancio', d20Penalty: 0, speedPenaltyM: 0, description: 'El personaje se encuentra descansado y sin penalizadores por agotamiento.' },
+  { level: 1, label: 'Nivel 1', d20Penalty: -2, speedPenaltyM: -1.5, description: 'Cansancio Nv 1 (D&D 2024): -2 a todas las Pruebas d20 (ataques, habilidades, salvaciones e iniciativa) y -1,5 m a la Velocidad. Un Descanso Largo reduce 1 nivel.' },
+  { level: 2, label: 'Nivel 2', d20Penalty: -4, speedPenaltyM: -3, description: 'Cansancio Nv 2 (D&D 2024): -4 a todas las Pruebas d20 y -3 m a la Velocidad. Un Descanso Largo reduce 1 nivel.' },
+  { level: 3, label: 'Nivel 3', d20Penalty: -6, speedPenaltyM: -4.5, description: 'Cansancio Nv 3 (D&D 2024): -6 a todas las Pruebas d20 y -4,5 m a la Velocidad. Un Descanso Largo reduce 1 nivel.' },
+  { level: 4, label: 'Nivel 4', d20Penalty: -8, speedPenaltyM: -6, description: 'Cansancio Nv 4 (D&D 2024): -8 a todas las Pruebas d20 y -6 m a la Velocidad. Un Descanso Largo reduce 1 nivel.' },
+  { level: 5, label: 'Nivel 5', d20Penalty: -10, speedPenaltyM: -7.5, description: 'Cansancio Nv 5 (D&D 2024): -10 a todas las Pruebas d20 y -7,5 m a la Velocidad. ¡Al siguiente nivel sobreviene la muerte! Un Descanso Largo reduce 1 nivel.' },
+  { level: 6, label: 'Nivel 6 (Muerte)', d20Penalty: -12, speedPenaltyM: 0, isDeadly: true, description: 'Cansancio Nv 6 (D&D 2024): El agotamiento extremo provoca la muerte inmediata del personaje (Velocidad 0 m).' }
+];
+
+const DND55_CONDITIONS = [
+  {
+    id: 'agarrado',
+    name: 'Agarrado',
+    icon: '✊',
+    effects: [
+      'Velocidad 0: Tu Velocidad es 0 y no puede aumentar.',
+      'Ataques Afectados: Tienes Desventaja en las tiradas de ataque contra cualquier objetivo que no sea quien te agarra.',
+      'Movible: Quien te agarra puede arrastrarte o llevarte al moverse, pero cada metro de movimiento le cuesta 1 m adicional (salvo que seas Diminuto o dos o más tamaños menor).'
+    ]
+  },
+  {
+    id: 'apresado',
+    name: 'Apresado',
+    icon: '⛓️',
+    effects: [
+      'Velocidad 0: Tu Velocidad es 0 y no puede aumentar.',
+      'Ataques Afectados: Las tiradas de ataque contra ti tienen Ventaja, y tus tiradas de ataque tienen Desventaja.',
+      'Salvaciones Afectadas: Tienes Desventaja en las tiradas de salvación de Destreza.'
+    ]
+  },
+  {
+    id: 'asustado',
+    name: 'Asustado',
+    icon: '😱',
+    effects: [
+      'Pruebas y Ataques Afectados: Tienes Desventaja en las pruebas de característica y tiradas de ataque mientras la fuente de tu miedo esté en tu línea de visión.',
+      'No Puedes Acercarte: No puedes moverte voluntariamente más cerca de la fuente de tu miedo.'
+    ]
+  },
+  {
+    id: 'aturdido',
+    name: 'Aturdido',
+    icon: '💫',
+    effects: [
+      'Incapacitado: Sufres el estado Incapacitado (sin acciones, acciones adicionales ni reacciones; pierdes Concentración).',
+      'Salvaciones Afectadas: Fallas automáticamente las tiradas de salvación de Fuerza y Destreza.',
+      'Ataques contra Ti: Las tiradas de ataque contra ti tienen Ventaja.'
+    ]
+  },
+  {
+    id: 'cegado',
+    name: 'Cegado',
+    icon: '🙈',
+    effects: [
+      'No Puedes Ver: No puedes ver y fallas automáticamente cualquier prueba de característica que requiera la vista.',
+      'Ataques Afectados: Las tiradas de ataque contra ti tienen Ventaja, y tus tiradas de ataque tienen Desventaja.'
+    ]
+  },
+  {
+    id: 'derribado',
+    name: 'Derribado',
+    icon: '🔻',
+    effects: [
+      'Movimiento Restringido: Solo puedes arrastrarte o gastar una cantidad de movimiento igual a la mitad de tu Velocidad (redondeado hacia abajo) para levantarte y poner fin al estado.',
+      'Ataques Afectados: Tienes Desventaja en tus tiradas de ataque. Una tirada de ataque contra ti tiene Ventaja si el atacante está a 1,5 m o menos de ti; de lo contrario, tiene Desventaja.'
+    ]
+  },
+  {
+    id: 'encantado',
+    name: 'Hechizado (Encantado)',
+    icon: '💖',
+    effects: [
+      'No Puedes Dañar al Encantador: No puedes atacar a quien te encantó ni hacerle objetivo de aptitudes dañinas o efectos mágicos.',
+      'Ventaja Social: Quien te encantó tiene Ventaja en cualquier prueba de característica para interactuar socialmente contigo.'
+    ]
+  },
+  {
+    id: 'ensordecido',
+    name: 'Ensordecido',
+    icon: '🔇',
+    effects: [
+      'No Puedes Oír: No puedes oír y fallas automáticamente cualquier prueba de característica que requiera el oído.'
+    ]
+  },
+  {
+    id: 'envenenado',
+    name: 'Envenenado',
+    icon: '☠️',
+    effects: [
+      'Pruebas y Ataques Afectados: Tienes Desventaja en las tiradas de ataque y en las pruebas de característica.'
+    ]
+  },
+  {
+    id: 'incapacitado',
+    name: 'Incapacitado',
+    icon: '🚫',
+    effects: [
+      'Inactivo: No puedes realizar ninguna acción, acción adicional ni reacción.',
+      'Sin Concentración: Tu Concentración se rompe.',
+      'Sin Habla: No puedes hablar.',
+      'Sorprendido: Si estás Incapacitado al tirar Iniciativa, tienes Desventaja en la tirada.'
+    ]
+  },
+  {
+    id: 'inconsciente',
+    name: 'Inconsciente',
+    icon: '💤',
+    effects: [
+      'Inerte: Sufres los estados Incapacitado y Derribado, y sueltas lo que estés sosteniendo. Al terminar este estado sigues Derribado.',
+      'Velocidad 0: Tu Velocidad es 0 y no puede aumentar.',
+      'Ataques Afectados: Las tiradas de ataque contra ti tienen Ventaja.',
+      'Salvaciones Afectadas: Fallas automáticamente las tiradas de salvación de Fuerza y Destreza.',
+      'Golpes Críticos Automáticos: Cualquier tirada de ataque que te impacte es un Golpe Crítico si el atacante está a 1,5 m o menos de ti.',
+      'Sin Consciencia: No eres consciente de tu entorno.'
+    ]
+  },
+  {
+    id: 'invisible',
+    name: 'Invisible',
+    icon: '👻',
+    effects: [
+      'Sorpresa: Si eres Invisible cuando tiras Iniciativa, tienes Ventaja en la tirada.',
+      'Oculto: No te afecta ningún efecto que requiera que su objetivo sea visto, salvo que el creador pueda verte de algún modo. Todo equipo que lleves o vistas también queda oculto.',
+      'Ataques Afectados: Las tiradas de ataque contra ti tienen Desventaja, y tus tiradas de ataque tienen Ventaja (si una criatura puede verte por sentidos especiales, no ganas este beneficio contra ella).'
+    ]
+  },
+  {
+    id: 'paralizado',
+    name: 'Paralizado',
+    icon: '⚡',
+    effects: [
+      'Incapacitado: Sufres el estado Incapacitado.',
+      'Velocidad 0: Tu Velocidad es 0 y no puede aumentar.',
+      'Salvaciones Afectadas: Fallas automáticamente las tiradas de salvación de Fuerza y Destreza.',
+      'Ataques Afectados: Las tiradas de ataque contra ti tienen Ventaja.',
+      'Golpes Críticos Automáticos: Cualquier tirada de ataque que te impacte es un Golpe Crítico si el atacante está a 1,5 m o menos de ti.'
+    ]
+  },
+  {
+    id: 'petrificado',
+    name: 'Petrificado',
+    icon: '🗿',
+    effects: [
+      'Transformado en Sustancia Inanimada: Te transformas, junto con todo objeto no mágico que vistas o lleves, en una sustancia sólida e inanimada (normalmente piedra). Tu peso se multiplica por diez y dejas de envejecer.',
+      'Incapacitado y Velocidad 0: Sufres el estado Incapacitado y tu Velocidad es 0.',
+      'Ataques y Salvaciones: Las tiradas de ataque contra ti tienen Ventaja. Fallas automáticamente las salvaciones de Fuerza y Destreza.',
+      'Resistir Daño: Tienes Resistencia a todo el daño.',
+      'Inmunidad a Veneno: Tienes Inmunidad al estado Envenenado.'
+    ]
+  }
+];
+
+function getCharacterExhaustionLevel(char) {
+  return Math.max(0, Math.min(6, Math.round(Number(char?.exhaustion) || 0)));
+}
+
 const DND55_SKILLS = [
   { name: "Acrobacias", ability: "dex", description: "Mantenerse en pie, piruetas y equilibrios." },
   { name: "Arcanos", ability: "int", description: "Conocimiento sobre magia, conjuros y planos." },
@@ -2521,15 +2678,19 @@ function calculateInitiative(char) {
       bonusDetails.push(`${mod.sourceName || 'Objeto'} (+${mod.value})`);
     }
   });
-  const total = dexMod + (hasAlert ? pb : 0) + bonusModifiers;
+  const exh = getCharacterExhaustionLevel(char);
+  const exhPenalty = exh * 2;
+  const total = dexMod + (hasAlert ? pb : 0) + bonusModifiers - exhPenalty;
   const parts = [`Mod. Destreza (${formatModifier(dexMod)})`];
   if (hasAlert)
     parts.push(`Dote Alerta (+${pb} BC)`);
   if (bonusDetails.length > 0)
     parts.push(...bonusDetails);
+  if (exh > 0)
+    parts.push(`Cansancio Nv ${exh} (-${exhPenalty})`);
   return { 
     bonus: total, 
-    formula: parts.length > 1 ? `${parts.join(" + ")} = ${formatModifier(total)}` : `${parts[0]} = ${formatModifier(total)}` 
+    formula: parts.length > 1 ? `${parts.join(" + ").replace(/\+ -/g, "- ")} = ${formatModifier(total)}` : `${parts[0]} = ${formatModifier(total)}` 
   };
 }
 
@@ -2579,10 +2740,23 @@ function calculateSpeed(char) {
     }
   });
 
-  const totalSpeed = baseSpeed + bonusSpeed;
+  const exh = getCharacterExhaustionLevel(char);
+  if (exh >= 6) {
+    parts.push(`Cansancio Nv 6 (Muerte → 0 m)`);
+    return {
+      speed: 0,
+      formula: `${parts.join(" + ")} = 0 m`
+    };
+  }
+  const exhSpeedLoss = exh * 1.5;
+  if (exh > 0) {
+    parts.push(`-${String(exhSpeedLoss).replace('.', ',')} m (Cansancio Nv ${exh})`);
+  }
+
+  const totalSpeed = Math.max(0, baseSpeed + bonusSpeed - exhSpeedLoss);
   return {
     speed: totalSpeed,
-    formula: parts.length > 1 ? `${parts.join(" + ")} = ${totalSpeed} m` : parts[0]
+    formula: parts.length > 1 ? `${parts.join(" + ").replace(/\+ -/g, "- ")} = ${String(totalSpeed).replace('.', ',')} m` : parts[0]
   };
 }
 
@@ -2638,8 +2812,10 @@ function calculateSavingThrows(char) {
       isProf = true;
       profSource = 'Cortesano Elegante (Samurái 7)';
     }
+    const exh = getCharacterExhaustionLevel(char);
+    const exhPenalty = exh * 2;
     const mod = getAbilityModifier(scores[ability]);
-    const totalSave = mod + (isProf ? pb : 0) + saveBonus;
+    const totalSave = mod + (isProf ? pb : 0) + saveBonus - exhPenalty;
     
     const parts = [`Mod. ${getAbilityFullName(ability)} (${formatModifier(mod)})`];
     if (isProf) {
@@ -2647,6 +2823,9 @@ function calculateSavingThrows(char) {
     }
     if (saveBonusDetails.length > 0) {
       parts.push(...saveBonusDetails);
+    }
+    if (exh > 0) {
+      parts.push(`-${exhPenalty} por Cansancio Nv ${exh}`);
     }
     const formula = `${parts.join(' ')} = ${formatModifier(totalSave)}`;
 
@@ -2844,6 +3023,14 @@ function calculateSkills(char) {
         bonus += jackBonus;
         parts.push(`+${jackBonus} por Aprendiz de Mucho (½ BC)`);
       }
+    }
+
+    // 4) Cansancio D&D 2024 (-2 por nivel a todas las Pruebas d20)
+    const exh = getCharacterExhaustionLevel(char);
+    if (exh > 0) {
+      const exhPenalty = exh * 2;
+      bonus -= exhPenalty;
+      parts.push(`-${exhPenalty} por Cansancio Nv ${exh}`);
     }
 
     const formula = `${parts.join(' ')} = ${formatModifier(bonus)}`;
@@ -3146,6 +3333,9 @@ function calculateSpellcasting(char) {
     if (m.target === "spellAttack" && m.mode === "bonus") attackBonus += m.value;
   });
 
+  const exh = getCharacterExhaustionLevel(char);
+  const exhPenalty = exh * 2;
+
   charClasses.forEach(c => {
     const classDef = DND55_CLASSES.find((cd) => cd.id === c.classId);
     let abilityKey = classDef?.spellcastingAbility;
@@ -3163,7 +3353,8 @@ function calculateSpellcasting(char) {
       const abName = ABILITY_LABELS[abilityKey]?.name || 'Inteligencia';
       const abShort = getAbilityShortName(abilityKey);
       const dcFormula = `8 base fija + ${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${dcBonus ? ` + ${dcBonus} (Magia/Rasgos)` : ''} = CD ${8 + pb + mod + dcBonus}`;
-      const attackBonusFormula = `+${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${attackBonus ? ` + ${attackBonus} (Magia/Rasgos)` : ''} = ${formatModifier(pb + mod + attackBonus)} al Ataque de Conjuros`;
+      const finalAtk = pb + mod + attackBonus - exhPenalty;
+      const attackBonusFormula = `+${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${attackBonus ? ` + ${attackBonus} (Magia/Rasgos)` : ''}${exh > 0 ? ` - ${exhPenalty} (Cansancio Nv ${exh})` : ''} = ${formatModifier(finalAtk)} al Ataque de Conjuros`;
       spellcasterClasses.push({
         classId: c.classId,
         className: classDef?.name || c.classId,
@@ -3173,7 +3364,7 @@ function calculateSpellcasting(char) {
         abilityModifier: mod,
         shortName: abShort,
         spellSaveDc: 8 + pb + mod + dcBonus,
-        spellAttackBonus: pb + mod + attackBonus,
+        spellAttackBonus: finalAtk,
         dcFormula,
         attackBonusFormula
       });
@@ -3197,8 +3388,9 @@ function calculateSpellcasting(char) {
     const mod = getAbilityModifier(scores[chosenAbility]);
     const abName = ABILITY_LABELS[chosenAbility]?.name || 'Inteligencia';
     const abShort = getAbilityShortName(chosenAbility);
+    const finalInnateAtk = pb + mod + attackBonus - exhPenalty;
     const dcFormula = `8 base fija + ${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${dcBonus ? ` + ${dcBonus} (Magia/Rasgos)` : ''} = CD ${8 + pb + mod + dcBonus}`;
-    const attackBonusFormula = `+${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${attackBonus ? ` + ${attackBonus} (Magia/Rasgos)` : ''} = ${formatModifier(pb + mod + attackBonus)} al Ataque de Conjuros`;
+    const attackBonusFormula = `+${pb} (BC) + ${mod} (Mod. ${abName} [${abShort}])${attackBonus ? ` + ${attackBonus} (Magia/Rasgos)` : ''}${exh > 0 ? ` - ${exhPenalty} (Cansancio Nv ${exh})` : ''} = ${formatModifier(finalInnateAtk)} al Ataque de Conjuros`;
 
     const innateProfile = {
       classId: 'innata',
@@ -3209,7 +3401,7 @@ function calculateSpellcasting(char) {
       abilityModifier: mod,
       shortName: abShort,
       spellSaveDc: 8 + pb + mod + dcBonus,
-      spellAttackBonus: pb + mod + attackBonus,
+      spellAttackBonus: finalInnateAtk,
       dcFormula,
       attackBonusFormula
     };
@@ -6043,5 +6235,8 @@ export {
   getMaxAllowedSkillsCount,
   DND55_XP_THRESHOLDS,
   getMinXpForLevel,
-  getNextLevelXp
+  getNextLevelXp,
+  DND55_CONDITIONS,
+  DND55_EXHAUSTION_LEVELS,
+  getCharacterExhaustionLevel
 };

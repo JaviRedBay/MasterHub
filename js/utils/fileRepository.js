@@ -705,12 +705,28 @@ export class FileRepositoryManager {
     }, delayMs));
   }
 
+  saveBastionsDebounced(bastions, delayMs = 400) {
+    if (!this.isConnected) return;
+    const key = 'bastions_save';
+    if (this.debounceTimers.has(key)) {
+      clearTimeout(this.debounceTimers.get(key));
+    }
+    this.notifyStatus({ syncing: true });
+    this.debounceTimers.set(key, setTimeout(async () => {
+      this.debounceTimers.delete(key);
+      await this.writeJsonFile('bastions.json', bastions);
+    }, delayMs));
+  }
+
   async exportAllToFolder(fullState) {
     if (!this.isConnected) return false;
     this.notifyStatus({ syncing: true, message: 'Guardando datos en el repositorio...' });
     try {
       if (Array.isArray(fullState.campaigns)) {
         await this.writeJsonFile('campaigns.json', fullState.campaigns);
+      }
+      if (Array.isArray(fullState.bastions)) {
+        await this.writeJsonFile('bastions.json', fullState.bastions);
       }
       if (Array.isArray(fullState.btrsHistory)) {
         await this.writeJsonFile('btrs_history.json', fullState.btrsHistory);
@@ -739,11 +755,17 @@ export class FileRepositoryManager {
     try {
       let campaigns = [];
       let characters = [];
+      let bastions = [];
       let btrsHistory = [];
 
       const loadedCampaigns = await this.readJsonFile('campaigns.json');
       if (Array.isArray(loadedCampaigns) && loadedCampaigns.length > 0) {
         campaigns = loadedCampaigns;
+      }
+
+      const loadedBastions = await this.readJsonFile('bastions.json');
+      if (Array.isArray(loadedBastions)) {
+        bastions = loadedBastions;
       }
 
       const loadedBtrs = await this.readJsonFile('btrs_history.json');
@@ -789,10 +811,13 @@ export class FileRepositoryManager {
         if (campaigns.length === 0 && snapshot && Array.isArray(snapshot.campaigns)) {
           campaigns = snapshot.campaigns;
         }
+        if (bastions.length === 0 && snapshot && Array.isArray(snapshot.bastions)) {
+          bastions = snapshot.bastions;
+        }
       }
 
       this.lastSyncTime = new Date().toLocaleTimeString();
-      return { success: true, campaigns, characters, btrsHistory };
+      return { success: true, campaigns, characters, bastions, btrsHistory };
     } catch (err) {
       console.error('[FileRepository] Error cargando repositorio:', err);
       return { success: false, error: err.message || 'Error al leer archivos del repositorio' };

@@ -4,7 +4,7 @@
  * Gestiona persistencia automática en localStorage y sincronización de personajes/campañas.
  */
 
-import { STORAGE_KEYS, loadFromStorage, saveToStorage, sanitizeCharacter, sanitizeCampaign } from './utils/storage.js';
+import { STORAGE_KEYS, loadFromStorage, saveToStorage, sanitizeCharacter, sanitizeCampaign, sanitizeBastion } from './utils/storage.js';
 import { DEFAULT_CAMPAIGNS, DEFAULT_CHARACTERS } from './constants/seedData.js';
 import { calculateHitPoints, getConsumableTraitsForCharacter } from './constants/dnd55Rules.js';
 import { showToast, showConfirmModal } from './utils/uiFeedback.js';
@@ -109,8 +109,10 @@ class AppStore extends EventEmitter {
       this.selectedCharacterId = partyChars[0]?.id || this.characters[0]?.id || '';
     }
 
-    // 5. Historial BTRS
+    // 5. Historial BTRS y Baluartes (inicialmente vacío si no hay ninguno creado)
     this.btrsHistory = loadFromStorage(STORAGE_KEYS.BTRS_HISTORY, []);
+    const storedBastions = loadFromStorage(STORAGE_KEYS.BASTIONS, []);
+    this.bastions = Array.isArray(storedBastions) ? storedBastions.map(sanitizeBastion) : [];
   }
 
   // ==========================================
@@ -141,12 +143,16 @@ class AppStore extends EventEmitter {
 
   deleteCampaign(id) {
     this.campaigns = this.campaigns.filter(c => c.id !== id);
+    this.bastions = (this.bastions || []).filter(b => b.campaignId !== id);
     saveToStorage(STORAGE_KEYS.CAMPAIGNS, this.campaigns);
+    saveToStorage(STORAGE_KEYS.BASTIONS, this.bastions);
     fileRepo.saveCampaignsDebounced(this.campaigns);
+    fileRepo.saveBastionsDebounced(this.bastions);
     if (this.selectedCampaignId === id) {
       this.setSelectedCampaignId(this.campaigns[0]?.id || '');
     }
     this.emit('campaigns:updated', this.campaigns);
+    this.emit('bastions:updated', this.bastions);
   }
 
   getSelectedCampaignId() {
@@ -233,6 +239,80 @@ class AppStore extends EventEmitter {
     }
 
     this.emit('characters:updated', this.characters);
+  }
+
+  // ==========================================
+  // GESTIÓN DE BALUARTES (BASTIONS DMG 2024)
+  // ==========================================
+
+  getBastions() {
+    return [...(this.bastions || [])];
+  }
+
+  getBastionsByCampaign(campaignId) {
+    if (!campaignId) return this.getBastions();
+    return (this.bastions || []).filter(b => b.campaignId === campaignId);
+  }
+
+  getBastion(id) {
+    return (this.bastions || []).find(b => b.id === id) || null;
+  }
+
+  saveBastion(bastionData) {
+    if (!Array.isArray(this.bastions)) this.bastions = [];
+    const sanitized = sanitizeBastion(bastionData);
+    const idx = this.bastions.findIndex(b => b.id === sanitized.id);
+    if (idx >= 0) {
+      this.bastions[idx] = sanitized;
+    } else {
+      this.bastions.push(sanitized);
+    }
+    saveToStorage(STORAGE_KEYS.BASTIONS, this.bastions);
+    fileRepo.saveBastionsDebounced(this.bastions);
+    this.emit('bastions:updated', this.bastions);
+    return sanitized;
+  }
+
+  deleteBastion(id) {
+    if (!Array.isArray(this.bastions)) this.bastions = [];
+    this.bastions = this.bastions.filter(b => b.id !== id);
+    saveToStorage(STORAGE_KEYS.BASTIONS, this.bastions);
+    fileRepo.saveBastionsDebounced(this.bastions);
+    this.emit('bastions:updated', this.bastions);
+  }
+
+  // ==========================================
+  // CANSANCIO Y ESTADOS (D&D 2024)
+  // ==========================================
+
+  updateCharacterExhaustion(charId, level) {
+    const char = this.getCharacter(charId);
+    if (!char) return;
+    char.exhaustion = Math.max(0, Math.min(6, Math.round(Number(level) || 0)));
+    this.saveCharacter(char);
+    this.emit('character:exhaustion-changed', { charId, exhaustion: char.exhaustion });
+  }
+
+  toggleCharacterCondition(charId, conditionId) {
+    const char = this.getCharacter(charId);
+    if (!char || !conditionId) return;
+    const current = new Set(Array.isArray(char.conditions) ? char.conditions : []);
+    if (current.has(conditionId)) {
+      current.delete(conditionId);
+    } else {
+      current.add(conditionId);
+    }
+    char.conditions = Array.from(current);
+    this.saveCharacter(char);
+    this.emit('character:conditions-changed', { charId, conditions: char.conditions });
+  }
+
+  clearCharacterConditions(charId) {
+    const char = this.getCharacter(charId);
+    if (!char) return;
+    char.conditions = [];
+    this.saveCharacter(char);
+    this.emit('character:conditions-changed', { charId, conditions: [] });
   }
 
   // ==========================================
@@ -607,6 +687,11 @@ class AppStore extends EventEmitter {
         char.heroicInspiration = true;
       }
 
+      // 6. Regla de Cansancio D&D 2024: Terminar un Descanso Largo reduce en 1 el nivel de Cansancio
+      if ((Number(char.exhaustion) || 0) > 0) {
+        char.exhaustion = Math.max(0, Math.round(Number(char.exhaustion) || 0) - 1);
+      }
+
       this.saveCharacter(char);
     });
 
@@ -648,6 +733,7 @@ class AppStore extends EventEmitter {
     return {
       campaigns: this.campaigns,
       characters: this.characters,
+      bastions: this.bastions || [],
       selectedCampaignId: this.selectedCampaignId,
       btrsHistory: this.btrsHistory,
       exportedAt: new Date().toISOString(),
@@ -664,6 +750,10 @@ class AppStore extends EventEmitter {
       this.characters = parsedData.characters.map(sanitizeCharacter);
       saveToStorage(STORAGE_KEYS.CHARACTERS, this.characters);
     }
+    if (Array.isArray(parsedData.bastions)) {
+      this.bastions = parsedData.bastions.map(sanitizeBastion);
+      saveToStorage(STORAGE_KEYS.BASTIONS, this.bastions);
+    }
     this.selectedCampaignId = this.campaigns[0]?.id || '';
     this.selectedCharacterId = this.characters[0]?.id || '';
 
@@ -672,6 +762,7 @@ class AppStore extends EventEmitter {
 
     this.emit('campaigns:updated', this.campaigns);
     this.emit('characters:updated', this.characters);
+    this.emit('bastions:updated', this.bastions || []);
     this.emit('campaign:selected', this.selectedCampaignId);
     this.emit('character:selected', this.getSelectedCharacter());
   }
@@ -679,16 +770,19 @@ class AppStore extends EventEmitter {
   resetToDefaults() {
     this.campaigns = DEFAULT_CAMPAIGNS.map(sanitizeCampaign);
     this.characters = DEFAULT_CHARACTERS.map(sanitizeCharacter);
+    this.bastions = [];
     this.selectedCampaignId = this.campaigns[0]?.id || '';
     this.selectedCharacterId = this.characters[0]?.id || '';
 
     saveToStorage(STORAGE_KEYS.CAMPAIGNS, this.campaigns);
     saveToStorage(STORAGE_KEYS.CHARACTERS, this.characters);
+    saveToStorage(STORAGE_KEYS.BASTIONS, this.bastions);
     saveToStorage(STORAGE_KEYS.SELECTED_CAMPAIGN, this.selectedCampaignId);
     saveToStorage(STORAGE_KEYS.SELECTED_CHARACTER, this.selectedCharacterId);
 
     this.emit('campaigns:updated', this.campaigns);
     this.emit('characters:updated', this.characters);
+    this.emit('bastions:updated', this.bastions);
     this.emit('campaign:selected', this.selectedCampaignId);
     this.emit('character:selected', this.getSelectedCharacter());
   }
